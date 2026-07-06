@@ -1,0 +1,8 @@
+[project]
+name = "chain-askdata"
+version = "0.1.0"
+description = "新氧连锁经管自然语言取数 MVP"
+requires-python = ">=3.14"
+
+[tool.pyright]
+include = ["app", "tests"]

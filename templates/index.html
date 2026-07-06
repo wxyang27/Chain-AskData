@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Chain-AskData</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <h1>Chain-AskData</h1>
+        <p>新氧连锁经管自然语言取数 MVP</p>
+      </div>
+      <span class="status">SQL 生成模式</span>
+    </header>
+
+    <main class="workspace">
+      <section class="panel input-panel">
+        <h2>问题</h2>
+        <textarea id="question" rows="7">最近30天各门店核销收入 TOP10</textarea>
+        <button id="generate">生成 SQL</button>
+        <div class="demo-list">
+          <h3>Demo 问题</h3>
+          <button class="demo-item">最近30天各门店核销收入 TOP10</button>
+          <button class="demo-item">昨天整体核销收入、GMV、人次、人数、客单价是多少？</button>
+          <button class="demo-item">奇迹胶原 最近90天渗透率</button>
+        </div>
+      </section>
+
+      <section class="panel plan-panel">
+        <h2>QueryPlan</h2>
+        <pre id="plan">等待生成...</pre>
+        <h2>口径说明</h2>
+        <ul id="notes"></ul>
+      </section>
+
+      <section class="panel sql-panel">
+        <div class="panel-title">
+          <h2>SQL</h2>
+          <button id="copy">复制</button>
+        </div>
+        <pre id="sql">等待生成...</pre>
+        <h2>校验结果</h2>
+        <pre id="validation">等待生成...</pre>
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>

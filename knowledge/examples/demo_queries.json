@@ -1,0 +1,67 @@
+[
+  {
+    "case_id": "Q001",
+    "question": "昨天整体核销收入、GMV、人次、人数、客单价是多少？",
+    "status": "待实现"
+  },
+  {
+    "case_id": "Q002",
+    "question": "最近30天各门店核销收入 TOP10",
+    "status": "已接入首版确定性链路"
+  },
+  {
+    "case_id": "Q003",
+    "question": "本周私域新客核销收入是多少？",
+    "status": "待实现"
+  },
+  {
+    "case_id": "Q004",
+    "question": "最近30天私域/公域/老带新核销收入、人次、客单价",
+    "status": "待实现"
+  },
+  {
+    "case_id": "Q005",
+    "question": "最近30天新客/老客核销收入、人次、客单价",
+    "status": "待实现"
+  },
+  {
+    "case_id": "Q006",
+    "question": "最近30天大单品/常规品/大师团核销收入各是多少？",
+    "status": "待实现"
+  },
+  {
+    "case_id": "Q007",
+    "question": "最近30天品项核销收入 TOP20",
+    "status": "待实现"
+  },
+  {
+    "case_id": "Q008",
+    "question": "奇迹胶原 最近90天渗透率",
+    "status": "待实现"
+  },
+  {
+    "case_id": "Q009",
+    "question": "最近30天 0 元核销订单占比",
+    "status": "待实现"
+  },
+  {
+    "case_id": "Q010",
+    "question": "当前待核销 GMV、服务点、订单数是多少？",
+    "status": "待实现"
+  },
+  {
+    "case_id": "Q011",
+    "question": "最近30天新客支付 GMV、订单数、支付人数、支付客单价",
+    "status": "待实现"
+  },
+  {
+    "case_id": "Q012",
+    "question": "支付后30日核销率是多少？成熟期 cohort 口径",
+    "status": "P1 增强"
+  },
+  {
+    "case_id": "Q013",
+    "question": "最近30天升单人数、升单人次、升单订单数",
+    "status": "待实现"
+  }
+]
