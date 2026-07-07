@@ -1,8 +1,9 @@
 from app.assets.loader import load_yaml_asset
 from app.knowledge_indexer.retrieval_context import RetrievalContext
 from app.metric_registry.registry import MetricRegistry
-from app.models.query import DimensionPlan, QueryPlan
+from app.models.query import DimensionPlan, QueryPlan, QueryPlanCoT
 from app.schema_retrieval.retriever import SchemaRetriever
+from app.schema_graph.graph import SchemaGraph
 
 
 class QueryPlanner:
@@ -21,7 +22,12 @@ class QueryPlanner:
             for case in self.demo_cases
         }
 
-    def plan(self, question: str, retrieval_context: RetrievalContext | None = None) -> QueryPlan:
+    def plan(
+        self,
+        question: str,
+        retrieval_context: RetrievalContext | None = None,
+        schema_graph: SchemaGraph | None = None,
+    ) -> QueryPlan:
         demo_case = self._match_case(question, retrieval_context)
         dimensions = [
             DimensionPlan(**dimension)
@@ -33,6 +39,11 @@ class QueryPlanner:
         retrieved_example_ids = retrieval_context.top_example_ids() if retrieval_context else []
         planning_evidence = self._build_planning_evidence(demo_case, retrieval_context)
         schema_evidence = self._build_schema_evidence(retrieval_context)
+        query_plan_cot = self._build_query_plan_cot(
+            demo_case=demo_case,
+            retrieval_context=retrieval_context,
+            schema_graph=schema_graph,
+        )
         risk_flags = demo_case.get("risk_flags", []).copy()
         if retrieval_context:
             risk_flags.extend(flag for flag in retrieval_context.risks if flag not in risk_flags)
@@ -59,6 +70,7 @@ class QueryPlanner:
             retrieved_example_ids=retrieved_example_ids,
             planning_evidence=planning_evidence,
             schema_evidence=schema_evidence,
+            query_plan_cot=query_plan_cot,
         )
 
     def list_demo_questions(self) -> list[dict]:
@@ -186,6 +198,70 @@ class QueryPlanner:
                 evidence.append(f"字段证据：{full_name}（{business_name or field_name}）")
             elif field_name:
                 evidence.append(f"字段证据：{field_name}")
+        return evidence
+
+    def _build_query_plan_cot(
+        self,
+        demo_case: dict,
+        retrieval_context: RetrievalContext | None,
+        schema_graph: SchemaGraph | None,
+    ) -> list[QueryPlanCoT]:
+        if not schema_graph and not retrieval_context:
+            return []
+
+        objects = schema_graph.table_names if schema_graph else []
+        fields = schema_graph.field_names if schema_graph else []
+        if not objects and retrieval_context:
+            objects = retrieval_context.top_table_names(limit=8)
+        if not fields and retrieval_context:
+            fields = retrieval_context.top_field_names(limit=12)
+
+        template_id = demo_case["template_id"]
+        return [
+            QueryPlanCoT(
+                step=1,
+                objects=objects,
+                fields=fields,
+                filters=self._infer_filters(template_id),
+                calculation=self._infer_cot_calculation(template_id, fields),
+                output=self._infer_cot_output(demo_case, fields),
+                evidence=self._cot_evidence(schema_graph, retrieval_context),
+            )
+        ]
+
+    def _infer_cot_calculation(self, template_id: str, fields: list[str]) -> str:
+        if template_id == "unverified_amount_store_top10":
+            return "SUM(left_gmv)"
+        if "payment" in template_id:
+            return "SUM(pay_gmv)"
+        if "execution" in template_id or "income" in template_id:
+            return "SUM(exe_income)"
+        return ", ".join(fields[:3])
+
+    def _infer_cot_output(self, demo_case: dict, fields: list[str]) -> str:
+        dimensions = [
+            dimension.get("field", "")
+            for dimension in demo_case.get("dimensions", [])
+            if dimension.get("field")
+        ]
+        return ", ".join(dict.fromkeys(dimensions + fields[:3]))
+
+    def _cot_evidence(
+        self,
+        schema_graph: SchemaGraph | None,
+        retrieval_context: RetrievalContext | None,
+    ) -> list[str]:
+        evidence: list[str] = []
+        if schema_graph:
+            for field in schema_graph.fields[:5]:
+                full_name = field.get("full_name") or field.get("field_name")
+                if full_name:
+                    evidence.append(f"\u5b57\u6bb5\u8bc1\u636e\uff1a{full_name}")
+            if schema_graph.schema_graph_text:
+                evidence.append("\u5df2\u6784\u5efa Schema Graph")
+        elif retrieval_context:
+            for field_name in retrieval_context.top_field_names(limit=5):
+                evidence.append(f"\u5b57\u6bb5\u8bc1\u636e\uff1a{field_name}")
         return evidence
 
     def _merge_retrieved_tables(

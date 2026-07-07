@@ -25,6 +25,18 @@ class DimensionPlan(BaseModel):
     source_table: str
 
 
+class QueryPlanCoT(BaseModel):
+    """Structured QueryPlan CoT step for downstream SQL generation."""
+
+    step: int
+    objects: list[str] = Field(default_factory=list)
+    fields: list[str] = Field(default_factory=list)
+    filters: list[str] = Field(default_factory=list)
+    calculation: str = ""
+    output: str = ""
+    evidence: list[str] = Field(default_factory=list)
+
+
 class QueryPlan(BaseModel):
     """查询计划。
 
@@ -50,6 +62,7 @@ class QueryPlan(BaseModel):
     retrieved_example_ids: list[str] = Field(default_factory=list)
     planning_evidence: list[str] = Field(default_factory=list)
     schema_evidence: list[str] = Field(default_factory=list)
+    query_plan_cot: list[QueryPlanCoT] = Field(default_factory=list)
 
 
 class ValidationResult(BaseModel):
@@ -71,3 +84,4 @@ class QueryResponse(BaseModel):
     caliber_notes: list[str]
     retrieval_trace: list[dict[str, Any]] = Field(default_factory=list)
     retrieval_context: dict[str, Any] = Field(default_factory=dict)
+    schema_graph: dict[str, Any] = Field(default_factory=dict)
