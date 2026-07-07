@@ -1,67 +1,132 @@
 [
   {
     "case_id": "Q001",
-    "question": "昨天整体核销收入、GMV、人次、人数、客单价是多少？",
-    "status": "待实现"
+    "template_id": "execution_summary_yesterday",
+    "question": "昨天整体核销收入、核销GMV、核销人次、核销人数、核销客单价是多少？",
+    "business_domain": "连锁经管-核销概览",
+    "metrics": ["execution_income", "execution_gmv", "execution_visit_count", "execution_user_count", "execution_aov_by_visit"],
+    "dimensions": [],
+    "source_tables": ["soyoung_dw.dm_opt_qy_user_execution_record_all_d"],
+    "risk_flags": ["核销收入使用 exe_income，核销 GMV 使用 exe_amount", "核销客单价默认分母为核销人次 verify_date_id"]
   },
   {
     "case_id": "Q002",
+    "template_id": "store_income_top10_30d",
     "question": "最近30天各门店核销收入 TOP10",
-    "status": "已接入首版确定性链路"
+    "business_domain": "连锁经管-门店排行",
+    "metrics": ["execution_income"],
+    "dimensions": [{"field": "sy_hospital_name", "alias": "门店", "source_table": "dim_qy_tenant_info_all_d"}],
+    "source_tables": ["soyoung_dw.dm_opt_qy_user_execution_record_all_d", "soyoung_dw.dim_qy_tenant_info_all_d"],
+    "risk_flags": ["门店展示名称优先使用 sy_hospital_name", "ORDER BY 必须 LIMIT"]
   },
   {
     "case_id": "Q003",
+    "template_id": "private_new_customer_income_this_week",
     "question": "本周私域新客核销收入是多少？",
-    "status": "待实现"
+    "business_domain": "连锁经管-渠道新客",
+    "metrics": ["execution_income"],
+    "dimensions": [],
+    "source_tables": ["soyoung_dw.dm_opt_qy_user_execution_record_all_d"],
+    "risk_flags": ["私域筛选 cx_first_channel = '私域'", "新客筛选 is_new = 1"]
   },
   {
     "case_id": "Q004",
-    "question": "最近30天私域/公域/老带新核销收入、人次、客单价",
-    "status": "待实现"
+    "template_id": "channel_execution_30d",
+    "question": "最近30天私域、公域、老带新的核销收入、人次、客单价对比",
+    "business_domain": "连锁经管-渠道对比",
+    "metrics": ["execution_income", "execution_visit_count", "execution_aov_by_visit"],
+    "dimensions": [{"field": "cx_first_channel", "alias": "channel_l1", "source_table": "dm_opt_qy_user_execution_record_all_d"}],
+    "source_tables": ["soyoung_dw.dm_opt_qy_user_execution_record_all_d"],
+    "risk_flags": ["渠道枚举限定为私域、公域、老带新"]
   },
   {
     "case_id": "Q005",
-    "question": "最近30天新客/老客核销收入、人次、客单价",
-    "status": "待实现"
+    "template_id": "new_old_customer_execution_30d",
+    "question": "最近30天新客和老客核销收入、人次、客单价分别是多少？",
+    "business_domain": "连锁经管-新老客对比",
+    "metrics": ["execution_income", "execution_visit_count", "execution_aov_by_visit"],
+    "dimensions": [{"field": "is_new", "alias": "新老客类型", "source_table": "dm_opt_qy_user_execution_record_all_d"}],
+    "source_tables": ["soyoung_dw.dm_opt_qy_user_execution_record_all_d"],
+    "risk_flags": ["新老客基于 is_new 派生"]
   },
   {
     "case_id": "Q006",
-    "question": "最近30天大单品/常规品/大师团核销收入各是多少？",
-    "status": "待实现"
+    "template_id": "revenue_category_execution_30d",
+    "question": "最近30天大单品、常规品、大师团核销收入对比",
+    "business_domain": "连锁经管-品类经营",
+    "metrics": ["execution_income"],
+    "dimensions": [{"field": "revenue_category", "alias": "product_revenue_category", "source_table": "dm_opt_qy_user_execution_record_all_d"}],
+    "source_tables": ["soyoung_dw.dm_opt_qy_user_execution_record_all_d"],
+    "risk_flags": ["经营分类使用 revenue_category"]
   },
   {
     "case_id": "Q007",
+    "template_id": "standard_item_income_top20_30d",
     "question": "最近30天品项核销收入 TOP20",
-    "status": "待实现"
+    "business_domain": "连锁经管-品项排行",
+    "metrics": ["execution_income"],
+    "dimensions": [{"field": "standard_name", "alias": "standard_item_name", "source_table": "dm_opt_qy_user_execution_record_all_d"}],
+    "source_tables": ["soyoung_dw.dm_opt_qy_user_execution_record_all_d"],
+    "risk_flags": ["品项展示优先使用 standard_name", "ORDER BY 必须 LIMIT"]
   },
   {
     "case_id": "Q008",
-    "question": "奇迹胶原 最近90天渗透率",
-    "status": "待实现"
+    "template_id": "standard_item_penetration_90d",
+    "question": "最近90天奇迹胶原品项渗透率是多少？",
+    "business_domain": "连锁经管-品项渗透",
+    "metrics": ["standard_item_penetration"],
+    "dimensions": [],
+    "source_tables": ["soyoung_dw.dm_opt_qy_user_execution_record_all_d"],
+    "risk_flags": ["品项口径使用 standard_name", "品项渗透率 = 品项核销人数 / 总核销人数"]
   },
   {
     "case_id": "Q009",
-    "question": "最近30天 0 元核销订单占比",
-    "status": "待实现"
+    "template_id": "zero_income_orders_30d",
+    "question": "最近30天0元单数量和核销人数是多少？",
+    "business_domain": "连锁经管-0元单",
+    "metrics": ["zero_income_order_count", "execution_user_count"],
+    "dimensions": [],
+    "source_tables": ["soyoung_dw.dm_opt_qy_user_execution_record_all_d"],
+    "risk_flags": ["0 元单判断使用 exe_income = 0"]
   },
   {
     "case_id": "Q010",
-    "question": "当前待核销 GMV、服务点、订单数是多少？",
-    "status": "待实现"
+    "template_id": "unverified_amount_store_top10",
+    "question": "截至昨天各门店待核销金额 TOP10",
+    "business_domain": "连锁经管-待核销库存",
+    "metrics": ["unverified_amount"],
+    "dimensions": [{"field": "sy_hospital_name", "alias": "门店", "source_table": "dim_qy_tenant_info_all_d"}],
+    "source_tables": ["soyoung_dw.dm_opt_qy_order_info_all_d", "soyoung_dw.dim_qy_tenant_info_all_d"],
+    "risk_flags": ["待核销金额是库存快照口径，不默认按 pay_date 截断"]
   },
   {
     "case_id": "Q011",
-    "question": "最近30天新客支付 GMV、订单数、支付人数、支付客单价",
-    "status": "待实现"
+    "template_id": "new_customer_payment_30d",
+    "question": "最近30天新客支付GMV、支付人数、支付客单价是多少？",
+    "business_domain": "连锁经管-支付新客",
+    "metrics": ["payment_gmv", "payment_user_count", "payment_aov_by_user_day"],
+    "dimensions": [],
+    "source_tables": ["soyoung_dw.dm_opt_qy_order_info_all_d"],
+    "risk_flags": ["支付 GMV 默认剔除当日退款", "支付客单价默认按支付日期+用户计算支付人次"]
   },
   {
     "case_id": "Q012",
-    "question": "支付后30日核销率是多少？成熟期 cohort 口径",
-    "status": "P1 增强"
+    "template_id": "pay_to_verify_rate_30d",
+    "question": "最近60天支付后30日核销率是多少？",
+    "business_domain": "连锁经管-支付到核销转化",
+    "metrics": ["payment_gmv", "execution_income"],
+    "dimensions": [],
+    "source_tables": ["soyoung_dw.dm_opt_qy_order_info_all_d", "soyoung_dw.dm_opt_qy_user_execution_record_all_d"],
+    "risk_flags": ["支付时间与核销时间必须分开处理", "支付后 30 日核销率使用成熟期 cohort 口径"]
   },
   {
     "case_id": "Q013",
-    "question": "最近30天升单人数、升单人次、升单订单数",
-    "status": "待实现"
+    "template_id": "upgrade_execution_30d",
+    "question": "最近30天升单人数、升单核销人次、升单核销收入是多少？",
+    "business_domain": "连锁经管-升单经营",
+    "metrics": ["execution_user_count", "execution_visit_count", "execution_income"],
+    "dimensions": [],
+    "source_tables": ["soyoung_dw.dm_opt_qy_user_execution_record_all_d"],
+    "risk_flags": ["升单筛选使用 is_up = 1"]
   }
 ]

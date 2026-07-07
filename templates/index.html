@@ -22,15 +22,17 @@
         <button id="generate">生成 SQL</button>
         <div class="demo-list">
           <h3>Demo 问题</h3>
-          <button class="demo-item">最近30天各门店核销收入 TOP10</button>
-          <button class="demo-item">昨天整体核销收入、GMV、人次、人数、客单价是多少？</button>
-          <button class="demo-item">奇迹胶原 最近90天渗透率</button>
+          <div id="demo-list">
+            <button class="demo-item" type="button">正在加载样例问题...</button>
+          </div>
         </div>
       </section>
 
       <section class="panel plan-panel">
         <h2>QueryPlan</h2>
         <pre id="plan">等待生成...</pre>
+        <h2>Retrieval Trace</h2>
+        <div id="retrieval-trace" class="trace-list">等待生成...</div>
         <h2>口径说明</h2>
         <ul id="notes"></ul>
       </section>

@@ -1,0 +1,103 @@
+{
+  "metrics": [
+    {
+      "canonical": "execution_income",
+      "display_name": "核销收入",
+      "formula": "SUM(exe_income)",
+      "source_table": "soyoung_dw.dm_opt_qy_user_execution_record_all_d",
+      "date_field": "executed_date",
+      "required_filters": ["is_valid = 1"],
+      "notes": ["核销收入使用实收 exe_income，不等同于核销 GMV"]
+    },
+    {
+      "canonical": "execution_gmv",
+      "display_name": "核销GMV",
+      "formula": "SUM(exe_amount)",
+      "source_table": "soyoung_dw.dm_opt_qy_user_execution_record_all_d",
+      "date_field": "executed_date",
+      "required_filters": ["is_valid = 1"],
+      "notes": ["核销 GMV 使用成交额 exe_amount，常含赠送或 0 元单"]
+    },
+    {
+      "canonical": "execution_visit_count",
+      "display_name": "核销人次",
+      "formula": "COUNT(DISTINCT verify_date_id)",
+      "source_table": "soyoung_dw.dm_opt_qy_user_execution_record_all_d",
+      "date_field": "executed_date",
+      "required_filters": ["is_valid = 1"],
+      "notes": ["核销人次按 verify_date_id 去重，同一人不同日算多次"]
+    },
+    {
+      "canonical": "execution_user_count",
+      "display_name": "核销人数",
+      "formula": "COUNT(DISTINCT customer_id)",
+      "source_table": "soyoung_dw.dm_opt_qy_user_execution_record_all_d",
+      "date_field": "executed_date",
+      "required_filters": ["is_valid = 1"],
+      "notes": ["核销人数按 customer_id 去重，不能直接使用 uid"]
+    },
+    {
+      "canonical": "execution_aov_by_visit",
+      "display_name": "核销客单价",
+      "formula": "SUM(exe_income) / COUNT(DISTINCT verify_date_id)",
+      "source_table": "soyoung_dw.dm_opt_qy_user_execution_record_all_d",
+      "date_field": "executed_date",
+      "required_filters": ["is_valid = 1"],
+      "notes": ["默认分母为核销人次，不是核销人数"]
+    },
+    {
+      "canonical": "payment_gmv",
+      "display_name": "支付GMV",
+      "formula": "SUM(pay_gmv)",
+      "source_table": "soyoung_dw.dm_opt_qy_order_info_all_d",
+      "date_field": "pay_date",
+      "required_filters": ["is_paydate_cash = 0"],
+      "notes": ["支付 GMV 默认剔除当日退款"]
+    },
+    {
+      "canonical": "payment_user_count",
+      "display_name": "支付人数",
+      "formula": "COUNT(DISTINCT uid)",
+      "source_table": "soyoung_dw.dm_opt_qy_order_info_all_d",
+      "date_field": "pay_date",
+      "required_filters": ["is_paydate_cash = 0"],
+      "notes": ["支付人数使用 uid 去重"]
+    },
+    {
+      "canonical": "payment_aov_by_user_day",
+      "display_name": "支付客单价",
+      "formula": "SUM(pay_gmv) / COUNT(DISTINCT CASE WHEN pay_flag = 1 THEN CONCAT(CAST(pay_date AS STRING), '_', CAST(uid AS STRING)) END)",
+      "source_table": "soyoung_dw.dm_opt_qy_order_info_all_d",
+      "date_field": "pay_date",
+      "required_filters": ["is_paydate_cash = 0"],
+      "notes": ["支付客单价默认按支付日期+用户计算支付人次"]
+    },
+    {
+      "canonical": "zero_income_order_count",
+      "display_name": "0元单量",
+      "formula": "COUNT(DISTINCT main_order_id)",
+      "source_table": "soyoung_dw.dm_opt_qy_user_execution_record_all_d",
+      "date_field": "executed_date",
+      "required_filters": ["is_valid = 1", "exe_income = 0"],
+      "notes": ["0 元单判断使用 exe_income = 0"]
+    },
+    {
+      "canonical": "standard_item_penetration",
+      "display_name": "品项渗透率",
+      "formula": "品项核销人数 / 总核销人数",
+      "source_table": "soyoung_dw.dm_opt_qy_user_execution_record_all_d",
+      "date_field": "executed_date",
+      "required_filters": ["is_valid = 1"],
+      "notes": ["品项口径使用 standard_name；品项渗透率 = 品项核销人数 / 总核销人数"]
+    },
+    {
+      "canonical": "unverified_amount",
+      "display_name": "待核销金额",
+      "formula": "SUM(left_gmv)",
+      "source_table": "soyoung_dw.dm_opt_qy_order_info_all_d",
+      "date_field": "dp",
+      "required_filters": ["left_num > 0"],
+      "notes": ["待核销是库存快照口径，默认不按 pay_date 发生期截断"]
+    }
+  ]
+}

@@ -1,0 +1,124 @@
+{
+  "database": "soyoung_dw",
+  "tables": [
+    {
+      "name": "dm_opt_qy_user_execution_record_all_d",
+      "full_name": "soyoung_dw.dm_opt_qy_user_execution_record_all_d",
+      "layer": "DM",
+      "theme": "核销事实",
+      "grain": "用户-订单-核销明细",
+      "required_partition": "dp",
+      "date_fields": ["executed_date", "verify_date_id"],
+      "key_fields": ["customer_id", "uid", "tenant_id", "verify_date_id", "main_order_id"],
+      "caliber_rules": [
+        "核销发生类问题使用 executed_date",
+        "有效核销必须过滤 is_valid = 1",
+        "核销人数按 customer_id 去重",
+        "核销人次按 verify_date_id 去重",
+        "0 元单使用 exe_income = 0"
+      ]
+    },
+    {
+      "name": "dm_opt_qy_order_info_all_d",
+      "full_name": "soyoung_dw.dm_opt_qy_order_info_all_d",
+      "layer": "DM",
+      "theme": "支付订单",
+      "grain": "订单支付与待核销明细",
+      "required_partition": "dp",
+      "date_fields": ["pay_date", "stat_date"],
+      "key_fields": ["uid", "tenant_id", "main_order_id", "item_product_id"],
+      "caliber_rules": [
+        "支付发生类问题使用 pay_date",
+        "支付 GMV 默认过滤 is_paydate_cash = 0",
+        "待核销金额是库存快照口径，使用 left_num > 0 与 left_gmv"
+      ]
+    },
+    {
+      "name": "dim_qy_tenant_info_all_d",
+      "full_name": "soyoung_dw.dim_qy_tenant_info_all_d",
+      "layer": "DIM",
+      "theme": "门店维度",
+      "grain": "门店",
+      "required_partition": "dp",
+      "key_fields": ["tenant_id", "hospital_id", "sy_hospital_id"],
+      "caliber_rules": [
+        "门店主键使用 tenant_id",
+        "门店展示名称优先使用 sy_hospital_name",
+        "大区使用 area_name，城市使用 city_name"
+      ]
+    },
+    {
+      "name": "dim_product_info",
+      "full_name": "soyoung_dw.dim_product_info",
+      "layer": "DIM",
+      "theme": "品项维度",
+      "grain": "品项",
+      "required_partition": "dp",
+      "key_fields": ["item_product_id", "product_id", "standard_name", "revenue_category"],
+      "caliber_rules": [
+        "品项口径使用 item_product_id 或 standard_name",
+        "经营分类使用 revenue_category：大单品、常规品、大师团"
+      ]
+    },
+    {
+      "name": "dws_opt_qy_core_summary_all_d",
+      "full_name": "soyoung_dw.dws_opt_qy_core_summary_all_d",
+      "layer": "DWS",
+      "theme": "经营核心汇总",
+      "grain": "经营主题汇总",
+      "required_partition": "dp",
+      "key_fields": ["tenant_id", "stat_date"],
+      "caliber_rules": [
+        "P1 汇总核对表，MVP 默认不优先生成明细 SQL"
+      ]
+    },
+    {
+      "name": "dws_opt_qy_tenant_topic_d",
+      "full_name": "soyoung_dw.dws_opt_qy_tenant_topic_d",
+      "layer": "DWS",
+      "theme": "门店经营主题",
+      "grain": "门店-日期",
+      "required_partition": "dp",
+      "key_fields": ["tenant_id", "stat_date"],
+      "caliber_rules": [
+        "P1 门店经营补充表，优先用于门店主题扩展"
+      ]
+    },
+    {
+      "name": "dws_opt_qy_gross_margin_stats_all_d",
+      "full_name": "soyoung_dw.dws_opt_qy_gross_margin_stats_all_d",
+      "layer": "DWS",
+      "theme": "毛利统计",
+      "grain": "经营主题-日期",
+      "required_partition": "dp",
+      "key_fields": ["tenant_id", "stat_date"],
+      "caliber_rules": [
+        "P1 毛利专题扩展，MVP NL2SQL 暂不默认使用"
+      ]
+    },
+    {
+      "name": "dm_opt_qy_user_summary_info_all_d",
+      "full_name": "soyoung_dw.dm_opt_qy_user_summary_info_all_d",
+      "layer": "DM",
+      "theme": "用户主题汇总",
+      "grain": "用户",
+      "required_partition": "dp",
+      "key_fields": ["uid", "customer_id"],
+      "caliber_rules": [
+        "P1 用户主题扩展，涉及用户画像时优先用于聚合维度补充"
+      ]
+    },
+    {
+      "name": "dim_user_qy_crm_customer_info_all_d",
+      "full_name": "soyoung_dw.dim_user_qy_crm_customer_info_all_d",
+      "layer": "DIM",
+      "theme": "CRM 用户维度",
+      "grain": "客户",
+      "required_partition": "dp",
+      "key_fields": ["customer_id", "uid"],
+      "caliber_rules": [
+        "P1 CRM 用户扩展表，默认不允许输出手机号、姓名等敏感字段"
+      ]
+    }
+  ]
+}

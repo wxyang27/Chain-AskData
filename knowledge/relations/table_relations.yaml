@@ -1,0 +1,20 @@
+{
+  "relations": [
+    {
+      "left_table": "soyoung_dw.dm_opt_qy_user_execution_record_all_d",
+      "right_table": "soyoung_dw.dim_qy_tenant_info_all_d",
+      "join_type": "LEFT JOIN",
+      "join_keys": ["tenant_id"],
+      "condition": "a.tenant_id = b.tenant_id AND b.dp = DATE_SUB(CURRENT_DATE(),1)",
+      "usage": "核销事实按门店、大区、城市分析"
+    },
+    {
+      "left_table": "soyoung_dw.dm_opt_qy_order_info_all_d",
+      "right_table": "soyoung_dw.dim_qy_tenant_info_all_d",
+      "join_type": "LEFT JOIN",
+      "join_keys": ["tenant_id"],
+      "condition": "a.tenant_id = b.tenant_id AND b.dp = DATE_SUB(CURRENT_DATE(),1)",
+      "usage": "支付订单或待核销库存按门店、大区、城市分析"
+    }
+  ]
+}

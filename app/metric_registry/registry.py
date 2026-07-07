@@ -1,12 +1,24 @@
+from app.assets.loader import load_yaml_asset
 from app.models.query import MetricPlan
 
 
 class MetricRegistry:
-    """MVP 指标注册表。后续会从 YAML/Markdown 资产加载。"""
+    """MVP 指标注册表，从机器可读资产加载标准口径。"""
 
-    def get_store_income_metric(self) -> MetricPlan:
+    def __init__(self):
+        metric_asset = load_yaml_asset("knowledge/metrics/core_metrics.yaml")
+        self.metrics = {
+            metric["canonical"]: metric
+            for metric in metric_asset["metrics"]
+        }
+
+    def get(self, canonical: str) -> MetricPlan:
+        metric = self.metrics[canonical]
         return MetricPlan(
-            canonical="store_exe_income",
-            display_name="门店核销收入",
-            formula="SUM(exe_income)",
+            canonical=metric["canonical"],
+            display_name=metric["display_name"],
+            formula=metric["formula"],
         )
+
+    def get_many(self, canonical_names: list[str]) -> list[MetricPlan]:
+        return [self.get(canonical) for canonical in canonical_names]

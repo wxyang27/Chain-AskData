@@ -10,3 +10,4 @@ chroma/
 data/
 logs/
 *.log
+.workbuddy/

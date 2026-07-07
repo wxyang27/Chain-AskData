@@ -1,7 +1,9 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 
 from app.answer.composer import AnswerComposer
+from app.knowledge_indexer.service import KnowledgeSearchService
 from app.models.query import QueryRequest, QueryResponse
+from app.query_planner.planner import QueryPlanner
 
 router = APIRouter()
 
@@ -13,6 +15,30 @@ def health() -> dict[str, str]:
     return {
         "project": "Chain-AskData",
         "status": "ok",
+    }
+
+
+@router.get("/demo-queries")
+def demo_queries() -> list[dict]:
+    """返回 MVP 阶段可演示的自然语言问题。"""
+
+    return QueryPlanner().list_demo_questions()
+
+
+@router.get("/knowledge/search")
+def search_knowledge(
+    q: str = Query(..., min_length=1, description="知识检索问题"),
+    top_k: int = Query(5, ge=1, le=20, description="返回条数"),
+) -> dict:
+    """检索本地 ChromaDB 知识库。"""
+
+    service = KnowledgeSearchService()
+    context = service.search_structured(q, top_k=top_k)
+    return {
+        "query": q,
+        "top_k": top_k,
+        "matches": context.raw_matches,
+        "retrieval_context": context.to_dict(),
     }
 
 

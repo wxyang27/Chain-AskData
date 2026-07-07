@@ -146,6 +146,68 @@ pre {
   line-height: 1.7;
 }
 
+.trace-list {
+  display: grid;
+  gap: 10px;
+  max-height: 360px;
+  overflow: auto;
+  margin-bottom: 18px;
+}
+
+.trace-item {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 10px;
+  background: #fbfcfd;
+}
+
+.trace-section {
+  display: grid;
+  gap: 8px;
+}
+
+.trace-section-title {
+  color: var(--text);
+  font-weight: 700;
+  font-size: 13px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--line);
+}
+
+.trace-title {
+  font-weight: 700;
+  font-size: 13px;
+  margin-bottom: 8px;
+  color: var(--accent-dark);
+}
+
+.trace-meta {
+  min-height: auto;
+  padding: 8px;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+
+.trace-item p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.trace-empty,
+.trace-risk {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.trace-risk {
+  color: #8a4b00;
+}
+
 @media (max-width: 980px) {
   .workspace {
     grid-template-columns: 1fr;

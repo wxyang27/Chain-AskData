@@ -1,8 +1,28 @@
-class SchemaRetriever:
-    """Schema 检索接口占位。首版返回固定核心表。"""
+from app.assets.loader import load_yaml_asset
 
-    def retrieve_for_store_income(self) -> list[str]:
+
+class SchemaRetriever:
+    """Schema 检索入口。
+
+    MVP 先读取本地表资产；后续可在这里替换为 ChromaDB 相似度检索。
+    """
+
+    def __init__(self):
+        table_asset = load_yaml_asset("knowledge/tables/core_tables.yaml")
+        self.tables = {
+            table["full_name"]: table
+            for table in table_asset["tables"]
+        }
+
+    def retrieve(self, source_tables: list[str]) -> list[str]:
         return [
-            "soyoung_dw.dm_opt_qy_user_execution_record_all_d",
-            "soyoung_dw.dim_qy_tenant_info_all_d",
+            table_name
+            for table_name in source_tables
+            if table_name in self.tables
         ]
+
+    def allowed_table_names(self) -> set[str]:
+        return {
+            table["name"]
+            for table in self.tables.values()
+        }

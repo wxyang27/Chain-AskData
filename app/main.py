@@ -11,7 +11,7 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title="Chain-AskData",
         description="新氧连锁经管自然语言取数 MVP",
-        version="0.1.0",
+        version="0.2.0",
     )
     app.include_router(api_router, prefix="/api")
     app.include_router(web_router)
