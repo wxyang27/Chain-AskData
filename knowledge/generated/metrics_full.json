@@ -1,0 +1,4165 @@
+[
+  {
+    "asset_id": "metric:A001",
+    "asset_type": "metric",
+    "metric_type": "atomic",
+    "metric_id": "A001",
+    "name": "核销gmv",
+    "english_name": "verify_gmv",
+    "business_domain": "核销",
+    "definition": "统计周期内，连锁业务总核销gmv",
+    "formula": "SUM(金额字段)",
+    "data_type": "DECIMAL",
+    "unit": "元",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(exe_amount) 核销gmv\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_valid = 1",
+    "derived_metric_count": "9",
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "原子指标字典",
+    "source_row": 2
+  },
+  {
+    "asset_id": "metric:A002",
+    "asset_type": "metric",
+    "metric_type": "atomic",
+    "metric_id": "A002",
+    "name": "核销收入",
+    "english_name": "verify_income",
+    "business_domain": "核销",
+    "definition": "统计周期内，连锁业务总核销收入",
+    "formula": "SUM(金额字段)",
+    "data_type": "DECIMAL",
+    "unit": "元",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(exe_income) 核销收入\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_valid = 1",
+    "derived_metric_count": "9",
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "原子指标字典",
+    "source_row": 3
+  },
+  {
+    "asset_id": "metric:A003",
+    "asset_type": "metric",
+    "metric_type": "atomic",
+    "metric_id": "A003",
+    "name": "核销客单价",
+    "english_name": "verify_avg_price",
+    "business_domain": "核销",
+    "definition": "统计周期内，总核销收入/总核销人次",
+    "formula": "SUM(收入) / COUNT(DISTINCT 人次)",
+    "data_type": "DECIMAL",
+    "unit": "元/人次",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(exe_income)/COUNT(DISTINCT verify_date_id) 核销客单价\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_valid = 1",
+    "derived_metric_count": "10",
+    "dashboard_names": [],
+    "notes": "⚠ 原SQL使用verify_date_id统计人次，请确认是否等同于核销人次",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "原子指标字典",
+    "source_row": 4
+  },
+  {
+    "asset_id": "metric:A004",
+    "asset_type": "metric",
+    "metric_type": "atomic",
+    "metric_id": "A004",
+    "name": "核销服务点数",
+    "english_name": "verify_service_points",
+    "business_domain": "核销",
+    "definition": "统计周期内，总核销服务点数",
+    "formula": "SUM(exe_cnt)",
+    "data_type": "INT",
+    "unit": "个",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(exe_cnt) 核销服务点数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_valid = 1",
+    "derived_metric_count": "9",
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "原子指标字典",
+    "source_row": 5
+  },
+  {
+    "asset_id": "metric:A005",
+    "asset_type": "metric",
+    "metric_type": "atomic",
+    "metric_id": "A005",
+    "name": "核销人数",
+    "english_name": "verify_user_cnt",
+    "business_domain": "核销",
+    "definition": "统计周期内，总核销用户数",
+    "formula": "COUNT(DISTINCT uid)",
+    "data_type": "INT",
+    "unit": "人",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT customer_id) 核销人数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_valid = 1",
+    "derived_metric_count": "0",
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "原子指标字典",
+    "source_row": 6
+  },
+  {
+    "asset_id": "metric:A006",
+    "asset_type": "metric",
+    "metric_type": "atomic",
+    "metric_id": "A006",
+    "name": "核销人次",
+    "english_name": "verify_visit_cnt",
+    "business_domain": "核销",
+    "definition": "统计周期内，总核销人次",
+    "formula": "COUNT(DISTINCT verify_date_id)",
+    "data_type": "INT",
+    "unit": "人次",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT count(DISTINCT verify_date_id) 核销人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_valid = 1",
+    "derived_metric_count": "12",
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "原子指标字典",
+    "source_row": 7
+  },
+  {
+    "asset_id": "metric:A007",
+    "asset_type": "metric",
+    "metric_type": "atomic",
+    "metric_id": "A007",
+    "name": "核销订单数",
+    "english_name": "verify_order_cnt",
+    "business_domain": "核销",
+    "definition": "统计周期内，总核销订单数",
+    "formula": "COUNT(DISTINCT order_id)",
+    "data_type": "INT",
+    "unit": "单",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT count(DISTINCT main_order_id) 核销订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_valid = 1",
+    "derived_metric_count": "19",
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "原子指标字典",
+    "source_row": 8
+  },
+  {
+    "asset_id": "metric:A008",
+    "asset_type": "metric",
+    "metric_type": "atomic",
+    "metric_id": "A008",
+    "name": "支付gmv",
+    "english_name": "pay_gmv",
+    "business_domain": "支付",
+    "definition": "统计周期内，总支付gmv(剔除当日退款)",
+    "formula": "SUM(金额字段)",
+    "data_type": "DECIMAL",
+    "unit": "元",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "select sum(pay_gmv) as 支付gmv\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_paydate_cash = 0\n;",
+    "derived_metric_count": "4",
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "原子指标字典",
+    "source_row": 9
+  },
+  {
+    "asset_id": "metric:A009",
+    "asset_type": "metric",
+    "metric_type": "atomic",
+    "metric_id": "A009",
+    "name": "支付订单数",
+    "english_name": "pay_order_cnt",
+    "business_domain": "支付",
+    "definition": "统计周期内，总支付订单数(剔除当日退款)",
+    "formula": "COUNT(DISTINCT order_id)",
+    "data_type": "INT",
+    "unit": "单",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "select count(disticnt main_order_id) as 支付订单数\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_paydate_cash = 0\n;",
+    "derived_metric_count": "6",
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "原子指标字典",
+    "source_row": 10
+  },
+  {
+    "asset_id": "metric:A010",
+    "asset_type": "metric",
+    "metric_type": "atomic",
+    "metric_id": "A010",
+    "name": "支付人数",
+    "english_name": "pay_user_cnt",
+    "business_domain": "支付",
+    "definition": "统计周期内，总支付人数(剔除当日退款)",
+    "formula": "COUNT(DISTINCT uid)",
+    "data_type": "INT",
+    "unit": "人",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT uid) as 支付人数\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_paydate_cash = 0\n;",
+    "derived_metric_count": "4",
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "原子指标字典",
+    "source_row": 11
+  },
+  {
+    "asset_id": "metric:A011",
+    "asset_type": "metric",
+    "metric_type": "atomic",
+    "metric_id": "A011",
+    "name": "支付客单价",
+    "english_name": "pay_avg_price",
+    "business_domain": "支付",
+    "definition": "统计周期内，总支付GMV/总支付人次(剔除当日退款)",
+    "formula": "SUM(收入) / COUNT(DISTINCT 人次)",
+    "data_type": "DECIMAL",
+    "unit": "元/人次",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT sum(pay_gmv)/count(distinct concat(uid,pay_date)) as 支付客单价\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_paydate_cash = 0\n;",
+    "derived_metric_count": "4",
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "原子指标字典",
+    "source_row": 12
+  },
+  {
+    "asset_id": "metric:A012",
+    "asset_type": "metric",
+    "metric_type": "atomic",
+    "metric_id": "A012",
+    "name": "待核销gmv",
+    "english_name": "pending_verify_gmv",
+    "business_domain": "支付",
+    "definition": "统计周期内，总待核销gmv",
+    "formula": "SUM(金额字段)",
+    "data_type": "DECIMAL",
+    "unit": "元",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT\nsum(left_gmv) as 待核销gmv\nFROM soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND left_num > 0\n;",
+    "derived_metric_count": "4",
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "原子指标字典",
+    "source_row": 13
+  },
+  {
+    "asset_id": "metric:A013",
+    "asset_type": "metric",
+    "metric_type": "atomic",
+    "metric_id": "A013",
+    "name": "待核销服务点",
+    "english_name": "pending_verify_sp",
+    "business_domain": "支付",
+    "definition": "统计周期内，总待核销服务点",
+    "formula": "SUM(exe_cnt)",
+    "data_type": "INT",
+    "unit": "个",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT\nsum(left_num) as 待核销服务点\nFROM soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND left_num > 0\n;",
+    "derived_metric_count": "4",
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "原子指标字典",
+    "source_row": 14
+  },
+  {
+    "asset_id": "metric:A014",
+    "asset_type": "metric",
+    "metric_type": "atomic",
+    "metric_id": "A014",
+    "name": "待核销订单数",
+    "english_name": "pending_verify_order_cnt",
+    "business_domain": "支付",
+    "definition": "统计周期内，总待核销订单数",
+    "formula": "COUNT(DISTINCT order_id)",
+    "data_type": "INT",
+    "unit": "单",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT\nCOUNT(DISTINCT main_order_id) as 待核销订单数\nFROM soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND left_num > 0\n;",
+    "derived_metric_count": "0",
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "原子指标字典",
+    "source_row": 15
+  },
+  {
+    "asset_id": "metric:A015",
+    "asset_type": "metric",
+    "metric_type": "atomic",
+    "metric_id": "A015",
+    "name": "升单订单数",
+    "english_name": "upsell_order_cnt",
+    "business_domain": "核销",
+    "definition": "统计周期内，升单的总订单数",
+    "formula": "COUNT(DISTINCT order_id)",
+    "data_type": "INT",
+    "unit": "单",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT\nCOUNT(DISTINCT main_order_id) as 升单订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND is_valid = 1",
+    "derived_metric_count": "9",
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "原子指标字典",
+    "source_row": 16
+  },
+  {
+    "asset_id": "metric:A016",
+    "asset_type": "metric",
+    "metric_type": "atomic",
+    "metric_id": "A016",
+    "name": "升单人数",
+    "english_name": "upsell_user_cnt",
+    "business_domain": "核销",
+    "definition": "统计周期内，升单的总用户数",
+    "formula": "COUNT(DISTINCT uid)",
+    "data_type": "INT",
+    "unit": "人",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT\nCOUNT(DISTINCT customer_id) AS 升单人数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND is_valid = 1",
+    "derived_metric_count": "9",
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "原子指标字典",
+    "source_row": 17
+  },
+  {
+    "asset_id": "metric:A017",
+    "asset_type": "metric",
+    "metric_type": "atomic",
+    "metric_id": "A017",
+    "name": "升单人次",
+    "english_name": "upsell_visit_cnt",
+    "business_domain": "核销",
+    "definition": "统计周期内，升单的总人次",
+    "formula": "COUNT(DISTINCT verify_date_id)",
+    "data_type": "INT",
+    "unit": "人次",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT verify_date_id) AS 升单人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND is_valid = 1",
+    "derived_metric_count": "9",
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "原子指标字典",
+    "source_row": 18
+  },
+  {
+    "asset_id": "metric:A018",
+    "asset_type": "metric",
+    "metric_type": "atomic",
+    "metric_id": "A018",
+    "name": "库存数",
+    "english_name": "inventory_cnt",
+    "business_domain": "库存",
+    "definition": "截止至今，总库存数量",
+    "formula": "",
+    "data_type": "INT",
+    "unit": "件",
+    "source_tables": [
+      "soyoung_dw.dws_qy_sc_ware_stock_stats_all_d"
+    ],
+    "sql": "SELECT ware_name,\nROUND(SUM(warehouse_stock_num_td), 0) AS 库存数\nFROM soyoung_dw.dws_qy_sc_ware_stock_stats_all_d\nWHERE pt = DATE_SUB(CURRENT_DATE(), 1)\nGROUP BY ware_name",
+    "derived_metric_count": "0",
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "原子指标字典",
+    "source_row": 19
+  },
+  {
+    "asset_id": "metric:A019",
+    "asset_type": "metric",
+    "metric_type": "atomic",
+    "metric_id": "A019",
+    "name": "相控微针升单率",
+    "english_name": "micro_needle_upsell_rate",
+    "business_domain": "核销",
+    "definition": "统计周期内，原单为相控微针且当日发生升单的核销人次/相控微针原单核销人次",
+    "formula": "分子指标 / 分母指标",
+    "data_type": "DECIMAL",
+    "unit": "%",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT a.standard_name ,COUNT(DISTINCT IF(b.verify_date_id IS NOT NULL,a.verify_date_id,NULL)) / COUNT(DISTINCT a.verify_date_id)升单率\nFROM (\nSELECT standard_name\n,verify_date_id\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nand is_valid = 1\nAND standard_name REGEXP '相控微针'\nAND ord_up_type_name = '原单'\n) a\nLEFT JOIN (\nSELECT\nstandard_name\n,verify_date_id\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND ord_up_type_name = '升单'\nAND is_valid = 1\n) b\nON a.verify_date_id = b.verify_date_id\nGROUP BY a.standard_name\n;",
+    "derived_metric_count": "0",
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "原子指标字典",
+    "source_row": 20
+  },
+  {
+    "asset_id": "metric:D001",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D001",
+    "name": "新客核销gmv",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，新客核销gmv之和",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(exe_amount) 新客核销gmv\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_new = 1\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销gmv"
+    ],
+    "dimension_slices": [
+      "新客/老客"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 2
+  },
+  {
+    "asset_id": "metric:D002",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D002",
+    "name": "老客核销gmv",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，老客核销gmv之和",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(exe_amount) 老客核销gmv\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_new = 0\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销gmv"
+    ],
+    "dimension_slices": [
+      "新客/老客"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 3
+  },
+  {
+    "asset_id": "metric:D003",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D003",
+    "name": "大师团核销gmv",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，大师团核销gmv之和",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(exe_amount) 大师团核销gmv\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category = '大师团'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销gmv"
+    ],
+    "dimension_slices": [
+      "大师团"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 4
+  },
+  {
+    "asset_id": "metric:D004",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D004",
+    "name": "大单品核销gmv",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，收入分类为大单品的核销gmv之和",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(exe_amount) 大单品核销gmv\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category = '大单品'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销gmv"
+    ],
+    "dimension_slices": [
+      "大单品/常规品"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 5
+  },
+  {
+    "asset_id": "metric:D005",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D005",
+    "name": "常规品核销gmv",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，常规品核销gmv之和",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(exe_amount) 常规品核销gmv\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category ='常规品'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销gmv"
+    ],
+    "dimension_slices": [
+      "大单品/常规品"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 6
+  },
+  {
+    "asset_id": "metric:D006",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D006",
+    "name": "私域核销gmv",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，获客渠道为私域的所有用户核销gmv之和",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(exe_amount) 私域核销gmv\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel='私域'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销gmv"
+    ],
+    "dimension_slices": [
+      "获客渠道"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 7
+  },
+  {
+    "asset_id": "metric:D007",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D007",
+    "name": "公域核销gmv",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，获客渠道为公域的所有用户核销gmv之和",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(exe_amount) 公域核销gmv\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel='公域'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销gmv"
+    ],
+    "dimension_slices": [
+      "获客渠道"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 8
+  },
+  {
+    "asset_id": "metric:D008",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D008",
+    "name": "老带新核销gmv",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，获客渠道为老带新的所有用户核销gmv之和",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(exe_amount) 老带新核销gmv\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel='老带新'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销gmv"
+    ],
+    "dimension_slices": [
+      "获客渠道"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 9
+  },
+  {
+    "asset_id": "metric:D009",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D009",
+    "name": "BBL HERO核销gmv",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，爱拉丝提核销gmv之和",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(exe_amount) BBL HERO核销gmv\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND standard_name REGEXP 'BBL HERO'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销gmv"
+    ],
+    "dimension_slices": [
+      "品项"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 10
+  },
+  {
+    "asset_id": "metric:D010",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D010",
+    "name": "新客核销收入",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，新客核销收入之和",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(exe_income) 新客核销收入\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_new = 1\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销收入"
+    ],
+    "dimension_slices": [
+      "新客/老客"
+    ],
+    "dashboard_names": [
+      "用户KPI看板",
+      "用户整体看板"
+    ],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 11
+  },
+  {
+    "asset_id": "metric:D011",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D011",
+    "name": "老客核销收入",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，老客核销收入之和",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(exe_income) 老客核销收入\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_new = 0\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销收入"
+    ],
+    "dimension_slices": [
+      "新客/老客"
+    ],
+    "dashboard_names": [
+      "用户KPI看板"
+    ],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 12
+  },
+  {
+    "asset_id": "metric:D012",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D012",
+    "name": "大师团核销收入",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，大师团核销收入之和",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(exe_income) 大师团核销收入\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category='大师团'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销收入"
+    ],
+    "dimension_slices": [
+      "大师团"
+    ],
+    "dashboard_names": [
+      "连锁品项总览"
+    ],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 13
+  },
+  {
+    "asset_id": "metric:D013",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D013",
+    "name": "大单品核销收入",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，收入分类为大单品的核销收入之和",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(exe_income) 大单品核销收入\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category='大单品'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销收入"
+    ],
+    "dimension_slices": [
+      "大单品/常规品"
+    ],
+    "dashboard_names": [
+      "连锁品项分析",
+      "连锁品项总览"
+    ],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 14
+  },
+  {
+    "asset_id": "metric:D014",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D014",
+    "name": "常规品核销收入",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，常规品核销收入之和",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(exe_income) 常规品核销收入\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category='常规品'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销收入"
+    ],
+    "dimension_slices": [
+      "大单品/常规品"
+    ],
+    "dashboard_names": [
+      "连锁品项总览"
+    ],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 15
+  },
+  {
+    "asset_id": "metric:D015",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D015",
+    "name": "私域核销收入",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，获客渠道为私域的所有用户核销收入之和",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(exe_income) 私域核销收入\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel = '私域'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销收入"
+    ],
+    "dimension_slices": [
+      "获客渠道"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 16
+  },
+  {
+    "asset_id": "metric:D016",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D016",
+    "name": "公域核销收入",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，获客渠道为公域的所有用户核销收入之和",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(exe_income) 公域核销收入\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel = '公域'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销收入"
+    ],
+    "dimension_slices": [
+      "获客渠道"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 17
+  },
+  {
+    "asset_id": "metric:D017",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D017",
+    "name": "老带新核销收入",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，获客渠道为老带新的所有用户核销收入之和",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(exe_income) 老带新核销收入\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel = '老带新'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销收入"
+    ],
+    "dimension_slices": [
+      "获客渠道"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 18
+  },
+  {
+    "asset_id": "metric:D018",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D018",
+    "name": "BBL HERO核销收入",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，BBL HERO核销收入之和",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(exe_income) BBL HERO核销收入\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND standard_name REGEXP 'BBL HERO'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销收入"
+    ],
+    "dimension_slices": [
+      "品项"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 19
+  },
+  {
+    "asset_id": "metric:D019",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D019",
+    "name": "新客核销服务点数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，新客核销服务点之和",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(exe_cnt) 新客核销服务点数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_new = 1\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销服务点数"
+    ],
+    "dimension_slices": [
+      "新客/老客"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 20
+  },
+  {
+    "asset_id": "metric:D020",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D020",
+    "name": "老客核销服务点数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，老客核销服务点之和",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(exe_cnt) 老客核销服务点数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_new = 0\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销服务点数"
+    ],
+    "dimension_slices": [
+      "新客/老客"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 21
+  },
+  {
+    "asset_id": "metric:D021",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D021",
+    "name": "大师团核销服务点数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，大师团核销服务点之和",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(exe_cnt) 大师团核销服务点数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category='大师团'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销服务点数"
+    ],
+    "dimension_slices": [
+      "大师团"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 22
+  },
+  {
+    "asset_id": "metric:D022",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D022",
+    "name": "大单品核销服务点数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，收入类别为大单品的核销服务点之和",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(exe_cnt) 大单品核销服务点数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category='大单品'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销服务点数"
+    ],
+    "dimension_slices": [
+      "大单品/常规品"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 23
+  },
+  {
+    "asset_id": "metric:D023",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D023",
+    "name": "常规品核销服务点数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，常规品核销服务点之和",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(exe_cnt) 常规品核销服务点数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category='常规品'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销服务点数"
+    ],
+    "dimension_slices": [
+      "大单品/常规品"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 24
+  },
+  {
+    "asset_id": "metric:D024",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D024",
+    "name": "私域核销服务点数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，获客渠道为私域的所有用户核销服务点之和",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(exe_cnt) 私域核销服务点数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel = '私域'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销服务点数"
+    ],
+    "dimension_slices": [
+      "获客渠道"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 25
+  },
+  {
+    "asset_id": "metric:D025",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D025",
+    "name": "公域核销服务点数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，获客渠道为公域的所有用户核销服务点之和",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(exe_cnt) 公域核销服务点数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel = '公域'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销服务点数"
+    ],
+    "dimension_slices": [
+      "获客渠道"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 26
+  },
+  {
+    "asset_id": "metric:D026",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D026",
+    "name": "老带新核销服务点数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，获客渠道为老带新的所有用户核销服务点之和",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(exe_cnt) 老带新核销服务点数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel = '老带新'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销服务点数"
+    ],
+    "dimension_slices": [
+      "获客渠道"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 27
+  },
+  {
+    "asset_id": "metric:D027",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D027",
+    "name": "BBL HERO核销服务点数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，爱拉丝提核销服务点之和",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(exe_cnt) BBL HERO核销服务点数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND standard_name REGEXP 'BBL HERO'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销服务点数"
+    ],
+    "dimension_slices": [
+      "品项"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 28
+  },
+  {
+    "asset_id": "metric:D028",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D028",
+    "name": "新客核销用户数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，新客核销总人数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT customer_id) 新客核销用户数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_new = 1\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销用户数"
+    ],
+    "dimension_slices": [
+      "新客/老客"
+    ],
+    "dashboard_names": [
+      "信息流网咨看板"
+    ],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 29
+  },
+  {
+    "asset_id": "metric:D029",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D029",
+    "name": "老客核销用户数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，老客核销总人数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT customer_id) 老客核销用户数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_new = 0\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销用户数"
+    ],
+    "dimension_slices": [
+      "新客/老客"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 30
+  },
+  {
+    "asset_id": "metric:D030",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D030",
+    "name": "大师团核销用户数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，大师团核销总人数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT customer_id) 大师团核销用户数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category = '大师团'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销用户数"
+    ],
+    "dimension_slices": [
+      "大师团"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 31
+  },
+  {
+    "asset_id": "metric:D031",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D031",
+    "name": "大单品核销用户数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，收入类别为大单品的核销总人数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT customer_id) 大单品核销用户数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category = '大单品'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销用户数"
+    ],
+    "dimension_slices": [
+      "大单品/常规品"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 32
+  },
+  {
+    "asset_id": "metric:D032",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D032",
+    "name": "大单品品项核销用户数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，所有大单品品项核销总人数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT customer_id) 大单品核销用户数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND standard_name REGEXP 'BBL HERO|奇迹童颜|新一代热玛吉|爱拉丝提'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销用户数"
+    ],
+    "dimension_slices": [
+      "大单品品项"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 33
+  },
+  {
+    "asset_id": "metric:D033",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D033",
+    "name": "常规品核销用户数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，常规品核销总人数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT customer_id) 常规品核销用户数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category = '常规品'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销用户数"
+    ],
+    "dimension_slices": [
+      "大单品/常规品"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 34
+  },
+  {
+    "asset_id": "metric:D034",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D034",
+    "name": "私域核销用户数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，获客渠道为私域的所有用户核销总人数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT customer_id) 私域核销用户数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel='私域'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销用户数"
+    ],
+    "dimension_slices": [
+      "获客渠道"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 35
+  },
+  {
+    "asset_id": "metric:D035",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D035",
+    "name": "公域核销用户数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，获客渠道为公域的所有用户核销总人数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT customer_id) 公域核销用户数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel='公域'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销用户数"
+    ],
+    "dimension_slices": [
+      "获客渠道"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 36
+  },
+  {
+    "asset_id": "metric:D036",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D036",
+    "name": "老带新核销用户数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，获客渠道为老带新的所有用户核销总人数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT customer_id) 老带新核销用户数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel='老带新'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销用户数"
+    ],
+    "dimension_slices": [
+      "获客渠道"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 37
+  },
+  {
+    "asset_id": "metric:D037",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D037",
+    "name": "BBL HERO核销用户数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，爱拉丝提核销总人数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT customer_id) BBL HERO核销用户数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND standard_name REGEXP 'BBL HERO'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销用户数"
+    ],
+    "dimension_slices": [
+      "品项"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 38
+  },
+  {
+    "asset_id": "metric:D038",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D038",
+    "name": "新客核销人次",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，新客核销总人次",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT verify_date_id) 新客核销人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_new = 1\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销人次"
+    ],
+    "dimension_slices": [
+      "新客/老客"
+    ],
+    "dashboard_names": [
+      "用户整体看板"
+    ],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 39
+  },
+  {
+    "asset_id": "metric:D039",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D039",
+    "name": "老客核销人次",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，老客核销总人次",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT verify_date_id) 老客核销人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_new = 0\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销人次"
+    ],
+    "dimension_slices": [
+      "新客/老客"
+    ],
+    "dashboard_names": [
+      "用户KPI看板"
+    ],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 40
+  },
+  {
+    "asset_id": "metric:D040",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D040",
+    "name": "大师团核销人次",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，大师团核销总人次",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT verify_date_id) 大师团核销人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category='大师团'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销人次"
+    ],
+    "dimension_slices": [
+      "大师团"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 41
+  },
+  {
+    "asset_id": "metric:D041",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D041",
+    "name": "大单品核销人次",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，收入类别为大单品的核销总人次",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT verify_date_id) 大单品核销人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category='大单品'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销人次"
+    ],
+    "dimension_slices": [
+      "大单品/常规品"
+    ],
+    "dashboard_names": [
+      "连锁品项分析"
+    ],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 42
+  },
+  {
+    "asset_id": "metric:D042",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D042",
+    "name": "大单品品项核销人次",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，所有大单品品项核销总人次",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT verify_date_id) 大单品核销人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND standard_name REGEXP 'BBL HERO|奇迹童颜|新一代热玛吉|爱拉丝提'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销人次"
+    ],
+    "dimension_slices": [
+      "大单品品项"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 43
+  },
+  {
+    "asset_id": "metric:D043",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D043",
+    "name": "常规品核销人次",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，常规品核销总人次",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT verify_date_id) 常规品核销人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category='常规品'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销人次"
+    ],
+    "dimension_slices": [
+      "大单品/常规品"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 44
+  },
+  {
+    "asset_id": "metric:D044",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D044",
+    "name": "私域核销人次",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，获客渠道为私域的所有用户核销总人次",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT verify_date_id) 私域核销人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel='私域'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销人次"
+    ],
+    "dimension_slices": [
+      "获客渠道"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 45
+  },
+  {
+    "asset_id": "metric:D045",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D045",
+    "name": "公域核销人次",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，获客渠道为公域的所有用户核销总人次",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT verify_date_id) 公域核销人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel='公域'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销人次"
+    ],
+    "dimension_slices": [
+      "获客渠道"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 46
+  },
+  {
+    "asset_id": "metric:D046",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D046",
+    "name": "老带新核销人次",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，获客渠道为老带新的所有用户核销总人次",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT verify_date_id) 老带新核销人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel='老带新'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销人次"
+    ],
+    "dimension_slices": [
+      "获客渠道"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 47
+  },
+  {
+    "asset_id": "metric:D047",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D047",
+    "name": "BBL HERO核销人次",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，BBL HERO核销总人次",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT verify_date_id) BBL HERO核销人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND standard_name REGEXP 'BBL HERO'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销人次"
+    ],
+    "dimension_slices": [
+      "品项"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 48
+  },
+  {
+    "asset_id": "metric:D048",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D048",
+    "name": "新客核销订单数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，新客核销总订单数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT count(DISTINCT main_order_id) 新客核销订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_new = 1\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销订单数"
+    ],
+    "dimension_slices": [
+      "新客/老客"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 49
+  },
+  {
+    "asset_id": "metric:D049",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D049",
+    "name": "新客0元核销订单数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，新客0元核销总订单数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT count(DISTINCT main_order_id) 新客0元核销订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_new = 1\nAND is_valid = 1\nAND exe_income = 0",
+    "atomic_metric_ids": [
+      "核销订单数"
+    ],
+    "dimension_slices": [
+      "新客/老客"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 50
+  },
+  {
+    "asset_id": "metric:D050",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D050",
+    "name": "老客核销订单数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，老客核销总订单数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT count(DISTINCT main_order_id) 老客核销订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_new = 0\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销订单数"
+    ],
+    "dimension_slices": [
+      "新客/老客"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 51
+  },
+  {
+    "asset_id": "metric:D051",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D051",
+    "name": "老客0元核销订单数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，老客0元核销总订单数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT count(DISTINCT main_order_id) 老客0元核销订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_new = 0\nAND is_valid = 1\nAND exe_income = 0",
+    "atomic_metric_ids": [
+      "核销订单数"
+    ],
+    "dimension_slices": [
+      "新客/老客"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 52
+  },
+  {
+    "asset_id": "metric:D052",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D052",
+    "name": "大师团核销订单数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，大师团核销总订单数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT count(DISTINCT main_order_id) 大师团核销订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category = '大师团'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销订单数"
+    ],
+    "dimension_slices": [
+      "大师团"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 53
+  },
+  {
+    "asset_id": "metric:D053",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D053",
+    "name": "大师团0元核销订单数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，大师团0元核销总订单数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT count(DISTINCT main_order_id) 大师团0元核销订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category = '大师团'\nAND is_valid = 1\nAND exe_income = 0",
+    "atomic_metric_ids": [
+      "核销订单数"
+    ],
+    "dimension_slices": [
+      "大师团"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 54
+  },
+  {
+    "asset_id": "metric:D054",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D054",
+    "name": "大单品核销订单数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，收入类别为大单品的核销总订单数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT count(DISTINCT main_order_id) 大单品核销订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category = '大单品'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销订单数"
+    ],
+    "dimension_slices": [
+      "大单品/常规品"
+    ],
+    "dashboard_names": [
+      "连锁品项分析"
+    ],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 55
+  },
+  {
+    "asset_id": "metric:D055",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D055",
+    "name": "大单品品项核销订单数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，所有大单品品项核销总订单数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT count(DISTINCT main_order_id) 大单品核销订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND standard_name REGEXP 'BBL HERO|奇迹童颜|新一代热玛吉|爱拉丝提'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销订单数"
+    ],
+    "dimension_slices": [
+      "大单品品项"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 56
+  },
+  {
+    "asset_id": "metric:D056",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D056",
+    "name": "大单品0元核销订单数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，大单品0元核销订单数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT count(DISTINCT main_order_id) 大单品0元核销订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category = '大单品'\nAND is_valid = 1\nAND exe_income = 0",
+    "atomic_metric_ids": [
+      "核销订单数"
+    ],
+    "dimension_slices": [
+      "大单品/常规品"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 57
+  },
+  {
+    "asset_id": "metric:D057",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D057",
+    "name": "常规品核销订单数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，常规品核销总订单数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT count(DISTINCT main_order_id) 常规品核销订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category = '常规品'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销订单数"
+    ],
+    "dimension_slices": [
+      "大单品/常规品"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 58
+  },
+  {
+    "asset_id": "metric:D058",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D058",
+    "name": "常规品0元核销订单数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，常规品0元单核销总订单数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT count(DISTINCT main_order_id) 常规品0元核销订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category = '常规品'\nAND is_valid = 1\nAND exe_income = 0",
+    "atomic_metric_ids": [
+      "核销订单数"
+    ],
+    "dimension_slices": [
+      "大单品/常规品"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 59
+  },
+  {
+    "asset_id": "metric:D059",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D059",
+    "name": "私域核销订单数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，获客渠道为私域的所有用户核销总订单数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT count(DISTINCT main_order_id) 私域核销订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel = '私域'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销订单数"
+    ],
+    "dimension_slices": [
+      "获客渠道"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 60
+  },
+  {
+    "asset_id": "metric:D060",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D060",
+    "name": "私域0元核销订单数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，获客渠道为私域的所有用户0元核销总订单数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT count(DISTINCT main_order_id) 私域0元核销订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel = '私域'\nAND is_valid = 1\nAND exe_income = 0",
+    "atomic_metric_ids": [
+      "核销订单数"
+    ],
+    "dimension_slices": [
+      "获客渠道"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 61
+  },
+  {
+    "asset_id": "metric:D061",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D061",
+    "name": "公域核销订单数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，获客渠道为公域的所有用户核销总订单数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT count(DISTINCT main_order_id) 公域核销订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel = '公域'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销订单数"
+    ],
+    "dimension_slices": [
+      "获客渠道"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 62
+  },
+  {
+    "asset_id": "metric:D062",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D062",
+    "name": "公域0元核销订单数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，获客渠道为公域的所有用户0元核销总订单数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT count(DISTINCT main_order_id) 公域0元核销订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel = '公域'\nAND is_valid = 1\nAND exe_income = 0",
+    "atomic_metric_ids": [
+      "核销订单数"
+    ],
+    "dimension_slices": [
+      "获客渠道"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 63
+  },
+  {
+    "asset_id": "metric:D063",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D063",
+    "name": "老带新核销订单数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，获客渠道为老带新的所有用户核销总订单数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT count(DISTINCT main_order_id) 老带新核销订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel = '老带新'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销订单数"
+    ],
+    "dimension_slices": [
+      "获客渠道"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 64
+  },
+  {
+    "asset_id": "metric:D064",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D064",
+    "name": "老带新0元核销订单数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，获客渠道为老带新的所有用户0元核销总订单数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT count(DISTINCT main_order_id) 老带新0元核销订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel = '老带新'\nAND is_valid = 1\nAND exe_income = 0",
+    "atomic_metric_ids": [
+      "核销订单数"
+    ],
+    "dimension_slices": [
+      "获客渠道"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 65
+  },
+  {
+    "asset_id": "metric:D065",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D065",
+    "name": "BBL HERO核销订单数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，爱拉丝提核销总订单数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT count(DISTINCT main_order_id) BBL HERO核销订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND standard_name REGEXP 'BBL HERO'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销订单数"
+    ],
+    "dimension_slices": [
+      "品项"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 66
+  },
+  {
+    "asset_id": "metric:D066",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D066",
+    "name": "BBL HERO0元核销订单数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，BBL HERO(爱拉丝提)0元核销总订单数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT count(DISTINCT main_order_id) BBL HERO0元核销订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND standard_name REGEXP 'BBL HERO'\nAND is_valid = 1\nAND exe_income = 0",
+    "atomic_metric_ids": [
+      "核销订单数"
+    ],
+    "dimension_slices": [
+      "品项"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 67
+  },
+  {
+    "asset_id": "metric:D067",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D067",
+    "name": "新客核销客单价",
+    "english_name": "",
+    "business_domain": "复合指标",
+    "definition": "统计周期内，新客核销收入/新客核销人次",
+    "formula": "新客核销收入 / 新客核销人次",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(exe_income)/count(DISTINCT verify_date_id) 新客核销客单价\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_new = 1\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销客单价"
+    ],
+    "dimension_slices": [
+      "新客/老客"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 68
+  },
+  {
+    "asset_id": "metric:D068",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D068",
+    "name": "老客核销客单价",
+    "english_name": "",
+    "business_domain": "复合指标",
+    "definition": "统计周期内，老客核销收入/老客核销人次",
+    "formula": "老客核销收入 / 老客核销人次",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(exe_income)/count(DISTINCT verify_date_id) 老客核销客单价\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_new = 0\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销客单价"
+    ],
+    "dimension_slices": [
+      "新客/老客"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 69
+  },
+  {
+    "asset_id": "metric:D069",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D069",
+    "name": "大师团核销客单价",
+    "english_name": "",
+    "business_domain": "复合指标",
+    "definition": "统计周期内，大师团核销收入/大师团核销人次",
+    "formula": "大师团核销收入 / 大师团核销人次",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(exe_income)/count(DISTINCT verify_date_id) 大师团核销客单价\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category='大师团'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销客单价"
+    ],
+    "dimension_slices": [
+      "大师团"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 70
+  },
+  {
+    "asset_id": "metric:D070",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D070",
+    "name": "大单品核销客单价",
+    "english_name": "",
+    "business_domain": "复合指标",
+    "definition": "统计周期内，大单品的核销收入/收入类别为大单品的核销人次",
+    "formula": "大单品核销收入 / 大单品核销人次",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(exe_income)/count(DISTINCT verify_date_id) 大单品核销客单价\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category='大单品'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销客单价"
+    ],
+    "dimension_slices": [
+      "大单品/常规品"
+    ],
+    "dashboard_names": [
+      "连锁品项分析"
+    ],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 71
+  },
+  {
+    "asset_id": "metric:D071",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D071",
+    "name": "常规品核销客单价",
+    "english_name": "",
+    "business_domain": "复合指标",
+    "definition": "统计周期内，常规品核销收入/常规品核销人次",
+    "formula": "常规品核销收入 / 常规品核销人次",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(exe_income)/count(DISTINCT verify_date_id) 常规品核销客单价\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category='常规品'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销客单价"
+    ],
+    "dimension_slices": [
+      "大单品/常规品"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 72
+  },
+  {
+    "asset_id": "metric:D072",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D072",
+    "name": "私域核销客单价",
+    "english_name": "",
+    "business_domain": "复合指标",
+    "definition": "统计周期内，获客渠道为私域的所有用户核销收入之和/获客渠道为私域的所有用户核销人次",
+    "formula": "私域核销收入 / 私域核销人次",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(exe_income)/count(DISTINCT verify_date_id) 私域核销客单价\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel = '私域'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销客单价"
+    ],
+    "dimension_slices": [
+      "获客渠道"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 73
+  },
+  {
+    "asset_id": "metric:D073",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D073",
+    "name": "公域核销客单价",
+    "english_name": "",
+    "business_domain": "复合指标",
+    "definition": "统计周期内，获客渠道为公域的所有用户核销收入/获客渠道为公域的所有用户核销人次",
+    "formula": "公域核销收入 / 公域核销人次",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(exe_income)/count(DISTINCT verify_date_id) 公域核销客单价\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel = '公域'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销客单价"
+    ],
+    "dimension_slices": [
+      "获客渠道"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 74
+  },
+  {
+    "asset_id": "metric:D074",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D074",
+    "name": "老带新核销客单价",
+    "english_name": "",
+    "business_domain": "复合指标",
+    "definition": "统计周期内，获客渠道为老带新的所有用户核销收入之和/获客渠道为老带新的所有用户核销人次",
+    "formula": "老带新核销收入 / 老带新核销人次",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(exe_income)/count(DISTINCT verify_date_id) 老带新核销客单价\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel = '老带新'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销客单价"
+    ],
+    "dimension_slices": [
+      "获客渠道"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 75
+  },
+  {
+    "asset_id": "metric:D075",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D075",
+    "name": "BBL HERO核销客单价",
+    "english_name": "",
+    "business_domain": "复合指标",
+    "definition": "统计周期内，BBL HERO核销收入之和/BBL HERO核销人次",
+    "formula": "BBL HERO核销收入 / BBL HERO核销人次",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(exe_income)/count(DISTINCT verify_date_id) BBL HERO核销客单价\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND standard_name REGEXP 'BBL HERO'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "核销客单价"
+    ],
+    "dimension_slices": [
+      "品项"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 76
+  },
+  {
+    "asset_id": "metric:D076",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D076",
+    "name": "相控微针升单客单价",
+    "english_name": "",
+    "business_domain": "复合指标",
+    "definition": "统计周期内，原单为相控微针且当日发生升单的核销收入之和/原单为相控微针且当日发生升单的核销人次",
+    "formula": "相控微针升单客单价核销收入 / 相控微针升单客单价核销人次",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT a.standard_name ,\nsum(if(a.verify_date_id = b.verify_date_id,b.exe_income,0))/nullif(count(distinct if(b.verify_date_id is not null,a.verify_date_id,null)),0) 相控微针升单客单价\nFROM (\nSELECT standard_name\n,verify_date_id\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nand is_valid = 1\nAND standard_name REGEXP '相控微针'\nAND ord_up_type_name = '原单'\n) a\nLEFT JOIN (\nSELECT\nstandard_name\n,verify_date_id\n,exe_income\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND ord_up_type_name = '升单'\nAND is_valid = 1\n) b\nON a.verify_date_id = b.verify_date_id\nGROUP BY a.standard_name\n;",
+    "atomic_metric_ids": [
+      "核销客单价"
+    ],
+    "dimension_slices": [
+      "品项"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 77
+  },
+  {
+    "asset_id": "metric:D077",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D077",
+    "name": "新客支付订单数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，新客支付总订单数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT main_order_id) AS 新客支付订单数\nFROM soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_pay_new=1\nAND is_paydate_cash = 0\n;",
+    "atomic_metric_ids": [
+      "支付订单数"
+    ],
+    "dimension_slices": [
+      "新客/老客"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 78
+  },
+  {
+    "asset_id": "metric:D078",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D078",
+    "name": "新客0元支付订单数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，新客支付金额为0的支付总订单数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT main_order_id) AS 新客0元支付订单数\nFROM soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_pay_new=1\nAND is_paydate_cash = 0\nAND pay_gmv = 0\n;",
+    "atomic_metric_ids": [
+      "支付订单数"
+    ],
+    "dimension_slices": [
+      "新客/老客"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 79
+  },
+  {
+    "asset_id": "metric:D079",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D079",
+    "name": "老客支付订单数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，老客支付总订单数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT main_order_id) AS 老客支付订单数\nFROM soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_pay_new=0\nAND is_paydate_cash = 0\n;",
+    "atomic_metric_ids": [
+      "支付订单数"
+    ],
+    "dimension_slices": [
+      "新客/老客"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 80
+  },
+  {
+    "asset_id": "metric:D080",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D080",
+    "name": "老客0元支付订单数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，老客支付金额为0的支付总订单数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT main_order_id) AS 老客0元支付订单数\nFROM soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_pay_new=0\nAND is_paydate_cash = 0\nAND pay_gmv = 0\n;",
+    "atomic_metric_ids": [
+      "支付订单数"
+    ],
+    "dimension_slices": [
+      "新客/老客"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 81
+  },
+  {
+    "asset_id": "metric:D081",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D081",
+    "name": "大单品支付订单数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，所有大单品支付总订单数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT main_order_id) AS 大单品支付订单数\nFROM soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category = '大单品'\nAND is_paydate_cash = 0\n;",
+    "atomic_metric_ids": [
+      "支付订单数"
+    ],
+    "dimension_slices": [
+      "大单品/常规品"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 82
+  },
+  {
+    "asset_id": "metric:D082",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D082",
+    "name": "BBL HERO支付订单数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，BBL HERO支付总订单数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT main_order_id) AS BBL HERO支付订单数\nFROM soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND standard_name REGEXP 'BBL HERO'\nAND is_paydate_cash = 0\n;",
+    "atomic_metric_ids": [
+      "支付订单数"
+    ],
+    "dimension_slices": [
+      "品项"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 83
+  },
+  {
+    "asset_id": "metric:D083",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D083",
+    "name": "新客支付gmv",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，新客支付总gmv",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "select sum(pay_gmv) as 新客支付gmv\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_pay_new=1\nAND is_paydate_cash = 0\n;",
+    "atomic_metric_ids": [
+      "支付gmv"
+    ],
+    "dimension_slices": [
+      "新客/老客"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 84
+  },
+  {
+    "asset_id": "metric:D084",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D084",
+    "name": "老客支付gmv",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，老客支付总gmv",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "select sum(pay_gmv) as 老客支付gmv\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_pay_new=0\nAND is_paydate_cash = 0\n;",
+    "atomic_metric_ids": [
+      "支付gmv"
+    ],
+    "dimension_slices": [
+      "新客/老客"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 85
+  },
+  {
+    "asset_id": "metric:D085",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D085",
+    "name": "大单品支付gmv",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，所有大单品品项支付总gmv",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "select sum(pay_gmv) as 大单品支付gmv\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category = \"大单品\"\nAND is_paydate_cash = 0\n;",
+    "atomic_metric_ids": [
+      "支付gmv"
+    ],
+    "dimension_slices": [
+      "大单品/常规品"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 86
+  },
+  {
+    "asset_id": "metric:D086",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D086",
+    "name": "BBL HERO支付gmv",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，BBL HERO支付总gmv",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "select sum(pay_gmv) as BBL HERO支付gmv\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND standard_name REGEXP 'BBL HERO'\nAND is_paydate_cash = 0\n;",
+    "atomic_metric_ids": [
+      "支付gmv"
+    ],
+    "dimension_slices": [
+      "品项"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 87
+  },
+  {
+    "asset_id": "metric:D087",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D087",
+    "name": "新客支付人数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，新客支付总人数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT uid) as 新客支付人数\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_pay_new=1\nAND is_paydate_cash = 0\n;",
+    "atomic_metric_ids": [
+      "支付人数"
+    ],
+    "dimension_slices": [
+      "新客/老客"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 88
+  },
+  {
+    "asset_id": "metric:D088",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D088",
+    "name": "老客支付人数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，老客支付总人数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT uid) as 老客支付人数\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_pay_new=0\nAND is_paydate_cash = 0\n;",
+    "atomic_metric_ids": [
+      "支付人数"
+    ],
+    "dimension_slices": [
+      "新客/老客"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 89
+  },
+  {
+    "asset_id": "metric:D089",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D089",
+    "name": "大单品支付人数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，所有大单品品项支付总人数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT uid) as 大单品支付人数\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category = '大单品'\nAND is_paydate_cash = 0\n;",
+    "atomic_metric_ids": [
+      "支付人数"
+    ],
+    "dimension_slices": [
+      "大单品/常规品"
+    ],
+    "dashboard_names": [
+      "连锁品项分析"
+    ],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 90
+  },
+  {
+    "asset_id": "metric:D090",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D090",
+    "name": "BBL HERO支付人数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，BBL HERO支付总人数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT uid) as BBL HERO支付人数\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND standard_name REGEXP 'BBL HERO'\nAND is_paydate_cash = 0\n;",
+    "atomic_metric_ids": [
+      "支付人数"
+    ],
+    "dimension_slices": [
+      "品项"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 91
+  },
+  {
+    "asset_id": "metric:D091",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D091",
+    "name": "新客支付客单价",
+    "english_name": "",
+    "business_domain": "复合指标",
+    "definition": "统计周期内，新客支付总gmv/新客总支付人次",
+    "formula": "新客支付GMV / 新客支付人次",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "select sum(pay_gmv)/count(distinct concat(uid,pay_date)) as 新客支付客单价\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_pay_new=1\nAND is_paydate_cash = 0\n;",
+    "atomic_metric_ids": [
+      "支付客单价"
+    ],
+    "dimension_slices": [
+      "新客/老客"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 92
+  },
+  {
+    "asset_id": "metric:D092",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D092",
+    "name": "老客支付客单价",
+    "english_name": "",
+    "business_domain": "复合指标",
+    "definition": "统计周期内，老客支付总gmv/老客总支付人次",
+    "formula": "老客支付GMV / 老客支付人次",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "select sum(pay_gmv)/count(distinct concat(uid,pay_date)) as 老客支付客单价\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_pay_new=0\nAND is_paydate_cash = 0\n;",
+    "atomic_metric_ids": [
+      "支付客单价"
+    ],
+    "dimension_slices": [
+      "新客/老客"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 93
+  },
+  {
+    "asset_id": "metric:D093",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D093",
+    "name": "大单品支付客单价",
+    "english_name": "",
+    "business_domain": "复合指标",
+    "definition": "统计周期内，所有大单品品项支付总gmv/所有大单品品项总支付人次",
+    "formula": "大单品支付GMV / 大单品支付人次",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "select sum(pay_gmv)/count(distinct concat(uid,pay_date)) as 大单品支付客单价\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category = '大单品'\nAND is_paydate_cash = 0\n;",
+    "atomic_metric_ids": [
+      "支付客单价"
+    ],
+    "dimension_slices": [
+      "大单品/常规品"
+    ],
+    "dashboard_names": [
+      "连锁品项分析"
+    ],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 94
+  },
+  {
+    "asset_id": "metric:D094",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D094",
+    "name": "BBL HERO支付客单价",
+    "english_name": "",
+    "business_domain": "复合指标",
+    "definition": "统计周期内，BBL HERO支付总gmv/BBL HERO总支付人次",
+    "formula": "BBL HERO支付GMV / BBL HERO支付人次",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "select sum(pay_gmv)/count(distinct concat(uid,pay_date)) as BBL HERO支付客单价\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND standard_name REGEXP 'BBL HERO'\nAND is_paydate_cash = 0\n;",
+    "atomic_metric_ids": [
+      "支付客单价"
+    ],
+    "dimension_slices": [
+      "品项"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 95
+  },
+  {
+    "asset_id": "metric:D095",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D095",
+    "name": "新客待核销gmv",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，新客总待核销gmv",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT\nsum(left_gmv) as 新客待核销gmv\nFROM soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_pay_new=1\nAND left_num > 0\n;",
+    "atomic_metric_ids": [
+      "待核销gmv"
+    ],
+    "dimension_slices": [
+      "新客/老客"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 96
+  },
+  {
+    "asset_id": "metric:D096",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D096",
+    "name": "老客待核销gmv",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，老客总待核销gmv",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT\nsum(left_gmv) as 老客待核销gmv\nFROM soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_pay_new=0\nAND left_num > 0\n;",
+    "atomic_metric_ids": [
+      "待核销gmv"
+    ],
+    "dimension_slices": [
+      "新客/老客"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 97
+  },
+  {
+    "asset_id": "metric:D097",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D097",
+    "name": "大单品待核销gmv",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，所有大单品品项总待核销gmv",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT\nsum(left_gmv) as 大单品待核销gmv\nFROM soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category = '大单品'\nAND left_num > 0\n;",
+    "atomic_metric_ids": [
+      "待核销gmv"
+    ],
+    "dimension_slices": [
+      "大单品/常规品"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 98
+  },
+  {
+    "asset_id": "metric:D098",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D098",
+    "name": "BBL HERO待核销gmv",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，BBL HERO总待核销gmv",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT\nsum(left_gmv) as BBL HERO待核销gmv\nFROM soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND standard_name REGEXP 'BBL HERO'\nAND left_num > 0\n;",
+    "atomic_metric_ids": [
+      "待核销gmv"
+    ],
+    "dimension_slices": [
+      "品项"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 99
+  },
+  {
+    "asset_id": "metric:D099",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D099",
+    "name": "新客待核销服务点",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，新客总待核销服务点",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT sum(left_num) as 新客待核销服务点\nFROM soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_pay_new=1\nAND left_num > 0\n;",
+    "atomic_metric_ids": [
+      "待核销服务点"
+    ],
+    "dimension_slices": [
+      "新客/老客"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 100
+  },
+  {
+    "asset_id": "metric:D100",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D100",
+    "name": "老客待核销服务点",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，老客总待核销服务点",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT sum(left_num) as 老客待核销服务点\nFROM soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_pay_new=0\nAND left_num > 0\n;",
+    "atomic_metric_ids": [
+      "待核销服务点"
+    ],
+    "dimension_slices": [
+      "新客/老客"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 101
+  },
+  {
+    "asset_id": "metric:D101",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D101",
+    "name": "大单品待核销服务点",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，所有大单品品项总待核销服务点",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT sum(left_num) as 大单品待核销服务点\nFROM soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category = '大单品'\nAND left_num > 0\n;",
+    "atomic_metric_ids": [
+      "待核销服务点"
+    ],
+    "dimension_slices": [
+      "大单品/常规品"
+    ],
+    "dashboard_names": [
+      "连锁品项分析"
+    ],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 102
+  },
+  {
+    "asset_id": "metric:D102",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D102",
+    "name": "BBL HERO待核销服务点",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，BBL HERO总待核销服务点",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT sum(left_num) as BBL HERO待核销服务点\nFROM soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND standard_name REGEXP 'BBL HERO'\nAND left_num > 0\n;",
+    "atomic_metric_ids": [
+      "待核销服务点"
+    ],
+    "dimension_slices": [
+      "品项"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 103
+  },
+  {
+    "asset_id": "metric:D103",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D103",
+    "name": "新客升单人数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，新客升单人数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT\nCOUNT(DISTINCT uid) AS 新客升单人数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND is_new = 1\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "升单人数"
+    ],
+    "dimension_slices": [
+      "新客/老客"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 104
+  },
+  {
+    "asset_id": "metric:D104",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D104",
+    "name": "老客升单人数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，老客升单人数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT\nCOUNT(DISTINCT uid) AS 老客升单人数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND is_new = 0\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "升单人数"
+    ],
+    "dimension_slices": [
+      "新客/老客"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 105
+  },
+  {
+    "asset_id": "metric:D105",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D105",
+    "name": "大师团升单人数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，大师团升单人数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT\nCOUNT(DISTINCT uid) AS 大师团升单人数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND revenue_category = '大师团'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "升单人数"
+    ],
+    "dimension_slices": [
+      "大师团"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 106
+  },
+  {
+    "asset_id": "metric:D106",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D106",
+    "name": "大单品升单人数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，收入类别为大单品的升单人数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT\nCOUNT(DISTINCT uid) AS 大单品升单人数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND revenue_category = '大单品'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "升单人数"
+    ],
+    "dimension_slices": [
+      "大单品/常规品"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 107
+  },
+  {
+    "asset_id": "metric:D107",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D107",
+    "name": "常规品升单人数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，常规品升单人数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT\nCOUNT(DISTINCT uid) AS 常规品升单人数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND revenue_category = '常规品'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "升单人数"
+    ],
+    "dimension_slices": [
+      "大单品/常规品"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 108
+  },
+  {
+    "asset_id": "metric:D108",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D108",
+    "name": "私域升单人数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，获客渠道为私域的所有用户升单人数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT\nCOUNT(DISTINCT uid) AS 私域升单人数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND cx_first_channel = '私域'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "升单人数"
+    ],
+    "dimension_slices": [
+      "获客渠道"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 109
+  },
+  {
+    "asset_id": "metric:D109",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D109",
+    "name": "公域升单人数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，获客渠道为公域的所有用户升单人数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT\nCOUNT(DISTINCT uid) AS 公域升单人数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND cx_first_channel = '公域'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "升单人数"
+    ],
+    "dimension_slices": [
+      "获客渠道"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 110
+  },
+  {
+    "asset_id": "metric:D110",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D110",
+    "name": "老带新升单人数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，获客渠道为老带新的所有用户升单人数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT\nCOUNT(DISTINCT uid) AS 老带新升单人数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND cx_first_channel = '老带新'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "升单人数"
+    ],
+    "dimension_slices": [
+      "获客渠道"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 111
+  },
+  {
+    "asset_id": "metric:D111",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D111",
+    "name": "BBL HERO升单人数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，BBL HERO升单人数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT\nCOUNT(DISTINCT uid) AS BBL HERO升单人数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND standard_name REGEXP 'BBL HERO'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "升单人数"
+    ],
+    "dimension_slices": [
+      "品项"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 112
+  },
+  {
+    "asset_id": "metric:D112",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D112",
+    "name": "新客升单订单数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，新客升单订单数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT\nCOUNT(DISTINCT main_order_id) as 新客升单订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND is_new = 1\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "升单订单数"
+    ],
+    "dimension_slices": [
+      "新客/老客"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 113
+  },
+  {
+    "asset_id": "metric:D113",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D113",
+    "name": "老客升单订单数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，老客升单订单数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT\nCOUNT(DISTINCT main_order_id) as 老客升单订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND is_new = 0\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "升单订单数"
+    ],
+    "dimension_slices": [
+      "新客/老客"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 114
+  },
+  {
+    "asset_id": "metric:D114",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D114",
+    "name": "大师团升单订单数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，大师团升单订单数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT\nCOUNT(DISTINCT main_order_id) as 大师团升单订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND revenue_category = '大师团'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "升单订单数"
+    ],
+    "dimension_slices": [
+      "大师团"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 115
+  },
+  {
+    "asset_id": "metric:D115",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D115",
+    "name": "大单品升单订单数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，收入类别为大单品的升单订单数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT\nCOUNT(DISTINCT main_order_id) as 大单品升单订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND revenue_category = '大单品'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "升单订单数"
+    ],
+    "dimension_slices": [
+      "大单品/常规品"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 116
+  },
+  {
+    "asset_id": "metric:D116",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D116",
+    "name": "常规品升单订单数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，常规品升单订单数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT\nCOUNT(DISTINCT main_order_id) as 常规品升单订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND revenue_category = '常规品'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "升单订单数"
+    ],
+    "dimension_slices": [
+      "大单品/常规品"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 117
+  },
+  {
+    "asset_id": "metric:D117",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D117",
+    "name": "私域升单订单数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，获客渠道为私域的所有用户升单订单数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT\nCOUNT(DISTINCT main_order_id) as 私域升单订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND cx_first_channel = '私域'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "升单订单数"
+    ],
+    "dimension_slices": [
+      "获客渠道"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 118
+  },
+  {
+    "asset_id": "metric:D118",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D118",
+    "name": "公域升单订单数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，获客渠道为公域的所有用户升单订单数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT\nCOUNT(DISTINCT main_order_id) as 公域升单订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND cx_first_channel = '公域'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "升单订单数"
+    ],
+    "dimension_slices": [
+      "获客渠道"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 119
+  },
+  {
+    "asset_id": "metric:D119",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D119",
+    "name": "老带新升单订单数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，获客渠道为老带新的所有用户升单订单数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT\nCOUNT(DISTINCT main_order_id) as 老带新升单订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND cx_first_channel = '老带新'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "升单订单数"
+    ],
+    "dimension_slices": [
+      "获客渠道"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 120
+  },
+  {
+    "asset_id": "metric:D120",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D120",
+    "name": "BBL HERO升单订单数",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，BBL HERO升单订单数",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT\nCOUNT(DISTINCT main_order_id) as BBL HERO升单订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND standard_name REGEXP 'BBL HERO'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "升单订单数"
+    ],
+    "dimension_slices": [
+      "品项"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 121
+  },
+  {
+    "asset_id": "metric:D121",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D121",
+    "name": "新客升单人次",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，新客升单人次",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT verify_date_id) AS 新客升单人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND is_new = 1\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "升单人次"
+    ],
+    "dimension_slices": [
+      "新客/老客"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 122
+  },
+  {
+    "asset_id": "metric:D122",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D122",
+    "name": "老客升单人次",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，老客升单人次",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT verify_date_id) AS 老客升单人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND is_new = 0\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "升单人次"
+    ],
+    "dimension_slices": [
+      "新客/老客"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 123
+  },
+  {
+    "asset_id": "metric:D123",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D123",
+    "name": "大师团升单人次",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，大师团升单人次",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT verify_date_id) AS 大师团升单人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND revenue_category = '大师团'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "升单人次"
+    ],
+    "dimension_slices": [
+      "大师团"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 124
+  },
+  {
+    "asset_id": "metric:D124",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D124",
+    "name": "大单品升单人次",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，收入类别为大单品的升单人次",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT verify_date_id) AS 大单品升单人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND revenue_category = '大单品'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "升单人次"
+    ],
+    "dimension_slices": [
+      "大单品/常规品"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 125
+  },
+  {
+    "asset_id": "metric:D125",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D125",
+    "name": "常规品品升单人次",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，常规品升单人次",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT verify_date_id) AS 常规品升单人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND revenue_category = '常规品'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "升单人次"
+    ],
+    "dimension_slices": [
+      "大单品/常规品"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 126
+  },
+  {
+    "asset_id": "metric:D126",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D126",
+    "name": "私域升单人次",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，获客渠道为私域的所有用户升单人次",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT verify_date_id) AS 私域升单人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND cx_first_channel = '私域'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "升单人次"
+    ],
+    "dimension_slices": [
+      "获客渠道"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 127
+  },
+  {
+    "asset_id": "metric:D127",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D127",
+    "name": "公域升单人次",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，获客渠道为公域的所有用户升单人次",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT verify_date_id) AS 公域升单人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND cx_first_channel = '公域'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "升单人次"
+    ],
+    "dimension_slices": [
+      "获客渠道"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 128
+  },
+  {
+    "asset_id": "metric:D128",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D128",
+    "name": "老带新升单人次",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，获客渠道为老带新的所有用户升单人次",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT verify_date_id) AS 老带新升单人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND cx_first_channel = '老带新'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "升单人次"
+    ],
+    "dimension_slices": [
+      "获客渠道"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 129
+  },
+  {
+    "asset_id": "metric:D129",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D129",
+    "name": "BBL HERO升单人次",
+    "english_name": "",
+    "business_domain": "衍生指标",
+    "definition": "统计周期内，BBL HERO升单人次",
+    "formula": "",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT verify_date_id) AS BBL HERO升单人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND standard_name REGEXP 'BBL HERO'\nAND is_valid = 1",
+    "atomic_metric_ids": [
+      "升单人次"
+    ],
+    "dimension_slices": [
+      "品项"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 130
+  },
+  {
+    "asset_id": "metric:D130",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D130",
+    "name": "相控微针升单率",
+    "english_name": "",
+    "business_domain": "复合指标",
+    "definition": "统计周期内，原单为相控微针且当日发生升单的核销人次/相控微针原单核销人次",
+    "formula": "升单人次 / 原单核销人次",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT a.standard_name ,COUNT(DISTINCT IF(b.verify_date_id IS NOT NULL,a.verify_date_id,NULL)) / COUNT(DISTINCT a.verify_date_id)升单率\nFROM (\nSELECT standard_name\n,verify_date_id\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nand is_valid = 1\nAND standard_name REGEXP '相控微针'\nAND ord_up_type_name = '原单'\n) a\nLEFT JOIN (\nSELECT\nstandard_name\n,verify_date_id\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND ord_up_type_name = '升单'\nAND is_valid = 1\n) b\nON a.verify_date_id = b.verify_date_id\nGROUP BY a.standard_name\n;",
+    "atomic_metric_ids": [
+      "核销人次"
+    ],
+    "dimension_slices": [
+      "品项"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 131
+  },
+  {
+    "asset_id": "metric:D131",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D131",
+    "name": "BBL HERO加购率",
+    "english_name": "",
+    "business_domain": "复合指标",
+    "definition": "统计周期内，品项的升单核销人次/总核销人次",
+    "formula": "升单核销人次 / 总核销人次",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT\nCOUNT(DISTINCT CASE WHEN standard_name regexp \"BBL HERO\" and is_up =1 then verify_date_id end)/\nCOUNT(DISTINCT verify_date_id) as 加购率\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_valid = 1\n;",
+    "atomic_metric_ids": [
+      "核销人次"
+    ],
+    "dimension_slices": [
+      "品项"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 132
+  },
+  {
+    "asset_id": "metric:D132",
+    "asset_type": "metric",
+    "metric_type": "derived",
+    "metric_id": "D132",
+    "name": "BBL HERO渗透率",
+    "english_name": "",
+    "business_domain": "复合指标",
+    "definition": "90日内，核销过BBL HERO的用户数/总核销用户数量",
+    "formula": "品项核销用户数 / 总核销用户数",
+    "data_type": "",
+    "unit": "",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "sql": "SELECT\nROUND(\nCOUNT(DISTINCT case when product_name regexp \"BBL HERO\" then customer_id end) * 1.0 /\nNULLIF(COUNT(DISTINCT customer_id), 0), 4 ) as 渗透率\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(), 1)\nAND executed_date BETWEEN DATE_SUB(DATE_SUB(CURRENT_DATE(), 1), 89) AND DATE_SUB(CURRENT_DATE(), 1) -- 截至昨天的滚动90天\nAND is_valid = 1;",
+    "atomic_metric_ids": [
+      "核销用户数"
+    ],
+    "dimension_slices": [
+      "品项"
+    ],
+    "dashboard_names": [],
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "衍生指标字典",
+    "source_row": 133
+  }
+]

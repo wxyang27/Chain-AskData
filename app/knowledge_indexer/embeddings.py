@@ -1,5 +1,6 @@
 import hashlib
 import math
+from collections.abc import Sequence
 
 
 class HashEmbedding:
@@ -25,7 +26,7 @@ class HashEmbedding:
             return vector
         return [value / norm for value in vector]
 
-    def embed_many(self, texts: list[str]) -> list[list[float]]:
+    def embed_many(self, texts: list[str]) -> list[Sequence[float]]:
         return [self.embed(text) for text in texts]
 
     def _tokens(self, text: str) -> list[str]:

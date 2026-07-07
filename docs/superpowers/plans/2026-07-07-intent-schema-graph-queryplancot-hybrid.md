@@ -1,69 +1,69 @@
-# Intent Schema Graph QueryPlanCoT Hybrid Implementation Plan
+# 意图路由 + Schema Graph + QueryPlanCoT + 混合检索 实施计划
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **给后续执行者：**本计划用于在保持当前模板优先 NL2SQL 路径稳定的前提下，新增 AskData-lite 风格的意图路由、Schema Graph、QueryPlanCoT 规划步骤和混合检索。
 
-**Goal:** Add AskData-lite intent routing, Schema Graph, QueryPlanCoT planning steps, and hybrid retrieval while keeping the current template-first NL2SQL path stable.
+**目标：**新增意图路由、Schema Graph、QueryPlanCoT 规划步骤和混合检索，同时保持当前模板优先的 NL2SQL 主路径稳定。
 
-**Architecture:** The request flow becomes `KnowledgeSearchService -> IntentRouter -> SchemaGraphBuilder -> QueryPlanner -> SqlGenerator/ExplainAnswer`. Schema Graph is the shared structured context for SQL generation and explanation responses. Hybrid retrieval improves recall before RetrievalContext grouping without splitting Chroma collections yet.
+**架构：**请求流水线变为 `KnowledgeSearchService -> IntentRouter -> SchemaGraphBuilder -> QueryPlanner -> SqlGenerator/ExplainAnswer`。Schema Graph 是 SQL 生成和解释响应的共享结构化上下文。混合检索在不拆分 Chroma Collection 的前提下提升 RetrievalContext 分组前的召回率。
 
-**Tech Stack:** FastAPI, Pydantic, ChromaDB, unittest, local JSON-compatible YAML assets.
+**技术栈：**FastAPI、Pydantic、ChromaDB、pytest、本地 YAML 资产。
 
 ---
 
-### Task 1: Intent Router
+### 任务 1：意图路由
 
-**Files:**
-- Create: `app/intent_router/router.py`
-- Modify: `app/models/query.py`
-- Modify: `app/answer/composer.py`
-- Test: `tests/test_intent_router.py`
-- Test: `tests/test_answer_modes.py`
+**文件：**
+- 新建：`app/intent_router/router.py`
+- 修改：`app/models/query.py`
+- 修改：`app/answer/composer.py`
+- 测试：`tests/test_intent_router.py`
+- 测试：`tests/test_answer_modes.py`
 
-- [ ] Write failing tests for `schema_explain`, `caliber_explain`, `unknown`, and `nl2sql`.
-- [ ] Implement deterministic routing from question text plus RetrievalContext evidence.
-- [ ] Make `AnswerComposer` return explanation responses without forcing SQL for explain/unknown intents.
-- [ ] Run targeted tests and full suite.
+- [ ] 先写测试，覆盖 `schema_explain`、`caliber_explain`、`unknown`、`nl2sql` 四种意图。
+- [ ] 实现基于问题文本 + RetrievalContext 证据的确定性路由。
+- [ ] 让 `AnswerComposer` 在 explain/unknown 意图时返回解释响应，不强制生成 SQL。
+- [ ] 运行针对性测试和全量测试。
 
-### Task 2: Schema Graph
+### 任务 2：Schema Graph
 
-**Files:**
-- Create: `app/schema_graph/graph.py`
-- Create: `app/schema_graph/builder.py`
-- Modify: `app/models/query.py`
-- Test: `tests/test_schema_graph.py`
+**文件：**
+- 新建：`app/schema_graph/graph.py`
+- 新建：`app/schema_graph/builder.py`
+- 修改：`app/models/query.py`
+- 测试：`tests/test_schema_graph.py`
 
-- [ ] Write failing tests that build tables, fields, relations, metrics, missing evidence, and graph text from RetrievalContext.
-- [ ] Implement `SchemaGraphBuilder.build(retrieval_context)`.
-- [ ] Include graph text in QueryResponse for UI/API trace.
-- [ ] Run targeted tests and full suite.
+- [ ] 先写测试，验证从 RetrievalContext 构建表、字段、关系、指标、缺失证据和 graph 文本。
+- [ ] 实现 `SchemaGraphBuilder.build(retrieval_context)`。
+- [ ] 在 QueryResponse 中包含 graph 文本，供 UI/API 追踪。
+- [ ] 运行针对性测试和全量测试。
 
-### Task 3: QueryPlanCoT
+### 任务 3：QueryPlanCoT
 
-**Files:**
-- Modify: `app/models/query.py`
-- Modify: `app/query_planner/planner.py`
-- Test: `tests/test_query_plan_cot.py`
+**文件：**
+- 修改：`app/models/query.py`
+- 修改：`app/query_planner/planner.py`
+- 测试：`tests/test_query_plan_cot.py`
 
-- [ ] Write failing tests requiring `query_plan.query_plan_cot` with objects, fields, filters, calculation, output, and evidence.
-- [ ] Implement deterministic QueryPlanCoT generation from demo template plus SchemaGraph.
-- [ ] Keep existing SQL generator compatible with current QueryPlan fields.
-- [ ] Run targeted tests and full suite.
+- [ ] 先写测试，要求 `query_plan.query_plan_cot` 包含对象、字段、过滤、计算、输出和证据步骤。
+- [ ] 实现基于 demo 模板 + SchemaGraph 的确定性 QueryPlanCoT 生成。
+- [ ] 保持现有 SQL 生成器与当前 QueryPlan 字段兼容。
+- [ ] 运行针对性测试和全量测试。
 
-### Task 4: Hybrid Retrieval
+### 任务 4：混合检索
 
-**Files:**
-- Create: `app/knowledge_indexer/keyword_extractor.py`
-- Create: `app/knowledge_indexer/hybrid_retriever.py`
-- Modify: `app/knowledge_indexer/service.py`
-- Test: `tests/test_hybrid_retriever.py`
+**文件：**
+- 新建：`app/knowledge_indexer/keyword_extractor.py`
+- 新建：`app/knowledge_indexer/hybrid_retriever.py`
+- 修改：`app/knowledge_indexer/service.py`
+- 测试：`tests/test_hybrid_retriever.py`
 
-- [ ] Write failing tests for keyword extraction, RRF fusion, and structured search preserving field/metric hits.
-- [ ] Implement keyword retrieval using current local chunks plus Chroma vector retrieval.
-- [ ] Fuse candidates using RRF and existing lightweight reranker.
-- [ ] Run targeted tests and full suite.
+- [ ] 先写测试，覆盖关键词提取、RRF 融合、结构化搜索保留字段/指标命中。
+- [ ] 实现基于当前本地 chunks 的关键词检索 + Chroma 向量检索。
+- [ ] 使用 RRF 和现有轻量 reranker 融合候选结果。
+- [ ] 运行针对性测试和全量测试。
 
-### Verification
+### 验证
 
 - [ ] `python -m unittest discover -s tests -v`
 - [ ] `python -m app.knowledge_indexer.init_chroma`
-- [ ] API smoke test for `/api/query` with one NL2SQL question, one schema explain question, one caliber explain question, and one unknown question.
+- [ ] API 冒烟测试：`/api/query` 分别测试一条 NL2SQL 问题、一条 schema 解释问题、一条口径解释问题、一条未知意图问题。

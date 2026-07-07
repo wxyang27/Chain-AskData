@@ -1,0 +1,2130 @@
+[
+  {
+    "asset_id": "user_profile_field:U001",
+    "asset_type": "user_profile_field",
+    "field_id": "U001",
+    "name": "连锁首单日期",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "每个连锁用户的首单支付日期",
+    "data_type": "DATE",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT DISTINCT a.user_id\n,SUBSTR(a.pay_date,1,10) 连锁首单日期\nFROM (\nSELECT pay_date\n,user_id\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date ASC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND bus_type IN ('新氧优享','连锁')\nAND pay_date != COALESCE(cash_back_date,0)\nAND is_ass_hospital = 1\nAND is_payed = 1\n) a\nWHERE a.rn = 1\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 2
+  },
+  {
+    "asset_id": "user_profile_field:U002",
+    "asset_type": "user_profile_field",
+    "field_id": "U002",
+    "name": "连锁首日订单数量",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "每个连锁用户首次支付当天的订单量",
+    "data_type": "INT",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,COUNT(DISTINCT a.main_order_id) AS 连锁首日订单数量\nFROM (\nSELECT main_order_id\n,user_id\n,pay_date\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date ASC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND bus_type IN ('新氧优享','连锁')\nAND pay_date != COALESCE(cash_back_date,0)\nAND is_ass_hospital = 1\nAND is_payed = 1\n) AS a\nWHERE rn = 1\nGROUP BY user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 3
+  },
+  {
+    "asset_id": "user_profile_field:U003",
+    "asset_type": "user_profile_field",
+    "field_id": "U003",
+    "name": "连锁首日订单支付金额gmv",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "每个连锁用户首次支付当天的支付金额gmv",
+    "data_type": "DECIMAL",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,SUM(a.pay_gmv) AS 连锁首日订单支付金额gmv\nFROM (\nSELECT pay_gmv\n,user_id\n,pay_date\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date ASC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND bus_type IN ('新氧优享','连锁')\nAND pay_date != COALESCE(cash_back_date,0)\nAND is_ass_hospital = 1\nAND is_payed = 1\n) AS a\nWHERE rn = 1\nGROUP BY user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 4
+  },
+  {
+    "asset_id": "user_profile_field:U004",
+    "asset_type": "user_profile_field",
+    "field_id": "U004",
+    "name": "连锁首日支付品项数",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "每个连锁用户首次支付当天的支付品项数",
+    "data_type": "VARCHAR",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT d.user_id\n,COUNT(DISTINCT c.standard_name) AS 连锁首日支付品项数\nFROM (\nSELECT pay_date\n,user_id\n,pid\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date ASC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND bus_type IN ('新氧优享','连锁')\nAND pay_date != COALESCE(cash_back_date,0)\nAND is_ass_hospital = 1\nAND is_payed = 1\n) AS d\nLEFT JOIN soyoung_dw.dim_product_info c\nON c.product_id = d.pid\nAND c.dp = CURRENT_DATE() - 1\nWHERE d.rn = 1\nGROUP BY d.user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 5
+  },
+  {
+    "asset_id": "user_profile_field:U005",
+    "asset_type": "user_profile_field",
+    "field_id": "U005",
+    "name": "连锁首日支付品项的list",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "每个连锁用户首次支付当天的支付品项列表",
+    "data_type": "STRING/ARRAY",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT d.user_id\n,COLLECT_SET(DISTINCT c.standard_name) AS 连锁首日支付品项的list\nFROM (\nSELECT pay_date\n,user_id\n,pid\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date ASC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND bus_type IN ('新氧优享','连锁')\nAND pay_date != COALESCE(cash_back_date,0)\nAND is_ass_hospital = 1\nAND is_payed = 1\n) AS d\nLEFT JOIN soyoung_dw.dim_product_info c\nON c.product_id = d.pid\nAND c.dp = CURRENT_DATE() - 1\nWHERE d.rn = 1\nGROUP BY d.user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 6
+  },
+  {
+    "asset_id": "user_profile_field:U006",
+    "asset_type": "user_profile_field",
+    "field_id": "U006",
+    "name": "连锁最近订单日期",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "每个连锁用户末次订单的支付日期",
+    "data_type": "DATE",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT DISTINCT a.user_id\n,SUBSTR(a.pay_date,1,10) 连锁最近订单日期\nFROM (\nSELECT pay_date\n,user_id\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date DESC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND bus_type IN ('新氧优享','连锁')\nAND pay_date != COALESCE(cash_back_date,0)\nAND is_ass_hospital = 1\nAND is_payed = 1\n) a\nWHERE a.rn = 1\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 7
+  },
+  {
+    "asset_id": "user_profile_field:U007",
+    "asset_type": "user_profile_field",
+    "field_id": "U007",
+    "name": "连锁最近一天日订单数量",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "每个连锁用户末次支付当天的订单量",
+    "data_type": "INT",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,COUNT(DISTINCT a.main_order_id) AS 连锁最近一天日订单数量\nFROM (\nSELECT main_order_id\n,user_id\n,pay_date\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date DESC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND bus_type IN ('新氧优享','连锁')\nAND pay_date != COALESCE(cash_back_date,0)\nAND is_ass_hospital = 1\nAND is_payed = 1\n) AS a\nWHERE rn = 1\nGROUP BY user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 8
+  },
+  {
+    "asset_id": "user_profile_field:U008",
+    "asset_type": "user_profile_field",
+    "field_id": "U008",
+    "name": "连锁最近一天日订单支付金额gmv",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "每个连锁用户末次支付当天的支付金额gmv",
+    "data_type": "DECIMAL",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,SUM(a.pay_gmv) AS 连锁最近一天日订单支付金额gmv\nFROM (\nSELECT pay_gmv\n,user_id\n,pay_date\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date DESC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND bus_type IN ('新氧优享','连锁')\nAND pay_date != COALESCE(cash_back_date,0)\nAND is_ass_hospital = 1\nAND is_payed = 1\n) AS a\nWHERE rn = 1\nGROUP BY user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 9
+  },
+  {
+    "asset_id": "user_profile_field:U009",
+    "asset_type": "user_profile_field",
+    "field_id": "U009",
+    "name": "连锁最近一天日支付品项数",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "每个连锁用户末次支付当天的支付品项数",
+    "data_type": "VARCHAR",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT d.user_id\n,COUNT(DISTINCT c.standard_name) AS 连锁最近一天日支付品项数\nFROM (\nSELECT pay_date\n,user_id\n,pid\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date DESC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND bus_type IN ('新氧优享','连锁')\nAND pay_date != COALESCE(cash_back_date,0)\nAND is_ass_hospital = 1\nAND is_payed = 1\n) AS d\nLEFT JOIN soyoung_dw.dim_product_info c\nON c.product_id = d.pid\nAND c.dp = CURRENT_DATE() - 1\nWHERE d.rn = 1\nGROUP BY d.user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 10
+  },
+  {
+    "asset_id": "user_profile_field:U010",
+    "asset_type": "user_profile_field",
+    "field_id": "U010",
+    "name": "连锁最近一天日支付品项的list",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "每个连锁用户末次支付当天的支付品项列表",
+    "data_type": "STRING/ARRAY",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT d.user_id\n,COLLECT_SET(DISTINCT c.standard_name) AS 连锁最近一天日支付品项的list\nFROM (\nSELECT pay_date\n,user_id\n,pid\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date DESC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND bus_type IN ('新氧优享','连锁')\nAND pay_date != COALESCE(cash_back_date,0)\nAND is_ass_hospital = 1\nAND is_payed = 1\n) AS d\nLEFT JOIN soyoung_dw.dim_product_info c\nON c.product_id = d.pid\nAND c.dp = CURRENT_DATE() - 1\nWHERE d.rn = 1\nGROUP BY d.user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 11
+  },
+  {
+    "asset_id": "user_profile_field:U011",
+    "asset_type": "user_profile_field",
+    "field_id": "U011",
+    "name": "连锁累计订单数量",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "每个连锁用户累计支付的订单量",
+    "data_type": "INT",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT user_id\n,COUNT(DISTINCT main_order_id) 连锁累计订单数量\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND bus_type IN ('新氧优享','连锁')\nAND pay_date != COALESCE(cash_back_date,0)\nAND is_ass_hospital = 1\nAND is_payed = 1\nGROUP BY user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 12
+  },
+  {
+    "asset_id": "user_profile_field:U012",
+    "asset_type": "user_profile_field",
+    "field_id": "U012",
+    "name": "连锁累计订单支付金额gmv",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "每个连锁用户累计支付的支付金额gmv",
+    "data_type": "DECIMAL",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT user_id\n,SUM(pay_gmv) 连锁累计订单支付金额gmv\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND bus_type IN ('新氧优享','连锁')\nAND pay_date != COALESCE(cash_back_date,0)\nAND is_ass_hospital = 1\nAND is_payed = 1\nGROUP BY user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 13
+  },
+  {
+    "asset_id": "user_profile_field:U013",
+    "asset_type": "user_profile_field",
+    "field_id": "U013",
+    "name": "连锁累计支付项目数",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "每个连锁用户累计支付的支付品项数",
+    "data_type": "INT",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,COUNT(DISTINCT c.standard_name) AS 连锁累计支付项目数\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d a\nLEFT JOIN soyoung_dw.dim_product_info c\nON a.pid = c.product_id\nWHERE a.bus_type IN ('新氧优享','连锁')\nAND a.dp = CURRENT_DATE() - 1\nAND c.dp = CURRENT_DATE() - 1\nAND a.pay_date != COALESCE(a.cash_back_date,0)\nAND a.is_ass_hospital = 1\nAND a.is_payed = 1\nGROUP BY a.user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 14
+  },
+  {
+    "asset_id": "user_profile_field:U014",
+    "asset_type": "user_profile_field",
+    "field_id": "U014",
+    "name": "连锁累计支付项目的list",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "每个连锁用户累计支付的支付品项列表",
+    "data_type": "STRING/ARRAY",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,COLLECT_SET(DISTINCT c.standard_name) AS 连锁累计支付项目的list\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d a\nLEFT JOIN soyoung_dw.dim_product_info c\nON a.pid = c.product_id\nWHERE a.bus_type IN ('新氧优享','连锁')\nAND a.dp = CURRENT_DATE() - 1\nAND c.dp = CURRENT_DATE() - 1\nAND a.pay_date != COALESCE(a.cash_back_date,0)\nAND a.is_ass_hospital = 1\nAND a.is_payed = 1\nGROUP BY a.user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 15
+  },
+  {
+    "asset_id": "user_profile_field:U015",
+    "asset_type": "user_profile_field",
+    "field_id": "U015",
+    "name": "连锁线上首单日期",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "每个连锁线上用户的首单支付日期",
+    "data_type": "DATE",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT DISTINCT a.user_id\n,SUBSTR(a.pay_date,1,10) 连锁线上首单日期\nFROM (\nSELECT pay_date\n,user_id\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date ASC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND bus_type IN ('新氧优享','连锁')\nAND pay_date != COALESCE(cash_back_date,0)\nAND is_ass_hospital = 1\nAND is_payed = 1\nAND app_id <> 126\n) a\nWHERE a.rn = 1\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 16
+  },
+  {
+    "asset_id": "user_profile_field:U016",
+    "asset_type": "user_profile_field",
+    "field_id": "U016",
+    "name": "连锁线上首日订单数量",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "每个连锁线上用户首次支付当天的订单量",
+    "data_type": "INT",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,COUNT(DISTINCT a.main_order_id) AS 连锁线上首日订单数量\nFROM (\nSELECT main_order_id\n,user_id\n,pay_date\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date ASC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND bus_type IN ('新氧优享','连锁')\nAND pay_date != COALESCE(cash_back_date,0)\nAND is_ass_hospital = 1\nAND is_payed = 1\nAND app_id <> 126\n) AS a\nWHERE rn = 1\nGROUP BY user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 17
+  },
+  {
+    "asset_id": "user_profile_field:U017",
+    "asset_type": "user_profile_field",
+    "field_id": "U017",
+    "name": "连锁线上首日订单支付金额gmv",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "每个连锁线上用户首次支付当天的支付金额gmv",
+    "data_type": "DECIMAL",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,SUM(a.pay_gmv) AS 连锁线上首日订单支付金额gmv\nFROM (\nSELECT pay_gmv\n,user_id\n,pay_date\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date ASC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND bus_type IN ('新氧优享','连锁')\nAND pay_date != COALESCE(cash_back_date,0)\nAND is_ass_hospital = 1\nAND is_payed = 1\nAND app_id <> 126\n) AS a\nWHERE rn = 1\nGROUP BY user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 18
+  },
+  {
+    "asset_id": "user_profile_field:U018",
+    "asset_type": "user_profile_field",
+    "field_id": "U018",
+    "name": "连锁线上首日支付项目数",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "每个连锁线上用户首次支付当天的支付品项数",
+    "data_type": "INT",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT d.user_id\n,COUNT(DISTINCT c.standard_name) AS 连锁线上首日支付品项数\nFROM (\nSELECT pay_date\n,user_id\n,pid\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date ASC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND bus_type IN ('新氧优享','连锁')\nAND pay_date != COALESCE(cash_back_date,0)\nAND is_ass_hospital = 1\nAND is_payed = 1\nAND app_id <> 126\n) AS d\nLEFT JOIN soyoung_dw.dim_product_info c\nON c.product_id = d.pid\nAND c.dp = CURRENT_DATE() - 1\nWHERE d.rn = 1\nGROUP BY d.user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 19
+  },
+  {
+    "asset_id": "user_profile_field:U019",
+    "asset_type": "user_profile_field",
+    "field_id": "U019",
+    "name": "连锁线上首日支付项目的list",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "每个连锁线上用户首次支付当天的支付品项列表",
+    "data_type": "STRING/ARRAY",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT d.user_id\n,COLLECT_SET(DISTINCT c.standard_name) AS 连锁线上首日支付品项的list\nFROM (\nSELECT pay_date\n,user_id\n,pid\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date ASC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND bus_type IN ('新氧优享','连锁')\nAND pay_date != COALESCE(cash_back_date,0)\nAND is_ass_hospital = 1\nAND is_payed = 1\nAND app_id <> 126\n) AS d\nLEFT JOIN soyoung_dw.dim_product_info c\nON c.product_id = d.pid\nAND c.dp = CURRENT_DATE() - 1\nWHERE d.rn = 1\nGROUP BY d.user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 20
+  },
+  {
+    "asset_id": "user_profile_field:U020",
+    "asset_type": "user_profile_field",
+    "field_id": "U020",
+    "name": "连锁线上最近订单日期",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "每个连锁线上用户末次订单的支付日期",
+    "data_type": "DATE",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT DISTINCT a.user_id\n,SUBSTR(a.pay_date,1,10) 连锁线上最近订单日期\nFROM (\nSELECT pay_date\n,user_id\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date DESC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND bus_type IN ('新氧优享','连锁')\nAND pay_date != COALESCE(cash_back_date,0)\nAND is_ass_hospital = 1\nAND is_payed = 1\nAND app_id <> 126\n) a\nWHERE a.rn = 1\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 21
+  },
+  {
+    "asset_id": "user_profile_field:U021",
+    "asset_type": "user_profile_field",
+    "field_id": "U021",
+    "name": "连锁线上最近一天日订单数量",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "每个连锁线上用户末次支付当天的订单量",
+    "data_type": "INT",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,COUNT(DISTINCT a.main_order_id) AS 连锁线上最近一天日订单数量\nFROM (\nSELECT main_order_id\n,user_id\n,pay_date\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date DESC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND bus_type IN ('新氧优享','连锁')\nAND pay_date != COALESCE(cash_back_date,0)\nAND is_ass_hospital = 1\nAND is_payed = 1\nAND app_id <> 126\n) AS a\nWHERE rn = 1\nGROUP BY user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 22
+  },
+  {
+    "asset_id": "user_profile_field:U022",
+    "asset_type": "user_profile_field",
+    "field_id": "U022",
+    "name": "连锁线上最近一天日订单支付金额gmv",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "每个连锁线上用户末次支付当天的支付金额gmv",
+    "data_type": "DECIMAL",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,SUM(a.pay_gmv) AS 连锁线上最近一天日订单支付金额gmv\nFROM (\nSELECT pay_gmv\n,user_id\n,pay_date\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date DESC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND bus_type IN ('新氧优享','连锁')\nAND pay_date != COALESCE(cash_back_date,0)\nAND is_ass_hospital = 1\nAND is_payed = 1\nAND app_id <> 126\n) AS a\nWHERE rn = 1\nGROUP BY user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 23
+  },
+  {
+    "asset_id": "user_profile_field:U023",
+    "asset_type": "user_profile_field",
+    "field_id": "U023",
+    "name": "连锁线上最近一天日支付项目数",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "每个连锁线上用户末次支付当天的支付品项数",
+    "data_type": "INT",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT d.user_id\n,COUNT(DISTINCT c.standard_name) AS 连锁线上最近一天日支付品项数\nFROM (\nSELECT pay_date\n,user_id\n,pid\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date DESC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND bus_type IN ('新氧优享','连锁')\nAND pay_date != COALESCE(cash_back_date,0)\nAND is_ass_hospital = 1\nAND is_payed = 1\nAND app_id <> 126\n) AS d\nLEFT JOIN soyoung_dw.dim_product_info c\nON c.product_id = d.pid\nAND c.dp = CURRENT_DATE() - 1\nWHERE d.rn = 1\nGROUP BY d.user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 24
+  },
+  {
+    "asset_id": "user_profile_field:U024",
+    "asset_type": "user_profile_field",
+    "field_id": "U024",
+    "name": "连锁线上最近一天日支付项目的list",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "每个连锁线上用户末次支付当天的支付品项列表",
+    "data_type": "STRING/ARRAY",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT d.user_id\n,COLLECT_SET(DISTINCT c.standard_name) AS 连锁线上最近一天日支付品项的list\nFROM (\nSELECT pay_date\n,user_id\n,pid\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date DESC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND bus_type IN ('新氧优享','连锁')\nAND pay_date != COALESCE(cash_back_date,0)\nAND is_ass_hospital = 1\nAND is_payed = 1\nAND app_id <> 126\n) AS d\nLEFT JOIN soyoung_dw.dim_product_info c\nON c.product_id = d.pid\nAND c.dp = CURRENT_DATE() - 1\nWHERE d.rn = 1\nGROUP BY d.user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 25
+  },
+  {
+    "asset_id": "user_profile_field:U025",
+    "asset_type": "user_profile_field",
+    "field_id": "U025",
+    "name": "连锁线上累计订单数量",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "每个连锁线上用户累计支付的订单量",
+    "data_type": "INT",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT user_id\n,COUNT(DISTINCT main_order_id) 连锁线上累计订单数量\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND bus_type IN ('新氧优享','连锁')\nAND pay_date != COALESCE(cash_back_date,0)\nAND is_ass_hospital = 1\nAND is_payed = 1\nAND app_id <> 126\nGROUP BY user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 26
+  },
+  {
+    "asset_id": "user_profile_field:U026",
+    "asset_type": "user_profile_field",
+    "field_id": "U026",
+    "name": "连锁线上累计订单支付金额gmv",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "每个连锁线上用户累计支付的支付金额gmv",
+    "data_type": "DECIMAL",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT user_id\n,SUM(pay_gmv) 连锁线上累计订单支付金额gmv\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND bus_type IN ('新氧优享','连锁')\nAND pay_date != COALESCE(cash_back_date,0)\nAND is_ass_hospital = 1\nAND is_payed = 1\nAND app_id <> 126\nGROUP BY user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 27
+  },
+  {
+    "asset_id": "user_profile_field:U027",
+    "asset_type": "user_profile_field",
+    "field_id": "U027",
+    "name": "连锁线上累计支付项目数",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "每个连锁线上用户累计支付的支付品项数",
+    "data_type": "INT",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,COUNT(DISTINCT c.standard_name) AS 连锁线上累计支付项目数\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d a\nLEFT JOIN soyoung_dw.dim_product_info c\nON a.pid = c.product_id\nWHERE a.bus_type IN ('新氧优享','连锁')\nAND a.dp = CURRENT_DATE() - 1\nAND c.dp = CURRENT_DATE() - 1\nAND a.pay_date != COALESCE(a.cash_back_date,0)\nAND a.is_ass_hospital = 1\nAND a.is_payed = 1\nAND a.app_id <> 126\nGROUP BY a.user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 28
+  },
+  {
+    "asset_id": "user_profile_field:U028",
+    "asset_type": "user_profile_field",
+    "field_id": "U028",
+    "name": "连锁线上累计支付项目list",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "每个连锁线上用户累计支付的支付品项列表",
+    "data_type": "STRING/ARRAY",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,COLLECT_SET(DISTINCT c.standard_name) AS 连锁线上累计支付项目的list\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d a\nLEFT JOIN soyoung_dw.dim_product_info c\nON a.pid = c.product_id\nWHERE a.bus_type IN ('新氧优享','连锁')\nAND a.dp = CURRENT_DATE() - 1\nAND c.dp = CURRENT_DATE() - 1\nAND a.pay_date != COALESCE(a.cash_back_date,0)\nAND a.is_ass_hospital = 1\nAND a.is_payed = 1\nAND a.app_id <> 126\nGROUP BY a.user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 29
+  },
+  {
+    "asset_id": "user_profile_field:U029",
+    "asset_type": "user_profile_field",
+    "field_id": "U029",
+    "name": "连锁线下首单日期",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "每个连锁线下用户的首单支付日期",
+    "data_type": "DATE",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT DISTINCT a.user_id\n,SUBSTR(a.pay_date,1,10) 连锁线下首单日期\nFROM (\nSELECT pay_date\n,user_id\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date ASC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND bus_type IN ('新氧优享','连锁')\nAND pay_date != COALESCE(cash_back_date,0)\nAND is_ass_hospital = 1\nAND is_payed = 1\nAND app_id = 126\n) a\nWHERE a.rn = 1\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 30
+  },
+  {
+    "asset_id": "user_profile_field:U030",
+    "asset_type": "user_profile_field",
+    "field_id": "U030",
+    "name": "连锁线下首日订单数量",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "每个连锁线下用户首次支付当天的订单量",
+    "data_type": "INT",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,COUNT(DISTINCT a.main_order_id) AS 连锁线下首日订单数量\nFROM (\nSELECT main_order_id\n,user_id\n,pay_date\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date ASC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND bus_type IN ('新氧优享','连锁')\nAND pay_date != COALESCE(cash_back_date,0)\nAND is_ass_hospital = 1\nAND is_payed = 1\nAND app_id = 126\n) AS a\nWHERE rn = 1\nGROUP BY user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 31
+  },
+  {
+    "asset_id": "user_profile_field:U031",
+    "asset_type": "user_profile_field",
+    "field_id": "U031",
+    "name": "连锁线下首日订单支付金额gmv",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "每个连锁线下用户首次支付当天的支付金额gmv",
+    "data_type": "DECIMAL",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,SUM(a.pay_gmv) AS 连锁线下首日订单支付金额gmv\nFROM (\nSELECT pay_gmv\n,user_id\n,pay_date\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date ASC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND bus_type IN ('新氧优享','连锁')\nAND pay_date != COALESCE(cash_back_date,0)\nAND is_ass_hospital = 1\nAND is_payed = 1\nAND app_id = 126\n) AS a\nWHERE rn = 1\nGROUP BY user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 32
+  },
+  {
+    "asset_id": "user_profile_field:U032",
+    "asset_type": "user_profile_field",
+    "field_id": "U032",
+    "name": "连锁线下首日支付项目数",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "每个连锁线下用户首次支付当天的支付品项数",
+    "data_type": "INT",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT d.user_id\n,COUNT(DISTINCT c.standard_name) AS 连锁线下首日支付品项数\nFROM (\nSELECT pay_date\n,user_id\n,pid\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date ASC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND bus_type IN ('新氧优享','连锁')\nAND pay_date != COALESCE(cash_back_date,0)\nAND is_ass_hospital = 1\nAND is_payed = 1\nAND app_id = 126\n) AS d\nLEFT JOIN soyoung_dw.dim_product_info c\nON c.product_id = d.pid\nAND c.dp = CURRENT_DATE() - 1\nWHERE d.rn = 1\nGROUP BY d.user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 33
+  },
+  {
+    "asset_id": "user_profile_field:U033",
+    "asset_type": "user_profile_field",
+    "field_id": "U033",
+    "name": "连锁线下首日支付项目的list",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "每个连锁线下用户首次支付当天的支付品项列表",
+    "data_type": "STRING/ARRAY",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT d.user_id\n,COLLECT_SET(DISTINCT c.standard_name) AS 连锁线下首日支付品项的list\nFROM (\nSELECT pay_date\n,user_id\n,pid\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date ASC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND bus_type IN ('新氧优享','连锁')\nAND pay_date != COALESCE(cash_back_date,0)\nAND is_ass_hospital = 1\nAND is_payed = 1\nAND app_id = 126\n) AS d\nLEFT JOIN soyoung_dw.dim_product_info c\nON c.product_id = d.pid\nAND c.dp = CURRENT_DATE() - 1\nWHERE d.rn = 1\nGROUP BY d.user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 34
+  },
+  {
+    "asset_id": "user_profile_field:U034",
+    "asset_type": "user_profile_field",
+    "field_id": "U034",
+    "name": "连锁线下最近订单日期",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "每个连锁线下用户末次订单的支付日期",
+    "data_type": "DATE",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT DISTINCT a.user_id\n,SUBSTR(a.pay_date,1,10) 连锁线下最近订单日期\nFROM (\nSELECT pay_date\n,user_id\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date DESC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND bus_type IN ('新氧优享','连锁')\nAND pay_date != COALESCE(cash_back_date,0)\nAND is_ass_hospital = 1\nAND is_payed = 1\nAND app_id = 126\n) a\nWHERE a.rn = 1\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 35
+  },
+  {
+    "asset_id": "user_profile_field:U035",
+    "asset_type": "user_profile_field",
+    "field_id": "U035",
+    "name": "连锁线下最近一天日订单数量",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "每个连锁线下用户末次支付当天的订单量",
+    "data_type": "INT",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,COUNT(DISTINCT a.main_order_id) AS 连锁线下最近一天日订单数量\nFROM (\nSELECT main_order_id\n,user_id\n,pay_date\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date DESC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND bus_type IN ('新氧优享','连锁')\nAND pay_date != COALESCE(cash_back_date,0)\nAND is_ass_hospital = 1\nAND is_payed = 1\nAND app_id = 126\n) AS a\nWHERE rn = 1\nGROUP BY user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 36
+  },
+  {
+    "asset_id": "user_profile_field:U036",
+    "asset_type": "user_profile_field",
+    "field_id": "U036",
+    "name": "连锁线下最近一天日订单支付金额gmv",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "每个连锁线下用户末次支付当天的支付金额gmv",
+    "data_type": "DECIMAL",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,SUM(a.pay_gmv) AS 连锁线下最近一天日订单支付金额gmv\nFROM (\nSELECT pay_gmv\n,user_id\n,pay_date\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date DESC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND bus_type IN ('新氧优享','连锁')\nAND pay_date != COALESCE(cash_back_date,0)\nAND is_ass_hospital = 1\nAND is_payed = 1\nAND app_id = 126\n) AS a\nWHERE rn = 1\nGROUP BY user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 37
+  },
+  {
+    "asset_id": "user_profile_field:U037",
+    "asset_type": "user_profile_field",
+    "field_id": "U037",
+    "name": "连锁线下最近一天日支付spu数",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "每个连锁线下用户末次支付当天的支付品项数",
+    "data_type": "VARCHAR",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT d.user_id\n,COUNT(DISTINCT c.standard_name) AS 连锁线下最近一天日支付品项数\nFROM (\nSELECT pay_date\n,user_id\n,pid\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date DESC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND bus_type IN ('新氧优享','连锁')\nAND pay_date != COALESCE(cash_back_date,0)\nAND is_ass_hospital = 1\nAND is_payed = 1\nAND app_id = 126\n) AS d\nLEFT JOIN soyoung_dw.dim_product_info c\nON c.product_id = d.pid\nAND c.dp = CURRENT_DATE() - 1\nWHERE d.rn = 1\nGROUP BY d.user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 38
+  },
+  {
+    "asset_id": "user_profile_field:U038",
+    "asset_type": "user_profile_field",
+    "field_id": "U038",
+    "name": "连锁线下最近一天日支付spu的list",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "每个连锁线下用户末次支付当天的支付品项列表",
+    "data_type": "STRING/ARRAY",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT d.user_id\n,COLLECT_SET(DISTINCT c.standard_name) AS 连锁线下最近一天日支付品项的list\nFROM (\nSELECT pay_date\n,user_id\n,pid\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date DESC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND bus_type IN ('新氧优享','连锁')\nAND pay_date != COALESCE(cash_back_date,0)\nAND is_ass_hospital = 1\nAND is_payed = 1\nAND app_id = 126\n) AS d\nLEFT JOIN soyoung_dw.dim_product_info c\nON c.product_id = d.pid\nAND c.dp = CURRENT_DATE() - 1\nWHERE d.rn = 1\nGROUP BY d.user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 39
+  },
+  {
+    "asset_id": "user_profile_field:U039",
+    "asset_type": "user_profile_field",
+    "field_id": "U039",
+    "name": "连锁线下累计订单数量",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "每个连锁线下用户累计支付的订单量",
+    "data_type": "INT",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT user_id\n,COUNT(DISTINCT main_order_id) 连锁线下累计订单数量\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND bus_type IN ('新氧优享','连锁')\nAND pay_date != COALESCE(cash_back_date,0)\nAND is_ass_hospital = 1\nAND is_payed = 1\nAND app_id = 126\nGROUP BY user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 40
+  },
+  {
+    "asset_id": "user_profile_field:U040",
+    "asset_type": "user_profile_field",
+    "field_id": "U040",
+    "name": "连锁线下累计订单支付金额gmv",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "每个连锁线下用户累计支付的支付金额gmv",
+    "data_type": "DECIMAL",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT user_id\n,SUM(pay_gmv) 连锁线下累计订单支付金额gmv\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND bus_type IN ('新氧优享','连锁')\nAND pay_date != COALESCE(cash_back_date,0)\nAND is_ass_hospital = 1\nAND is_payed = 1\nAND app_id = 126\nGROUP BY user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 41
+  },
+  {
+    "asset_id": "user_profile_field:U041",
+    "asset_type": "user_profile_field",
+    "field_id": "U041",
+    "name": "连锁线下累计支付项目数",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "每个连锁线下用户累计支付的支付品项数",
+    "data_type": "INT",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,COUNT(DISTINCT c.standard_name) AS 连锁线下累计支付项目数\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d a\nLEFT JOIN soyoung_dw.dim_product_info c\nON a.pid = c.product_id\nWHERE a.bus_type IN ('新氧优享','连锁')\nAND a.dp = CURRENT_DATE() - 1\nAND c.dp = CURRENT_DATE() - 1\nAND a.pay_date != COALESCE(a.cash_back_date,0)\nAND a.is_ass_hospital = 1\nAND a.is_payed = 1\nAND a.app_id = 126\nGROUP BY a.user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 42
+  },
+  {
+    "asset_id": "user_profile_field:U042",
+    "asset_type": "user_profile_field",
+    "field_id": "U042",
+    "name": "连锁线下累计支付项目的list",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "每个连锁线下用户累计支付的支付品项列表",
+    "data_type": "STRING/ARRAY",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,COLLECT_SET(DISTINCT c.standard_name) AS 连锁线下累计支付项目的list\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d a\nLEFT JOIN soyoung_dw.dim_product_info c\nON a.pid = c.product_id\nWHERE a.bus_type IN ('新氧优享','连锁')\nAND a.dp = CURRENT_DATE() - 1\nAND c.dp = CURRENT_DATE() - 1\nAND a.pay_date != COALESCE(a.cash_back_date,0)\nAND a.is_ass_hospital = 1\nAND a.is_payed = 1\nAND a.app_id = 126\nGROUP BY a.user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 43
+  },
+  {
+    "asset_id": "user_profile_field:U043",
+    "asset_type": "user_profile_field",
+    "field_id": "U043",
+    "name": "医美首单日期",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "连锁用户在医美领域的首单支付日期",
+    "data_type": "DATE",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT DISTINCT a.user_id\n,a.pay_date AS 医美首单日期\nFROM (\nSELECT DISTINCT pay_date\n,pid\n,user_id\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date ASC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d a\nLEFT JOIN soyoung_dw.dim_product_info b\nON a.pid = b.product_id\nAND b.dp = CURRENT_DATE() - 1\nAND (\nb.track <> '好物'\nOR b.track IS NULL\n)\nWHERE a.dp = CURRENT_DATE() - 1\nAND a.bus_type IN ('新氧优享','连锁')\nAND a.pay_date != COALESCE(cash_back_date,0)\nAND a.is_ass_hospital = 1\nAND a.is_payed = 1\n) a\nWHERE a.rn = 1\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 44
+  },
+  {
+    "asset_id": "user_profile_field:U044",
+    "asset_type": "user_profile_field",
+    "field_id": "U044",
+    "name": "医美首日订单数量",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "连锁用户在医美领域的首次支付当天的订单量",
+    "data_type": "INT",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,COUNT(DISTINCT main_order_id) AS 医美首日订单数量\nFROM (\nSELECT DISTINCT pay_date\n,user_id\n,pid\n,main_order_id\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date ASC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d a\nLEFT JOIN soyoung_dw.dim_product_info b\nON a.pid = b.product_id\nAND b.dp = CURRENT_DATE() - 1\nAND (\nb.track <> '好物'\nOR b.track IS NULL\n)\nWHERE a.dp = CURRENT_DATE() - 1\nAND a.bus_type IN ('新氧优享','连锁')\nAND a.pay_date != COALESCE(cash_back_date,0)\nAND a.is_ass_hospital = 1\nAND a.is_payed = 1\n) a\nWHERE a.rn = 1\nGROUP BY a.user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 45
+  },
+  {
+    "asset_id": "user_profile_field:U045",
+    "asset_type": "user_profile_field",
+    "field_id": "U045",
+    "name": "医美首日订单支付金额gmv",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "连锁用户在医美领域首次支付当天的支付金额gmv",
+    "data_type": "DECIMAL",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,SUM(pay_gmv) AS 医美首日订单支付支付金额gmv\nFROM (\nSELECT DISTINCT pay_date\n,user_id\n,pid\n,main_order_id\n,pay_gmv\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date ASC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d a\nLEFT JOIN soyoung_dw.dim_product_info b\nON a.pid = b.product_id\nAND b.dp = CURRENT_DATE() - 1\nAND (\nb.track <> '好物'\nOR b.track IS NULL\n)\nWHERE a.dp = CURRENT_DATE() - 1\nAND a.bus_type IN ('新氧优享','连锁')\nAND a.pay_date != COALESCE(cash_back_date,0)\nAND a.is_ass_hospital = 1\nAND a.is_payed = 1\n) a\nWHERE a.rn = 1\nGROUP BY a.user_id",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 46
+  },
+  {
+    "asset_id": "user_profile_field:U046",
+    "asset_type": "user_profile_field",
+    "field_id": "U046",
+    "name": "医美首日支付项目数",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "连锁用户在医美领域首次支付当天的支付品项数",
+    "data_type": "INT",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,COUNT(b.standard_name) AS 医美首日支付项目数\nFROM (\nSELECT DISTINCT pay_date\n,user_id\n,pid\n,main_order_id\n,pay_gmv\n,b.standard_name\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date ASC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d a\nLEFT JOIN soyoung_dw.dim_product_info b\nON a.pid = b.product_id\nAND b.dp = CURRENT_DATE() - 1\nAND (\nb.track <> '好物'\nOR b.track IS NULL\n)\nWHERE a.dp = CURRENT_DATE() - 1\nAND a.bus_type IN ('新氧优享','连锁')\nAND a.pay_date != COALESCE(cash_back_date,0)\nAND a.is_ass_hospital = 1\nAND a.is_payed = 1\n) a\nWHERE a.rn = 1\nGROUP BY a.user_id",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 47
+  },
+  {
+    "asset_id": "user_profile_field:U047",
+    "asset_type": "user_profile_field",
+    "field_id": "U047",
+    "name": "医美首日支付项目的list",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "连锁用户在医美领域首次支付当天的支付品项列表",
+    "data_type": "STRING/ARRAY",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,COLLECT_SET(DISTINCT b.standard_name) AS 医美首日支付项目的list\nFROM (\nSELECT DISTINCT pay_date\n,user_id\n,pid\n,main_order_id\n,pay_gmv\n,b.standard_name\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date ASC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d a\nLEFT JOIN soyoung_dw.dim_product_info b\nON a.pid = b.product_id\nAND b.dp = CURRENT_DATE() - 1\nAND (\nb.track <> '好物'\nOR b.track IS NULL\n)\nWHERE a.dp = CURRENT_DATE() - 1\nAND a.bus_type IN ('新氧优享','连锁')\nAND a.pay_date != COALESCE(cash_back_date,0)\nAND a.is_ass_hospital = 1\nAND a.is_payed = 1\n) a\nWHERE a.rn = 1\nGROUP BY a.user_id",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 48
+  },
+  {
+    "asset_id": "user_profile_field:U048",
+    "asset_type": "user_profile_field",
+    "field_id": "U048",
+    "name": "医美最近一次订单日期",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "连锁用户在医美领域末次订单的支付日期",
+    "data_type": "DATE",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT DISTINCT a.user_id\n,a.pay_date AS 医美最近一次订单日期\nFROM (\nSELECT DISTINCT pay_date\n,pid\n,user_id\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date DESC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d a\nLEFT JOIN soyoung_dw.dim_product_info b\nON a.pid = b.product_id\nAND b.dp = CURRENT_DATE() - 1\nAND (\nb.track <> '好物'\nOR b.track IS NULL\n)\nWHERE a.dp = CURRENT_DATE() - 1\nAND a.bus_type IN ('新氧优享','连锁')\nAND a.pay_date != COALESCE(cash_back_date,0)\nAND a.is_ass_hospital = 1\nAND a.is_payed = 1\n) a\nWHERE a.rn = 1\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 49
+  },
+  {
+    "asset_id": "user_profile_field:U049",
+    "asset_type": "user_profile_field",
+    "field_id": "U049",
+    "name": "医美最近一天日订单数量",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "连锁用户在医美领域末次支付当天的订单量",
+    "data_type": "INT",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,COUNT(DISTINCT main_order_id) AS 医美最近一天日订单数量\nFROM (\nSELECT DISTINCT pay_date\n,user_id\n,pid\n,main_order_id\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date DESC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d a\nLEFT JOIN soyoung_dw.dim_product_info b\nON a.pid = b.product_id\nAND b.dp = CURRENT_DATE() - 1\nAND (\nb.track <> '好物'\nOR b.track IS NULL\n)\nWHERE a.dp = CURRENT_DATE() - 1\nAND a.bus_type IN ('新氧优享','连锁')\nAND a.pay_date != COALESCE(cash_back_date,0)\nAND a.is_ass_hospital = 1\nAND a.is_payed = 1\n) a\nWHERE a.rn = 1\nGROUP BY a.user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 50
+  },
+  {
+    "asset_id": "user_profile_field:U050",
+    "asset_type": "user_profile_field",
+    "field_id": "U050",
+    "name": "医美最近一天日订单支付支付金额gmv",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "连锁用户在医美领域末次支付当天的支付金额gmv",
+    "data_type": "DECIMAL",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,SUM(pay_gmv) AS 医美最近一天日订单支付金额gmv\nFROM (\nSELECT DISTINCT pay_date\n,user_id\n,pid\n,main_order_id\n,pay_gmv\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date DESC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d a\nLEFT JOIN soyoung_dw.dim_product_info b\nON a.pid = b.product_id\nAND b.dp = CURRENT_DATE() - 1\nAND (\nb.track <> '好物'\nOR b.track IS NULL\n)\nWHERE a.dp = CURRENT_DATE() - 1\nAND a.bus_type IN ('新氧优享','连锁')\nAND a.pay_date != COALESCE(cash_back_date,0)\nAND a.is_ass_hospital = 1\nAND a.is_payed = 1\n) a\nWHERE a.rn = 1\nGROUP BY a.user_id",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 51
+  },
+  {
+    "asset_id": "user_profile_field:U051",
+    "asset_type": "user_profile_field",
+    "field_id": "U051",
+    "name": "医美最近一天日支付项目数",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "连锁用户在医美领域末次支付当天的支付品项数",
+    "data_type": "INT",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,COUNT(b.standard_name) AS 医美最近一天日支付项目数\nFROM (\nSELECT DISTINCT pay_date\n,user_id\n,pid\n,main_order_id\n,pay_gmv\n,b.standard_name\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date DESC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d a\nLEFT JOIN soyoung_dw.dim_product_info b\nON a.pid = b.product_id\nAND b.dp = CURRENT_DATE() - 1\nAND (\nb.track <> '好物'\nOR b.track IS NULL\n)\nWHERE a.dp = CURRENT_DATE() - 1\nAND a.bus_type IN ('新氧优享','连锁')\nAND a.pay_date != COALESCE(cash_back_date,0)\nAND a.is_ass_hospital = 1\nAND a.is_payed = 1\n) a\nWHERE a.rn = 1\nGROUP BY a.user_id",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 52
+  },
+  {
+    "asset_id": "user_profile_field:U052",
+    "asset_type": "user_profile_field",
+    "field_id": "U052",
+    "name": "医美最近一天日支付项目的list",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "连锁用户在医美领域末次支付当天的支付品项列表",
+    "data_type": "STRING/ARRAY",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,COLLECT_SET(DISTINCT b.standard_name) AS 医美最近一天日支付项目的list\nFROM (\nSELECT DISTINCT pay_date\n,user_id\n,pid\n,main_order_id\n,pay_gmv\n,b.standard_name\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date DESC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d a\nLEFT JOIN soyoung_dw.dim_product_info b\nON a.pid = b.product_id\nAND b.dp = CURRENT_DATE() - 1\nAND (\nb.track <> '好物'\nOR b.track IS NULL\n)\nWHERE a.dp = CURRENT_DATE() - 1\nAND a.bus_type IN ('新氧优享','连锁')\nAND a.pay_date != COALESCE(cash_back_date,0)\nAND a.is_ass_hospital = 1\nAND a.is_payed = 1\n) a\nWHERE a.rn = 1\nGROUP BY a.user_id",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 53
+  },
+  {
+    "asset_id": "user_profile_field:U053",
+    "asset_type": "user_profile_field",
+    "field_id": "U053",
+    "name": "医美累计订单数量",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "连锁用户在医美领域累计支付的订单量",
+    "data_type": "INT",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,COUNT(DISTINCT a.main_order_id) AS 医美累计订单数量\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d a\nLEFT JOIN soyoung_dw.dim_product_info b\nON a.pid = b.product_id\nAND (\nb.track <> '好物'\nOR b.track IS NULL\n)\nWHERE a.bus_type IN ('新氧优享','连锁')\nAND a.pay_date != COALESCE(a.cash_back_date,0)\nAND a.is_ass_hospital = 1\nAND a.is_payed = 1\nAND a.dp = CURRENT_DATE() - 1\nAND b.dp = CURRENT_DATE() - 1\nGROUP BY a.user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 54
+  },
+  {
+    "asset_id": "user_profile_field:U054",
+    "asset_type": "user_profile_field",
+    "field_id": "U054",
+    "name": "医美累计订单支付支付金额gmv",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "连锁用户在医美领域累计支付的订单金额gmv",
+    "data_type": "DECIMAL",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,SUM(a.pay_gmv) AS 医美累计订单支付支付金额gmv\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d a\nLEFT JOIN soyoung_dw.dim_product_info b\nON a.pid = b.product_id\nAND (\nb.track <> '好物'\nOR b.track IS NULL\n)\nWHERE a.bus_type IN ('新氧优享','连锁')\nAND a.pay_date != COALESCE(a.cash_back_date,0)\nAND a.is_ass_hospital = 1\nAND a.is_payed = 1\nAND a.dp = CURRENT_DATE() - 1\nAND b.dp = CURRENT_DATE() - 1\nGROUP BY a.user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 55
+  },
+  {
+    "asset_id": "user_profile_field:U055",
+    "asset_type": "user_profile_field",
+    "field_id": "U055",
+    "name": "医美累计支付项目数",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "连锁用户在医美领域累计支付的项目数",
+    "data_type": "INT",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,COUNT(DISTINCT b.standard_name) AS 医美累计支付项目数\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d a\nLEFT JOIN soyoung_dw.dim_product_info b\nON a.pid = b.product_id\nAND (\nb.track <> '好物'\nOR b.track IS NULL\n)\nWHERE a.bus_type IN ('新氧优享','连锁')\nAND a.pay_date != COALESCE(a.cash_back_date,0)\nAND a.is_ass_hospital = 1\nAND a.is_payed = 1\nAND a.dp = CURRENT_DATE() - 1\nAND b.dp = CURRENT_DATE() - 1\nGROUP BY a.user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 56
+  },
+  {
+    "asset_id": "user_profile_field:U056",
+    "asset_type": "user_profile_field",
+    "field_id": "U056",
+    "name": "医美累计支付项目的list",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "连锁用户在医美领域累计支付项目的list",
+    "data_type": "STRING/ARRAY",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,COLLECT_SET(DISTINCT b.standard_name) AS 医美累计支付项目的list\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d a\nLEFT JOIN soyoung_dw.dim_product_info b\nON a.pid = b.product_id\nAND (\nb.track <> '好物'\nOR b.track IS NULL\n)\nWHERE a.bus_type IN ('新氧优享','连锁')\nAND a.pay_date != COALESCE(a.cash_back_date,0)\nAND a.is_ass_hospital = 1\nAND a.is_payed = 1\nAND a.dp = CURRENT_DATE() - 1\nAND b.dp = CURRENT_DATE() - 1\nGROUP BY a.user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 57
+  },
+  {
+    "asset_id": "user_profile_field:U057",
+    "asset_type": "user_profile_field",
+    "field_id": "U057",
+    "name": "好物首单日期",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "连锁用户在好物领域的首单支付日期",
+    "data_type": "DATE",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT DISTINCT a.user_id\n,a.pay_date AS 好物首单日期\nFROM (\nSELECT DISTINCT pay_date\n,pid\n,user_id\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date ASC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d a\nLEFT JOIN soyoung_dw.dim_product_info b\nON a.pid = b.product_id\nAND b.dp = CURRENT_DATE() - 1\nAND b.track = '好物'\nWHERE a.dp = CURRENT_DATE() - 1\nAND a.bus_type IN ('新氧优享','连锁')\nAND a.pay_date != COALESCE(cash_back_date,0)\nAND a.is_ass_hospital = 1\nAND a.is_payed = 1\n) a\nWHERE a.rn = 1\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 58
+  },
+  {
+    "asset_id": "user_profile_field:U058",
+    "asset_type": "user_profile_field",
+    "field_id": "U058",
+    "name": "好物首日订单数量",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "连锁用户在好物领域的首次支付当天的订单量",
+    "data_type": "INT",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,COUNT(DISTINCT main_order_id) AS 好物首日订单数量\nFROM (\nSELECT DISTINCT pay_date\n,user_id\n,pid\n,main_order_id\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date ASC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d a\nLEFT JOIN soyoung_dw.dim_product_info b\nON a.pid = b.product_id\nAND b.dp = CURRENT_DATE() - 1\nAND b.track = '好物'\nWHERE a.dp = CURRENT_DATE() - 1\nAND a.bus_type IN ('新氧优享','连锁')\nAND a.pay_date != COALESCE(cash_back_date,0)\nAND a.is_ass_hospital = 1\nAND a.is_payed = 1\n) a\nWHERE a.rn = 1\nGROUP BY a.user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 59
+  },
+  {
+    "asset_id": "user_profile_field:U059",
+    "asset_type": "user_profile_field",
+    "field_id": "U059",
+    "name": "好物首日订单支付支付金额gmv",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "连锁用户在好物领域首次支付当天的支付金额gmv",
+    "data_type": "DECIMAL",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,SUM(pay_gmv) AS 好物首日订单支付支付金额gmv\nFROM (\nSELECT DISTINCT pay_date\n,user_id\n,pid\n,main_order_id\n,pay_gmv\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date ASC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d a\nLEFT JOIN soyoung_dw.dim_product_info b\nON a.pid = b.product_id\nAND b.dp = CURRENT_DATE() - 1\nAND b.track = '好物'\nWHERE a.dp = CURRENT_DATE() - 1\nAND a.bus_type IN ('新氧优享','连锁')\nAND a.pay_date != COALESCE(cash_back_date,0)\nAND a.is_ass_hospital = 1\nAND a.is_payed = 1\n) a\nWHERE a.rn = 1\nGROUP BY a.user_id",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 60
+  },
+  {
+    "asset_id": "user_profile_field:U060",
+    "asset_type": "user_profile_field",
+    "field_id": "U060",
+    "name": "好物首日支付项目数",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "连锁用户在好物领域首次支付当天的支付品项数",
+    "data_type": "INT",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,COUNT(b.standard_name) AS 好物首日支付项目数\nFROM (\nSELECT DISTINCT pay_date\n,user_id\n,pid\n,main_order_id\n,pay_gmv\n,b.standard_name\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date ASC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d a\nLEFT JOIN soyoung_dw.dim_product_info b\nON a.pid = b.product_id\nAND b.dp = CURRENT_DATE() - 1\nAND b.track = '好物'\nWHERE a.dp = CURRENT_DATE() - 1\nAND a.bus_type IN ('新氧优享','连锁')\nAND a.pay_date != COALESCE(cash_back_date,0)\nAND a.is_ass_hospital = 1\nAND a.is_payed = 1\n) a\nWHERE a.rn = 1\nGROUP BY a.user_id",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 61
+  },
+  {
+    "asset_id": "user_profile_field:U061",
+    "asset_type": "user_profile_field",
+    "field_id": "U061",
+    "name": "好物首日支付项目的list",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "连锁用户在好物领域首次支付当天的支付品项列表",
+    "data_type": "STRING/ARRAY",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,COLLECT_SET(DISTINCT b.standard_name) AS 好物首日支付项目的list\nFROM (\nSELECT DISTINCT pay_date\n,user_id\n,pid\n,main_order_id\n,pay_gmv\n,b.standard_name\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date ASC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d a\nLEFT JOIN soyoung_dw.dim_product_info b\nON a.pid = b.product_id\nAND b.dp = CURRENT_DATE() - 1\nAND b.track = '好物'\nWHERE a.dp = CURRENT_DATE() - 1\nAND a.bus_type IN ('新氧优享','连锁')\nAND a.pay_date != COALESCE(cash_back_date,0)\nAND a.is_ass_hospital = 1\nAND a.is_payed = 1\n) a\nWHERE a.rn = 1\nGROUP BY a.user_id",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 62
+  },
+  {
+    "asset_id": "user_profile_field:U062",
+    "asset_type": "user_profile_field",
+    "field_id": "U062",
+    "name": "好物最近一次订单日期",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "连锁用户在好物领域末次订单的支付日期",
+    "data_type": "DATE",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT DISTINCT a.user_id\n,a.pay_date AS 好物最近一次订单日期\nFROM (\nSELECT DISTINCT pay_date\n,pid\n,user_id\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date DESC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d a\nLEFT JOIN soyoung_dw.dim_product_info b\nON a.pid = b.product_id\nAND b.dp = CURRENT_DATE() - 1\nAND b.track = '好物'\nWHERE a.dp = CURRENT_DATE() - 1\nAND a.bus_type IN ('新氧优享','连锁')\nAND a.pay_date != COALESCE(cash_back_date,0)\nAND a.is_ass_hospital = 1\nAND a.is_payed = 1\n) a\nWHERE a.rn = 1\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 63
+  },
+  {
+    "asset_id": "user_profile_field:U063",
+    "asset_type": "user_profile_field",
+    "field_id": "U063",
+    "name": "好物最近一天日订单数量",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "连锁用户在好物领域末次支付当天的订单量",
+    "data_type": "INT",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,COUNT(DISTINCT main_order_id) AS 好物最近一天日订单数量\nFROM (\nSELECT DISTINCT pay_date\n,user_id\n,pid\n,main_order_id\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date DESC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d a\nLEFT JOIN soyoung_dw.dim_product_info b\nON a.pid = b.product_id\nAND b.dp = CURRENT_DATE() - 1\nAND b.track = '好物'\nWHERE a.dp = CURRENT_DATE() - 1\nAND a.bus_type IN ('新氧优享','连锁')\nAND a.pay_date != COALESCE(cash_back_date,0)\nAND a.is_ass_hospital = 1\nAND a.is_payed = 1\n) a\nWHERE a.rn = 1\nGROUP BY a.user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 64
+  },
+  {
+    "asset_id": "user_profile_field:U064",
+    "asset_type": "user_profile_field",
+    "field_id": "U064",
+    "name": "好物最近一天日订单支付支付金额gmv",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "连锁用户在好物领域末次支付当天的支付金额gmv",
+    "data_type": "DECIMAL",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,SUM(pay_gmv) AS 好物最近一天日订单支付金额gmv\nFROM (\nSELECT DISTINCT pay_date\n,user_id\n,pid\n,main_order_id\n,pay_gmv\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date DESC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d a\nLEFT JOIN soyoung_dw.dim_product_info b\nON a.pid = b.product_id\nAND b.dp = CURRENT_DATE() - 1\nAND b.track = '好物'\nWHERE a.dp = CURRENT_DATE() - 1\nAND a.bus_type IN ('新氧优享','连锁')\nAND a.pay_date != COALESCE(cash_back_date,0)\nAND a.is_ass_hospital = 1\nAND a.is_payed = 1\n) a\nWHERE a.rn = 1\nGROUP BY a.user_id",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 65
+  },
+  {
+    "asset_id": "user_profile_field:U065",
+    "asset_type": "user_profile_field",
+    "field_id": "U065",
+    "name": "好物最近一天日支付spu数",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "连锁用户在好物领域末次支付当天的支付品项数",
+    "data_type": "VARCHAR",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,COUNT(b.standard_name) AS 好物最近一天日支付项目数\nFROM (\nSELECT DISTINCT pay_date\n,user_id\n,pid\n,main_order_id\n,pay_gmv\n,b.standard_name\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date DESC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d a\nLEFT JOIN soyoung_dw.dim_product_info b\nON a.pid = b.product_id\nAND b.dp = CURRENT_DATE() - 1\nAND b.track = '好物'\nWHERE a.dp = CURRENT_DATE() - 1\nAND a.bus_type IN ('新氧优享','连锁')\nAND a.pay_date != COALESCE(cash_back_date,0)\nAND a.is_ass_hospital = 1\nAND a.is_payed = 1\n) a\nWHERE a.rn = 1\nGROUP BY a.user_id",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 66
+  },
+  {
+    "asset_id": "user_profile_field:U066",
+    "asset_type": "user_profile_field",
+    "field_id": "U066",
+    "name": "好物最近一天日支付spu的list",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "连锁用户在好物领域末次支付当天的支付品项列表",
+    "data_type": "STRING/ARRAY",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,COLLECT_SET(DISTINCT b.standard_name) AS 好物最近一天日支付项目的list\nFROM (\nSELECT DISTINCT pay_date\n,user_id\n,pid\n,main_order_id\n,pay_gmv\n,b.standard_name\n,DENSE_RANK() OVER (PARTITION BY user_id ORDER BY pay_date DESC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d a\nLEFT JOIN soyoung_dw.dim_product_info b\nON a.pid = b.product_id\nAND b.dp = CURRENT_DATE() - 1\nAND b.track = '好物'\nWHERE a.dp = CURRENT_DATE() - 1\nAND a.bus_type IN ('新氧优享','连锁')\nAND a.pay_date != COALESCE(cash_back_date,0)\nAND a.is_ass_hospital = 1\nAND a.is_payed = 1\n) a\nWHERE a.rn = 1\nGROUP BY a.user_id",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 67
+  },
+  {
+    "asset_id": "user_profile_field:U067",
+    "asset_type": "user_profile_field",
+    "field_id": "U067",
+    "name": "好物累计订单数量",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "连锁用户在好物领域累计支付的订单量",
+    "data_type": "INT",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,COUNT(DISTINCT a.main_order_id) AS 好物累计订单数量\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d a\nLEFT JOIN soyoung_dw.dim_product_info b\nON a.pid = b.product_id\nAND b.track = '好物'\nWHERE a.bus_type IN ('新氧优享','连锁')\nAND a.pay_date != COALESCE(a.cash_back_date,0)\nAND a.is_ass_hospital = 1\nAND a.is_payed = 1\nAND a.dp = CURRENT_DATE() - 1\nAND b.dp = CURRENT_DATE() - 1\nGROUP BY a.user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 68
+  },
+  {
+    "asset_id": "user_profile_field:U068",
+    "asset_type": "user_profile_field",
+    "field_id": "U068",
+    "name": "好物累计订单支付金额gmv",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "连锁用户在好物领域累计支付的订单金额gmv",
+    "data_type": "DECIMAL",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,SUM(a.pay_gmv) AS 好物累计订单支付支付金额gmv\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d a\nLEFT JOIN soyoung_dw.dim_product_info b\nON a.pid = b.product_id\nAND b.track = '好物'\nWHERE a.bus_type IN ('新氧优享','连锁')\nAND a.pay_date != COALESCE(a.cash_back_date,0)\nAND a.is_ass_hospital = 1\nAND a.is_payed = 1\nAND a.dp = CURRENT_DATE() - 1\nAND b.dp = CURRENT_DATE() - 1\nGROUP BY a.user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 69
+  },
+  {
+    "asset_id": "user_profile_field:U069",
+    "asset_type": "user_profile_field",
+    "field_id": "U069",
+    "name": "好物累计支付项目数",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "连锁用户在好物领域累计支付的项目数",
+    "data_type": "INT",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,COUNT(DISTINCT b.standard_name) AS 好物累计支付项目数\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d a\nLEFT JOIN soyoung_dw.dim_product_info b\nON a.pid = b.product_id\nAND b.track = '好物'\nWHERE a.bus_type IN ('新氧优享','连锁')\nAND a.pay_date != COALESCE(a.cash_back_date,0)\nAND a.is_ass_hospital = 1\nAND a.is_payed = 1\nAND a.dp = CURRENT_DATE() - 1\nAND b.dp = CURRENT_DATE() - 1\nGROUP BY a.user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 70
+  },
+  {
+    "asset_id": "user_profile_field:U070",
+    "asset_type": "user_profile_field",
+    "field_id": "U070",
+    "name": "好物累计支付项目的list",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "连锁用户在好物领域累计支付项目的list",
+    "data_type": "STRING/ARRAY",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,COLLECT_SET(DISTINCT b.standard_name) AS 好物累计支付项目的list\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d a\nLEFT JOIN soyoung_dw.dim_product_info b\nON a.pid = b.product_id\nAND b.track = '好物'\nWHERE a.bus_type IN ('新氧优享','连锁')\nAND a.pay_date != COALESCE(a.cash_back_date,0)\nAND a.is_ass_hospital = 1\nAND a.is_payed = 1\nAND a.dp = CURRENT_DATE() - 1\nAND b.dp = CURRENT_DATE() - 1\nGROUP BY a.user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 71
+  },
+  {
+    "asset_id": "user_profile_field:U071",
+    "asset_type": "user_profile_field",
+    "field_id": "U071",
+    "name": "实际支付GMV，剔除退款，换购，转增",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "剔除退款，换购，转增后，用户的实际支付gmv",
+    "data_type": "DECIMAL",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT user_id\n,SUM(pay_gmv) AS 实际支付GMV\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND bus_type IN ('新氧优享','连锁')\nAND cash_back_date IS NULL\nAND is_ass_hospital = 1\nAND is_payed = 1\nAND transaction_type = 1\nGROUP BY user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 72
+  },
+  {
+    "asset_id": "user_profile_field:U072",
+    "asset_type": "user_profile_field",
+    "field_id": "U072",
+    "name": "实际支付项目list剔除退款，换购，转增",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "剔除退款，换购，转增后，用户的实际支付项目list",
+    "data_type": "STRING/ARRAY",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT a.user_id\n,COLLECT_SET(DISTINCT c.standard_name) AS 实际支付项目的list\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d a\nLEFT JOIN soyoung_dw.dim_product_info c\nON a.pid = c.product_id\nAND c.dp = CURRENT_DATE() - 1\nWHERE a.bus_type IN ('新氧优享','连锁')\nAND a.dp = CURRENT_DATE() - 1\nAND cash_back_date IS NULL\nAND a.is_ass_hospital = 1\nAND a.is_payed = 1\nAND a.transaction_type = 1\nGROUP BY a.user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 73
+  },
+  {
+    "asset_id": "user_profile_field:U073",
+    "asset_type": "user_profile_field",
+    "field_id": "U073",
+    "name": "实际支付订单数，剔除剔除退款，换购，转增",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "剔除退款，换购，转增后，用户的实际支付订单数",
+    "data_type": "INT",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT user_id\n,COUNT(DISTINCT main_order_id) AS 实际支付订单数\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND bus_type IN ('新氧优享','连锁')\nAND cash_back_date IS NULL\nAND is_ass_hospital = 1\nAND is_payed = 1\nAND transaction_type = 1\nGROUP BY user_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 74
+  },
+  {
+    "asset_id": "user_profile_field:U074",
+    "asset_type": "user_profile_field",
+    "field_id": "U074",
+    "name": "待核销订单数",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "用户购买后还未核销的订单数",
+    "data_type": "INT",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT crm_customer_id\n,COUNT(DISTINCT main_order_id) AS 待核销订单数\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND bus_type IN ('新氧优享','连锁')\nAND pay_date != COALESCE(cash_back_date,'0')\nAND cash_back_date IS NULL\nAND is_ass_hospital = 1\nAND is_payed = 1\nAND left_num > 0\nGROUP BY crm_customer_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 75
+  },
+  {
+    "asset_id": "user_profile_field:U075",
+    "asset_type": "user_profile_field",
+    "field_id": "U075",
+    "name": "待核销订单金额",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "用户购买后还未核销的订单金额gmv",
+    "data_type": "DECIMAL",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT crm_customer_id\n,SUM(pay_gmv) AS 待核销订单金额\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND bus_type IN ('新氧优享','连锁')\nAND pay_date != COALESCE(cash_back_date,'0')\nAND cash_back_date IS NULL\nAND is_ass_hospital = 1\nAND is_payed = 1\nAND left_num > 0\nGROUP BY crm_customer_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 76
+  },
+  {
+    "asset_id": "user_profile_field:U076",
+    "asset_type": "user_profile_field",
+    "field_id": "U076",
+    "name": "待核销项目数",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "用户购买后还未核销的项目数",
+    "data_type": "INT",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT crm_customer_id\n,COUNT(DISTINCT s.standard_commodity) 待核销项目数\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d a\nLEFT JOIN soyoung_dw.dim_qy_sku_market_temp_all s\nON a.pid = s.sku_id\nWHERE a.dp = CURRENT_DATE() - 1\nAND a.pay_date != COALESCE(a.cash_back_date,0)\nAND a.cash_back_date IS NULL\nAND a.bus_type IN ('新氧优享','连锁')\nAND a.is_ass_hospital = 1\nAND a.is_payed = 1\nAND left_num > 0\nGROUP BY crm_customer_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 77
+  },
+  {
+    "asset_id": "user_profile_field:U077",
+    "asset_type": "user_profile_field",
+    "field_id": "U077",
+    "name": "待核销项目list",
+    "business_area": "用户板块",
+    "category": "支付",
+    "grain": "用户级",
+    "definition": "用户购买后还未核销的项目列表",
+    "data_type": "STRING/ARRAY",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qzy_fact_all_d"
+    ],
+    "sql": "SELECT crm_customer_id\n,COLLECT_SET(s.standard_commodity) 待核销项目list\nFROM soyoung_dw.dwd_ord_order_qzy_fact_all_d a\nLEFT JOIN soyoung_dw.dim_qy_sku_market_temp_all s\nON a.pid = s.sku_id\nWHERE a.dp = CURRENT_DATE() - 1\nAND a.pay_date != COALESCE(a.cash_back_date,0)\nAND a.cash_back_date IS NULL\nAND a.bus_type IN ('新氧优享','连锁')\nAND a.is_ass_hospital = 1\nAND a.is_payed = 1\nAND left_num > 0\nGROUP BY crm_customer_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 78
+  },
+  {
+    "asset_id": "user_profile_field:U078",
+    "asset_type": "user_profile_field",
+    "field_id": "U078",
+    "name": "首次核销日期",
+    "business_area": "用户板块",
+    "category": "核销",
+    "grain": "用户级",
+    "definition": "用户的首次核销日期",
+    "data_type": "DATE",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qy_execution_record_all_d"
+    ],
+    "sql": "SELECT DISTINCT a.executed_date 首次核销日期\n,crm_customer_id\nFROM (\nSELECT DISTINCT executed_date\n,crm_customer_id\n,DENSE_RANK() OVER (PARTITION BY crm_customer_id ORDER BY executed_date ASC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qy_execution_record_all_d a\nWHERE dp = CURRENT_DATE() - 1\nAND is_valid = 1\n) a\nWHERE a.rn = 1\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 79
+  },
+  {
+    "asset_id": "user_profile_field:U079",
+    "asset_type": "user_profile_field",
+    "field_id": "U079",
+    "name": "首次核销gmv",
+    "business_area": "用户板块",
+    "category": "核销",
+    "grain": "用户级",
+    "definition": "用户的首次核销金额gmv",
+    "data_type": "DECIMAL",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qy_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(amount) 首次核销gmv\n,crm_customer_id\nFROM (\nSELECT crm_customer_id\n,amount\n,DENSE_RANK() OVER (PARTITION BY crm_customer_id ORDER BY executed_date ASC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qy_execution_record_all_d a\nWHERE dp = CURRENT_DATE() - 1\nAND is_valid = 1\n) a\nWHERE a.rn = 1\nGROUP BY crm_customer_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 80
+  },
+  {
+    "asset_id": "user_profile_field:U080",
+    "asset_type": "user_profile_field",
+    "field_id": "U080",
+    "name": "首次核销收入（不含税gmv/1.06）",
+    "business_area": "用户板块",
+    "category": "核销",
+    "grain": "用户级",
+    "definition": "用户的首次核销收入",
+    "data_type": "DECIMAL",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qy_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(amount / 1.06) 首次核销收入\n,crm_customer_id\nFROM (\nSELECT crm_customer_id\n,amount\n,DENSE_RANK() OVER (PARTITION BY crm_customer_id ORDER BY executed_date ASC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qy_execution_record_all_d a\nWHERE dp = CURRENT_DATE() - 1\nAND is_valid = 1\n) a\nWHERE a.rn = 1\nGROUP BY crm_customer_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 81
+  },
+  {
+    "asset_id": "user_profile_field:U081",
+    "asset_type": "user_profile_field",
+    "field_id": "U081",
+    "name": "首次核销服务点数",
+    "business_area": "用户板块",
+    "category": "核销",
+    "grain": "用户级",
+    "definition": "用户的首次核销的服务点数",
+    "data_type": "INT",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qy_execution_record_all_d"
+    ],
+    "sql": "SELECT COUNT(exe_cnt) 首次核销服务点数\n,customer_id\nFROM (\nSELECT exe_cnt\n,customer_id\n,DENSE_RANK() OVER (PARTITION BY customer_id ORDER BY st_day ASC ) AS rn\nFROM soyoung_dw.dws_opt_qy_core_summary_all_d a\nWHERE dp = CURRENT_DATE() - 1\n) a\nWHERE a.rn = 1\nGROUP BY customer_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 82
+  },
+  {
+    "asset_id": "user_profile_field:U082",
+    "asset_type": "user_profile_field",
+    "field_id": "U082",
+    "name": "首次核销项目数",
+    "business_area": "用户板块",
+    "category": "核销",
+    "grain": "用户级",
+    "definition": "用户首次核销的项目数",
+    "data_type": "INT",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qy_execution_record_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT product_id) 首次核销项目数\n,crm_customer_id\nFROM (\nSELECT crm_customer_id\n,product_id\n,DENSE_RANK() OVER (PARTITION BY crm_customer_id ORDER BY executed_date ASC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qy_execution_record_all_d a\nWHERE dp = CURRENT_DATE() - 1\nAND is_valid = 1\n) a\nWHERE a.rn = 1\nGROUP BY crm_customer_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 83
+  },
+  {
+    "asset_id": "user_profile_field:U083",
+    "asset_type": "user_profile_field",
+    "field_id": "U083",
+    "name": "首次核销项目数的list",
+    "business_area": "用户板块",
+    "category": "核销",
+    "grain": "用户级",
+    "definition": "用户首次核销的项目数的list",
+    "data_type": "STRING/ARRAY",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qy_execution_record_all_d"
+    ],
+    "sql": "SELECT COLLECT_SET(DISTINCT a.item_product_name) 首次核销项目list\n,crm_customer_id\nFROM (\nSELECT crm_customer_id\n,item_product_name\n,DENSE_RANK() OVER (PARTITION BY crm_customer_id ORDER BY executed_date ASC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qy_execution_record_all_d a\nWHERE dp = CURRENT_DATE() - 1\nAND is_valid = 1\n) a\nWHERE a.rn = 1\nGROUP BY crm_customer_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 84
+  },
+  {
+    "asset_id": "user_profile_field:U084",
+    "asset_type": "user_profile_field",
+    "field_id": "U084",
+    "name": "最近一次核销日期",
+    "business_area": "用户板块",
+    "category": "核销",
+    "grain": "用户级",
+    "definition": "用户的末次核销日期",
+    "data_type": "DATE",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qy_execution_record_all_d"
+    ],
+    "sql": "SELECT DISTINCT a.executed_date 最近一次核销日期\n,crm_customer_id\nFROM (\nSELECT DISTINCT executed_date\n,crm_customer_id\n,DENSE_RANK() OVER (PARTITION BY crm_customer_id ORDER BY executed_date DESC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qy_execution_record_all_d a\nWHERE dp = CURRENT_DATE() - 1\nAND is_valid = 1\n) a\nWHERE a.rn = 1\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 85
+  },
+  {
+    "asset_id": "user_profile_field:U085",
+    "asset_type": "user_profile_field",
+    "field_id": "U085",
+    "name": "最近一次核销gmv",
+    "business_area": "用户板块",
+    "category": "核销",
+    "grain": "用户级",
+    "definition": "用户的末次核销金额gmv",
+    "data_type": "DECIMAL",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qy_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(amount) 最近一次核销gmv\n,crm_customer_id\nFROM (\nSELECT crm_customer_id\n,amount\n,DENSE_RANK() OVER (PARTITION BY crm_customer_id ORDER BY executed_date DESC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qy_execution_record_all_d a\nWHERE dp = CURRENT_DATE() - 1\nAND is_valid = 1\n) a\nWHERE a.rn = 1\nGROUP BY crm_customer_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 86
+  },
+  {
+    "asset_id": "user_profile_field:U086",
+    "asset_type": "user_profile_field",
+    "field_id": "U086",
+    "name": "最近一次核销收入（不含税",
+    "business_area": "用户板块",
+    "category": "核销",
+    "grain": "用户级",
+    "definition": "用户的末次核销收入",
+    "data_type": "DECIMAL",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qy_execution_record_all_d"
+    ],
+    "sql": "SELECT SUM(amount / 1.06) 最近一次核销收入\n,crm_customer_id\nFROM (\nSELECT crm_customer_id\n,amount\n,DENSE_RANK() OVER (PARTITION BY crm_customer_id ORDER BY executed_date DESC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qy_execution_record_all_d a\nWHERE dp = CURRENT_DATE() - 1\nAND is_valid = 1\n) a\nWHERE a.rn = 1\nGROUP BY crm_customer_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 87
+  },
+  {
+    "asset_id": "user_profile_field:U087",
+    "asset_type": "user_profile_field",
+    "field_id": "U087",
+    "name": "最近一次核销服务点数",
+    "business_area": "用户板块",
+    "category": "核销",
+    "grain": "用户级",
+    "definition": "用户的末次核销的服务点数",
+    "data_type": "INT",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qy_execution_record_all_d"
+    ],
+    "sql": "SELECT COUNT(exe_cnt) 最近一次核销服务点数\n,customer_id\nFROM (\nSELECT exe_cnt\n,customer_id\n,DENSE_RANK() OVER (PARTITION BY customer_id ORDER BY st_day DESC ) AS rn\nFROM soyoung_dw.dws_opt_qy_core_summary_all_d a\nWHERE dp = CURRENT_DATE() - 1\n) a\nWHERE a.rn = 1\nGROUP BY customer_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 88
+  },
+  {
+    "asset_id": "user_profile_field:U088",
+    "asset_type": "user_profile_field",
+    "field_id": "U088",
+    "name": "最近一次核销项目数",
+    "business_area": "用户板块",
+    "category": "核销",
+    "grain": "用户级",
+    "definition": "用户末次核销的项目数",
+    "data_type": "INT",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qy_execution_record_all_d"
+    ],
+    "sql": "SELECT COUNT(DISTINCT product_id) 最近一次核销项目数\n,crm_customer_id\nFROM (\nSELECT crm_customer_id\n,product_id\n,DENSE_RANK() OVER (PARTITION BY crm_customer_id ORDER BY executed_date DESC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qy_execution_record_all_d a\nWHERE dp = CURRENT_DATE() - 1\nAND is_valid = 1\n) a\nWHERE a.rn = 1\nGROUP BY crm_customer_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 89
+  },
+  {
+    "asset_id": "user_profile_field:U089",
+    "asset_type": "user_profile_field",
+    "field_id": "U089",
+    "name": "最近一次核销项目list",
+    "business_area": "用户板块",
+    "category": "核销",
+    "grain": "用户级",
+    "definition": "用户末次核销的项目数的list",
+    "data_type": "STRING/ARRAY",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qy_execution_record_all_d"
+    ],
+    "sql": "SELECT COLLECT_SET(DISTINCT a.item_product_name) 最近一次核销项目list\n,crm_customer_id\nFROM (\nSELECT crm_customer_id\n,item_product_name\n,DENSE_RANK() OVER (PARTITION BY crm_customer_id ORDER BY executed_date DESC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qy_execution_record_all_d a\nWHERE dp = CURRENT_DATE() - 1\nAND is_valid = 1\n) a\nWHERE a.rn = 1\nGROUP BY crm_customer_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 90
+  },
+  {
+    "asset_id": "user_profile_field:U090",
+    "asset_type": "user_profile_field",
+    "field_id": "U090",
+    "name": "累计核销gmv",
+    "business_area": "用户板块",
+    "category": "核销",
+    "grain": "用户级",
+    "definition": "用户的累计核销金额gmv",
+    "data_type": "DECIMAL",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qy_execution_record_all_d"
+    ],
+    "sql": "SELECT crm_customer_id\n,SUM(amount) AS 累计核销gmv\nFROM soyoung_dw.dwd_ord_order_qy_execution_record_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND is_valid = 1\nGROUP BY crm_customer_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 91
+  },
+  {
+    "asset_id": "user_profile_field:U091",
+    "asset_type": "user_profile_field",
+    "field_id": "U091",
+    "name": "累计核销收入（不含税gmv/1.06）",
+    "business_area": "用户板块",
+    "category": "核销",
+    "grain": "用户级",
+    "definition": "用户的累计核销收入",
+    "data_type": "DECIMAL",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qy_execution_record_all_d"
+    ],
+    "sql": "SELECT crm_customer_id\n,SUM(amount / 1.06) AS 累计核销收入\nFROM soyoung_dw.dwd_ord_order_qy_execution_record_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND is_valid = 1\nGROUP BY crm_customer_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 92
+  },
+  {
+    "asset_id": "user_profile_field:U092",
+    "asset_type": "user_profile_field",
+    "field_id": "U092",
+    "name": "累计核销服务点数",
+    "business_area": "用户板块",
+    "category": "核销",
+    "grain": "用户级",
+    "definition": "用户的累计核销服务点数",
+    "data_type": "INT",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qy_execution_record_all_d"
+    ],
+    "sql": "SELECT COUNT(exe_cnt) 累计核销服务点数\n,customer_id\nFROM soyoung_dw.dws_opt_qy_core_summary_all_d\nWHERE dp = CURRENT_DATE() - 1\nGROUP BY customer_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 93
+  },
+  {
+    "asset_id": "user_profile_field:U093",
+    "asset_type": "user_profile_field",
+    "field_id": "U093",
+    "name": "累计核销项目数",
+    "business_area": "用户板块",
+    "category": "核销",
+    "grain": "用户级",
+    "definition": "用户的累计核销项目数",
+    "data_type": "INT",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qy_execution_record_all_d"
+    ],
+    "sql": "SELECT crm_customer_id\n,COUNT(DISTINCT product_id) 累计核销项目数\nFROM soyoung_dw.dwd_ord_order_qy_execution_record_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND is_valid = 1\nGROUP BY crm_customer_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 94
+  },
+  {
+    "asset_id": "user_profile_field:U094",
+    "asset_type": "user_profile_field",
+    "field_id": "U094",
+    "name": "累计核销项目list",
+    "business_area": "用户板块",
+    "category": "核销",
+    "grain": "用户级",
+    "definition": "用户的累计核销的项目list",
+    "data_type": "STRING/ARRAY",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qy_execution_record_all_d"
+    ],
+    "sql": "SELECT crm_customer_id\n,COLLECT_SET(DISTINCT item_product_name) 累计核销品项list\nFROM soyoung_dw.dwd_ord_order_qy_execution_record_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND is_valid = 1\nGROUP BY crm_customer_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 95
+  },
+  {
+    "asset_id": "user_profile_field:U095",
+    "asset_type": "user_profile_field",
+    "field_id": "U095",
+    "name": "非本月末次核销时间",
+    "business_area": "用户板块",
+    "category": "核销",
+    "grain": "用户级",
+    "definition": "用户在当前月之前的末次核销日期",
+    "data_type": "VARCHAR",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qy_execution_record_all_d"
+    ],
+    "sql": "SELECT a.executed_date AS 非本月末次核销日期\n,crm_customer_id\nFROM (\nSELECT DISTINCT executed_date\n,crm_customer_id\n,DENSE_RANK() OVER (PARTITION BY crm_customer_id ORDER BY executed_date DESC ) AS rn\nFROM soyoung_dw.dwd_ord_order_qy_execution_record_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND is_valid = 1\nAND executed_date < SUBSTR(CURRENT_DATE(),1,7)\n) a\nWHERE a.rn = 1\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 96
+  },
+  {
+    "asset_id": "user_profile_field:U096",
+    "asset_type": "user_profile_field",
+    "field_id": "U096",
+    "name": "累计核销次数（按天去重）",
+    "business_area": "用户板块",
+    "category": "核销",
+    "grain": "用户级",
+    "definition": "用户的累计核销次数（同一天多次核销算一次）",
+    "data_type": "INT",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qy_execution_record_all_d"
+    ],
+    "sql": "SELECT crm_customer_id\n,COUNT(DISTINCT executed_date) AS 累计核销次数_按天去重\nFROM soyoung_dw.dwd_ord_order_qy_execution_record_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND is_valid = 1\nGROUP BY crm_customer_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 97
+  },
+  {
+    "asset_id": "user_profile_field:U097",
+    "asset_type": "user_profile_field",
+    "field_id": "U097",
+    "name": "非本月累计核销次数（按天去重）",
+    "business_area": "用户板块",
+    "category": "核销",
+    "grain": "用户级",
+    "definition": "用户非本月的累计核销次数（同一天多次核销算一次）",
+    "data_type": "INT",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qy_execution_record_all_d"
+    ],
+    "sql": "SELECT crm_customer_id\n,COUNT(DISTINCT executed_date) AS 非本月累计核销次数_按天去重\nFROM soyoung_dw.dwd_ord_order_qy_execution_record_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND is_valid = 1\nAND executed_date < SUBSTR(CURRENT_DATE(),1,7)\nGROUP BY crm_customer_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 98
+  },
+  {
+    "asset_id": "user_profile_field:U098",
+    "asset_type": "user_profile_field",
+    "field_id": "U098",
+    "name": "大师团核销gmv",
+    "business_area": "用户板块",
+    "category": "核销",
+    "grain": "用户级",
+    "definition": "用户在大师团核销的gmv",
+    "data_type": "DECIMAL",
+    "source_tables": [
+      "soyoung_dw.dwd_ord_order_qy_execution_record_all_d"
+    ],
+    "sql": "SELECT crm_customer_id\n,SUM(CASE WHEN customer_is_master = 1 THEN amount ELSE 0 END) AS 大师团核销gmv\nFROM soyoung_dw.dwd_ord_order_qy_execution_record_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND is_valid = 1\nGROUP BY crm_customer_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 99
+  },
+  {
+    "asset_id": "user_profile_field:U099",
+    "asset_type": "user_profile_field",
+    "field_id": "U099",
+    "name": "是否私域用户",
+    "business_area": "用户板块",
+    "category": "加c",
+    "grain": "用户级",
+    "definition": "是否私域用户",
+    "data_type": "BOOLEAN",
+    "source_tables": [
+      "soyoung_dw.dwd_inp_private_user_fact_all_d"
+    ],
+    "sql": "SELECT d.unionid\n,CASE WHEN a.union_id IS NOT NULL THEN '是'\nELSE '否'\nEND 是否私域用户\nFROM soyoung_dw.dim_user_info d\nLEFT JOIN (\nSELECT DISTINCT a.dp\n,union_id\nFROM soyoung_dw.dwd_inp_private_user_fact_all_d a\nWHERE a.dp = CURRENT_DATE() - 1\nAND a.source IN (1,2)\nAND a.data_type = 1\nAND is_valid = 1\nAND union_id <> ''\nAND union_id IS NOT NULL\n) a\nON d.unionid = a.union_id\nWHERE d.dp = CURRENT_DATE() - 1",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 100
+  },
+  {
+    "asset_id": "user_profile_field:U100",
+    "asset_type": "user_profile_field",
+    "field_id": "U100",
+    "name": "是否私域账号有效加c",
+    "business_area": "用户板块",
+    "category": "加c",
+    "grain": "用户级",
+    "definition": "是否私域账号有效加c",
+    "data_type": "BOOLEAN",
+    "source_tables": [
+      "soyoung_dw.dwd_inp_private_user_fact_all_d"
+    ],
+    "sql": "WITH siyu AS\n(\nSELECT DISTINCT a.dp\n,union_id\nFROM soyoung_dw.dwd_inp_private_user_fact_all_d a\nJOIN soyoung_dw.dim_inp_private_staff_info_all_d b\nON a.qywx_user_id = b.qywx_user_id\nAND b.source = 2\nAND b.dp = CURRENT_DATE() - 1\nWHERE a.dp = CURRENT_DATE() - 1\nAND a.source = 2\nAND a.data_type = 1\nAND is_valid = 1\nAND union_id <> ''\nAND union_id IS NOT NULL\nAND departments REGEXP '私域部|大师团'\n)\nSELECT DISTINCT a.unionid\n,CASE WHEN t.union_id IS NOT NULL THEN '是'\nELSE '否'\nEND AS 是否私域C\nFROM soyoung_dw.dim_user_info a\nLEFT JOIN siyu t\nON a.unionid = t.union_id\nWHERE a.dp = CURRENT_DATE() - 1",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 101
+  },
+  {
+    "asset_id": "user_profile_field:U101",
+    "asset_type": "user_profile_field",
+    "field_id": "U101",
+    "name": "是否网咨账号有效加c",
+    "business_area": "用户板块",
+    "category": "加c",
+    "grain": "用户级",
+    "definition": "是否网咨账号有效加c",
+    "data_type": "BOOLEAN",
+    "source_tables": [
+      "soyoung_dw.dwd_inp_private_user_fact_all_d"
+    ],
+    "sql": "WITH wangzi AS\n(\nSELECT DISTINCT a.dp\n,union_id\nFROM soyoung_dw.dwd_inp_private_user_fact_all_d a\nLEFT JOIN soyoung_dw.dim_inp_private_staff_info_all_d b\nON a.qywx_user_id = b.qywx_user_id\nAND b.source = 2\nAND b.dp = CURRENT_DATE() - 1\nWHERE a.dp = CURRENT_DATE() - 1\nAND a.source = 2\nAND a.data_type = 1\nAND is_valid = 1\nAND departments REGEXP '总部网咨'\nAND a.union_id <> ''\nAND a.union_id IS NOT NULL\n)\nSELECT DISTINCT a.unionid\n,CASE WHEN t.union_id IS NOT NULL THEN '是'\nELSE '否'\nEND AS 是否网咨C\nFROM soyoung_dw.dim_user_info a\nLEFT JOIN wangzi t\nON a.unionid = t.union_id\nWHERE a.dp = CURRENT_DATE() - 1",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 102
+  },
+  {
+    "asset_id": "user_profile_field:U102",
+    "asset_type": "user_profile_field",
+    "field_id": "U102",
+    "name": "是否门店咨询账号有效加c",
+    "business_area": "用户板块",
+    "category": "加c",
+    "grain": "用户级",
+    "definition": "是否门店咨询账号有效加c",
+    "data_type": "BOOLEAN",
+    "source_tables": [
+      "soyoung_dw.dwd_inp_private_user_fact_all_d"
+    ],
+    "sql": "WITH mendian AS\n(\nSELECT DISTINCT a.dp\n,union_id\nFROM soyoung_dw.dwd_inp_private_user_fact_all_d a\nLEFT JOIN soyoung_dw.dim_inp_private_staff_info_all_d b\nON a.qywx_user_id = b.qywx_user_id\nAND b.source = 2\nAND b.dp = CURRENT_DATE() - 1\nWHERE a.dp = CURRENT_DATE() - 1\nAND a.source = 2\nAND a.data_type = 1\nAND is_valid = 1\nAND departments REGEXP '全国咨询师'\nAND a.union_id <> ''\nAND a.union_id IS NOT NULL\n)\nSELECT DISTINCT a.unionid\n,CASE WHEN t.union_id IS NOT NULL THEN '是'\nELSE '否'\nEND AS 是否门店C\nFROM soyoung_dw.dim_user_info a\nLEFT JOIN mendian t\nON a.unionid = t.union_id\nWHERE a.dp = CURRENT_DATE() - 1",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 103
+  },
+  {
+    "asset_id": "user_profile_field:U103",
+    "asset_type": "user_profile_field",
+    "field_id": "U103",
+    "name": "是否加群",
+    "business_area": "用户板块",
+    "category": "加c",
+    "grain": "用户级",
+    "definition": "是否加群",
+    "data_type": "BOOLEAN",
+    "source_tables": [
+      "soyoung_dw.dwd_inp_private_user_fact_all_d"
+    ],
+    "sql": "WITH qun AS\n(\nSELECT DISTINCT a.dp\n,union_id\nFROM soyoung_dw.dwd_inp_private_user_fact_all_d a\nWHERE a.dp = CURRENT_DATE() - 1\nAND a.source = 2\nAND a.data_type = 2\nAND is_valid = 1\nAND union_id <> ''\nAND union_id IS NOT NULL\n)\nSELECT DISTINCT a.unionid\n,CASE WHEN t.union_id IS NOT NULL THEN '是'\nELSE '否'\nEND AS 是否加群\nFROM soyoung_dw.dim_user_info a\nLEFT JOIN qun t\nON a.unionid = t.union_id\nWHERE a.dp = CURRENT_DATE() - 1",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 104
+  },
+  {
+    "asset_id": "user_profile_field:U104",
+    "asset_type": "user_profile_field",
+    "field_id": "U104",
+    "name": "app首次登陆日期",
+    "business_area": "用户板块",
+    "category": "小程序",
+    "grain": "用户级",
+    "definition": "用户首次登陆app的日期",
+    "data_type": "DATE",
+    "source_tables": [
+      "soyoung_dw.dwd_md_xcx_all_log_d"
+    ],
+    "sql": "SELECT u.unionid\n,MIN(a.dp) AS first_login_date\nFROM soyoung_dw.dwd_md_app_log_nocheat a\nJOIN soyoung_dw.dim_device_info d\nON a.device_id = d.device_id\nAND d.dp = CURRENT_DATE() - 1\nJOIN soyoung_dw.dim_user_info u\nON d.uid = u.uid\nAND u.dp = CURRENT_DATE() - 1\nWHERE a.dp >= CURRENT_DATE() - 90 --90天内\nAND a.app_id IN (131,132)\nAND a.from_action_id = 28454\nAND a.type = 1\nAND u.unionid IS NOT NULL\nAND u.unionid <> ''\nGROUP BY u.unionid\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 105
+  },
+  {
+    "asset_id": "user_profile_field:U105",
+    "asset_type": "user_profile_field",
+    "field_id": "U105",
+    "name": "app末次登陆日期",
+    "business_area": "用户板块",
+    "category": "小程序",
+    "grain": "用户级",
+    "definition": "用户末次登陆app的日期",
+    "data_type": "DATE",
+    "source_tables": [
+      "soyoung_dw.dwd_md_xcx_all_log_d"
+    ],
+    "sql": "SELECT u.unionid\n,MAX(a.dp) AS last_login_date\nFROM soyoung_dw.dwd_md_app_log_nocheat a\nJOIN soyoung_dw.dim_device_info d\nON a.device_id = d.device_id\nAND d.dp = CURRENT_DATE() - 1\nJOIN soyoung_dw.dim_user_info u\nON d.uid = u.uid\nAND u.dp = CURRENT_DATE() - 1\nWHERE a.dp >= CURRENT_DATE() - 90 --90天内\nAND a.app_id IN (131,132)\nAND a.from_action_id = 28454\nAND a.type = 1\nAND u.unionid IS NOT NULL\nAND u.unionid <> ''\nGROUP BY u.unionid\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 106
+  },
+  {
+    "asset_id": "user_profile_field:U106",
+    "asset_type": "user_profile_field",
+    "field_id": "U106",
+    "name": "app近30天活跃天数",
+    "business_area": "用户板块",
+    "category": "小程序",
+    "grain": "用户级",
+    "definition": "用户近30天在app的活跃天数",
+    "data_type": "INT",
+    "source_tables": [
+      "soyoung_dw.dwd_md_xcx_all_log_d"
+    ],
+    "sql": "SELECT u.unionid\n,COUNT(DISTINCT a.dp) AS active_days_last30\nFROM soyoung_dw.dwd_md_app_log_nocheat a\nJOIN soyoung_dw.dim_device_info d\nON a.device_id = d.device_id\nAND d.dp = CURRENT_DATE() - 1\nJOIN soyoung_dw.dim_user_info u\nON d.uid = u.uid\nAND u.dp = CURRENT_DATE() - 1\nWHERE a.dp >= CURRENT_DATE() - 30 -- 近30天\nAND a.app_id IN (131,132)\nAND a.from_action_id = 28454\nAND a.type = 1\nAND u.unionid IS NOT NULL\nAND u.unionid <> ''\nGROUP BY u.unionid\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 107
+  },
+  {
+    "asset_id": "user_profile_field:U107",
+    "asset_type": "user_profile_field",
+    "field_id": "U107",
+    "name": "小程序首次登陆日期",
+    "business_area": "用户板块",
+    "category": "小程序",
+    "grain": "用户级",
+    "definition": "用户首次登陆小程序的日期",
+    "data_type": "DATE",
+    "source_tables": [
+      "soyoung_dw.dwd_md_xcx_all_log_d"
+    ],
+    "sql": "SELECT unionid\n,MIN(dp) AS 小程序首次登陆日期\nFROM soyoung_dw.dwd_md_xcx_all_log_d a\nWHERE dp >= CURRENT_DATE() - 90 --90天内\nAND app_id IN (123) -- 连锁小程序\nAND from_action_id = 612 -- 小程序唤醒\nAND a.unionid IS NOT NULL\nAND a.unionid <> ''\nAND a.type = 1\nGROUP BY unionid\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 108
+  },
+  {
+    "asset_id": "user_profile_field:U108",
+    "asset_type": "user_profile_field",
+    "field_id": "U108",
+    "name": "小程序末次登陆日期",
+    "business_area": "用户板块",
+    "category": "小程序",
+    "grain": "用户级",
+    "definition": "用户末次登陆小程序的日期",
+    "data_type": "DATE",
+    "source_tables": [
+      "soyoung_dw.dwd_md_xcx_all_log_d"
+    ],
+    "sql": "SELECT unionid\n,MAX(dp) AS 小程序末次登陆日期\nFROM soyoung_dw.dwd_md_xcx_all_log_d a\nWHERE dp >= CURRENT_DATE() - 90 --90天内\nAND app_id IN (123) -- 连锁小程序\nAND from_action_id = 612 -- 小程序唤醒\nAND a.unionid IS NOT NULL\nAND a.unionid <> ''\nAND a.type = 1\nGROUP BY unionid\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 109
+  },
+  {
+    "asset_id": "user_profile_field:U109",
+    "asset_type": "user_profile_field",
+    "field_id": "U109",
+    "name": "小程序近30天活跃天数",
+    "business_area": "用户板块",
+    "category": "小程序",
+    "grain": "用户级",
+    "definition": "用户近30天在小程序的活跃天数",
+    "data_type": "INT",
+    "source_tables": [
+      "soyoung_dw.dwd_md_xcx_all_log_d"
+    ],
+    "sql": "SELECT unionid\n,COUNT(DISTINCT dp) AS 近30天活跃天数\nFROM soyoung_dw.dwd_md_xcx_all_log_d a\nWHERE dp >= CURRENT_DATE() - 30 -- 近30天\nAND app_id IN (123) -- 连锁小程序\nAND from_action_id = 612 -- 小程序唤醒\nAND a.unionid IS NOT NULL\nAND a.unionid <> ''\nAND a.type = 1\nGROUP BY unionid\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 110
+  },
+  {
+    "asset_id": "user_profile_field:U110",
+    "asset_type": "user_profile_field",
+    "field_id": "U110",
+    "name": "最近有效预约日期",
+    "business_area": "用户板块",
+    "category": "预约",
+    "grain": "用户级",
+    "definition": "用户最近的有效预约日期",
+    "data_type": "DATE",
+    "source_tables": [
+      "soyoung_dw.dwd_opt_qy_reserve_all_d"
+    ],
+    "sql": "SELECT customer_id\n,MIN(SUBSTR(reserve_date,1,10)) reserve_date\nFROM soyoung_dw.dwd_opt_qy_reserve_all_d\nWHERE dp = CURRENT_DATE() - 1\nAND reserve_status IN (1,2)\nAND SUBSTR(reserve_date,1,10) >= CURRENT_DATE()\nGROUP BY customer_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 111
+  },
+  {
+    "asset_id": "user_profile_field:U111",
+    "asset_type": "user_profile_field",
+    "field_id": "U111",
+    "name": "最近有效预约订单list",
+    "business_area": "用户板块",
+    "category": "预约",
+    "grain": "用户级",
+    "definition": "用户最近的有效预约订单列表",
+    "data_type": "STRING/ARRAY",
+    "source_tables": [
+      "soyoung_dw.dwd_opt_qy_reserve_all_d"
+    ],
+    "sql": "SELECT customer_id\n,MIN(SUBSTR(reserve_date,1,10)) reserve_date\n,COLLECT_SET(DISTINCT b.main_order_id) AS 最近有效预约订单list\nFROM soyoung_dw.dwd_opt_qy_reserve_all_d a\nJOIN soyoung_dw.dwd_ord_order_qzy_fact_all_d b\nON a.order_id = b.sales_order_id\nAND b.dp = CURRENT_DATE() - 1\nWHERE a.dp = CURRENT_DATE() - 1\nAND SUBSTR(reserve_date,1,10) >= CURRENT_DATE()\nAND reserve_status IN (1,2)\nGROUP BY customer_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 112
+  },
+  {
+    "asset_id": "user_profile_field:U112",
+    "asset_type": "user_profile_field",
+    "field_id": "U112",
+    "name": "最近有效预约gmv",
+    "business_area": "用户板块",
+    "category": "预约",
+    "grain": "用户级",
+    "definition": "用户最近的有效预约订单的订单金额gmv",
+    "data_type": "DECIMAL",
+    "source_tables": [
+      "soyoung_dw.dwd_opt_qy_reserve_all_d"
+    ],
+    "sql": "SELECT customer_id\n,MIN(SUBSTR(reserve_date,1,10)) reserve_date\n,SUM(b.pay_gmv) AS 最近有效预约gmv\nFROM soyoung_dw.dwd_opt_qy_reserve_all_d a\nJOIN soyoung_dw.dwd_ord_order_qzy_fact_all_d b\nON a.order_id = b.sales_order_id\nAND b.dp = CURRENT_DATE() - 1\nWHERE a.dp = CURRENT_DATE() - 1\nAND SUBSTR(reserve_date,1,10) >= CURRENT_DATE()\nAND reserve_status IN (1,2)\nGROUP BY customer_id\n;",
+    "notes": "",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "用户画像字段",
+    "source_row": 113
+  }
+]

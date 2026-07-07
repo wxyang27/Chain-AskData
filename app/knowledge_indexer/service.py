@@ -9,10 +9,18 @@ from app.knowledge_indexer.retrieval_context import RetrievalContext, RetrievalC
 class KnowledgeSearchService:
     """知识库检索服务。"""
 
-    def __init__(self, store: ChromaKnowledgeStore | None = None):
+    def __init__(
+        self,
+        store: ChromaKnowledgeStore | None = None,
+        include_generated: bool = True,
+        generated_dir: str = "knowledge/generated",
+    ):
         self.store = store or ChromaKnowledgeStore()
         self.context_builder = RetrievalContextBuilder()
-        self.chunks = load_knowledge_chunks()
+        self.chunks = load_knowledge_chunks(
+            include_generated=include_generated,
+            generated_dir=generated_dir,
+        )
         self.hybrid_retriever = HybridRetriever(self.chunks)
 
     def search(self, query_text: str, top_k: int = 5) -> list[dict[str, Any]]:

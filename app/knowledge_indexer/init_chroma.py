@@ -5,12 +5,15 @@ from app.knowledge_indexer.loader import load_knowledge_chunks
 from app.knowledge_indexer.types import ChromaInitResult
 
 
-def initialize_chroma_from_assets(reset: bool = True) -> ChromaInitResult:
+def initialize_chroma_from_assets(
+    reset: bool = True,
+    include_generated: bool = True,
+) -> ChromaInitResult:
     """从 knowledge 目录初始化本地 ChromaDB。"""
 
     persist_dir = os.getenv("CHROMA_PERSIST_DIR", "data/chroma")
     collection_name = os.getenv("CHROMA_COLLECTION_NAME", "chain_askdata_knowledge")
-    chunks = load_knowledge_chunks()
+    chunks = load_knowledge_chunks(include_generated=include_generated)
     store = ChromaKnowledgeStore(
         persist_dir=persist_dir,
         collection_name=collection_name,

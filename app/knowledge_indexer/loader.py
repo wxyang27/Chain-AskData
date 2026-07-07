@@ -1,8 +1,12 @@
 from app.assets.loader import load_yaml_asset
+from app.knowledge_importer.chunker import load_generated_knowledge_chunks
 from app.knowledge_indexer.types import KnowledgeChunk
 
 
-def load_knowledge_chunks() -> list[KnowledgeChunk]:
+def load_knowledge_chunks(
+    include_generated: bool = False,
+    generated_dir: str = "knowledge/generated",
+) -> list[KnowledgeChunk]:
     """加载本地知识资产并切成 ChromaDB 文档块。"""
 
     chunks: list[KnowledgeChunk] = []
@@ -11,6 +15,8 @@ def load_knowledge_chunks() -> list[KnowledgeChunk]:
     chunks.extend(_load_table_chunks())
     chunks.extend(_load_relation_chunks())
     chunks.extend(_load_demo_query_chunks())
+    if include_generated:
+        chunks.extend(load_generated_knowledge_chunks(generated_dir))
     return chunks
 
 

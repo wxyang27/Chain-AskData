@@ -69,9 +69,9 @@ class ChromaKnowledgeStore:
             include=["documents", "metadatas", "distances"],
         )
 
-        documents = result.get("documents", [[]])[0]
-        metadatas = result.get("metadatas", [[]])[0]
-        distances = result.get("distances", [[]])[0]
+        documents = (result.get("documents") or [[]])[0]
+        metadatas = (result.get("metadatas") or [[]])[0]
+        distances = (result.get("distances") or [[]])[0]
         matches = [
             {
                 "document": document,

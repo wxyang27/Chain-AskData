@@ -1,0 +1,812 @@
+[
+  {
+    "asset_id": "business_playbook:section:003",
+    "asset_type": "business_playbook",
+    "playbook_id": "section_003",
+    "title": "1.1 经营分析要回答的四个问题",
+    "content_type": "section",
+    "content": "1.1 经营分析要回答的四个问题\n经营分析，不是\"把数报出来\"，而是至少要回答四个问题：\n现在业务离目标还差多少？\n差距主要出在规模、价格、结构还是履约？\n问题集中在哪些渠道、城市、门店、品项或用户层？\n接下来一周或一个月，最有效的追数动作是什么？",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 3
+  },
+  {
+    "asset_id": "business_playbook:section:005",
+    "asset_type": "business_playbook",
+    "playbook_id": "section_005",
+    "title": "1.3 五层分析框架：总盘 + 人货场财",
+    "content_type": "section",
+    "content": "1.3 五层分析框架：总盘 + 人货场财",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 5
+  },
+  {
+    "asset_id": "business_playbook:section:006",
+    "asset_type": "business_playbook",
+    "playbook_id": "section_006",
+    "title": "1.4 标准分析顺序（七步法）",
+    "content_type": "section",
+    "content": "1.4 标准分析顺序（七步法）\n先看时间进度达成\n再看总收入和新老客结构\n再做量价拆解（核销人次 x 客单价）\n再看支付到核销的过程转化\n再看品项结构（大单品/常规品/大师团）、价格结构、0元单结构\n再下钻城市、门店、渠道、品项\n最后输出动作方案\n这个顺序比较重要，可以参考——它能避免一上来扎进细节，却没抓住真正影响经营结果的主因。",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 6
+  },
+  {
+    "asset_id": "business_playbook:section:008",
+    "asset_type": "business_playbook",
+    "playbook_id": "section_008",
+    "title": "2.1 先看进度，不先看绝对值",
+    "content_type": "section",
+    "content": "2.1 先看进度，不先看绝对值\n>> 分析第一步不是\"这个月做了多少\"，而是：达成得算快还是慢？如果按当前节奏走，全月大概落到哪里？差额还来不来得及补？",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 8
+  },
+  {
+    "asset_id": "business_playbook:section:009",
+    "asset_type": "business_playbook",
+    "playbook_id": "section_009",
+    "title": "2.2 所有异常都要回到量价拆解",
+    "content_type": "section",
+    "content": "2.2 所有异常都要回到量价拆解\n客单价和单服务点收入都有三层口径，可以分层来拆解看看：\n整体：含0元、含大师团\n非0元：剔除0元单\n非0非大师：剔除0元单和大师团——最真实反映核心品项经营质量",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 9
+  },
+  {
+    "asset_id": "business_playbook:section:011",
+    "asset_type": "business_playbook",
+    "playbook_id": "section_011",
+    "title": "2.4 好分析要同时看结果和过程",
+    "content_type": "section",
+    "content": "2.4 好分析要同时看结果和过程\n不能只解释过去，还要提前预判未来~",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 11
+  },
+  {
+    "asset_id": "business_playbook:section:012",
+    "asset_type": "business_playbook",
+    "playbook_id": "section_012",
+    "title": "2.5 环比基线选择很重要",
+    "content_type": "section",
+    "content": "2.5 环比基线选择很重要\n周报：核心用\"周环比\"和\"较前5周均值\"两个基线（前5周均值更稳定，能剔除单周波动）\n月报：核心用\"月环比\"和\"同比\"\n关键注意：要排除大促月份（如11月双11、6月618）对基线的失真影响",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 12
+  },
+  {
+    "asset_id": "business_playbook:section:014",
+    "asset_type": "business_playbook",
+    "playbook_id": "section_014",
+    "title": "3.1 总盘收入拆解",
+    "content_type": "section",
+    "content": "3.1 总盘收入拆解\n连锁总收入 = 医美收入 + 好物收入\n医美收入 = 新客收入 + 老客收入\n新客收入 = 私域新客 + 老带新新客 + 公域新客（美团/小红书/KOL/线下市场/直接上门）\n老客收入 = 活跃老客 + 非活跃老客 + 当月核销新客",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 14
+  },
+  {
+    "asset_id": "business_playbook:section:015",
+    "asset_type": "business_playbook",
+    "playbook_id": "section_015",
+    "title": "3.2 新客分析SOP",
+    "content_type": "section",
+    "content": "3.2 新客分析SOP\n新客分析可以看四层：\n结果层：收入、人次、客单价\n渠道层：私域、老带新、美团、小红书、KOL、线下市场、直接上门\n转化层：支付 → 建档 → 核销\n质量层：价格带分布（0元/1-999/1000-2999/3000+）、升单、后续复核潜力\n渠道分析一般有 >>",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 15
+  },
+  {
+    "asset_id": "business_playbook:section:016",
+    "asset_type": "business_playbook",
+    "playbook_id": "section_016",
+    "title": "3.3 老客分析SOP",
+    "content_type": "section",
+    "content": "3.3 老客分析SOP\n老客不是一个总盘，至少要拆成三层：\n老客核心指标矩阵：\n老客分析的建议顺序：\n老客收入达成是否落后。\n活跃用户池是否还在增长。\n当月到院率是否在下滑。\n升单能力是否撑住。\n待核销订单是否足够支撑本月落袋。\n老客核销人次波动时的排查思路——按\"支付间隔\"拆解：\n当日支付（线下升单驱动）\n近1周支付（短周期核销）\n近2-3周支付（活动订单核销）\n近10周支付（可能受节假日支付低峰影响）\n10周以上支付（可能受大促订单持续核销影响）",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 16
+  },
+  {
+    "asset_id": "business_playbook:section:017",
+    "asset_type": "business_playbook",
+    "playbook_id": "section_017",
+    "title": "3.4 老带新：独立经营主题",
+    "content_type": "section",
+    "content": "3.4 老带新：独立经营主题\n老带新同时影响五个维度：新客规模、新客质量、0元单结构、老客裂变活跃度、ROI和获客成本。\n区分\"健康增长\"和\"低质量裂变\"：",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 17
+  },
+  {
+    "asset_id": "business_playbook:section:019",
+    "asset_type": "business_playbook",
+    "playbook_id": "section_019",
+    "title": "4.1 三大品类对比",
+    "content_type": "section",
+    "content": "4.1 三大品类对比\nCR10/CR20/CR30：收入贡献TOP10/20/30品项的累计收入占比。CR30通常约83%，每月排名升降主要受私域排期、院内主推等因素影响。\n价格指数 = 新氧当前价格 / 市场同品同规格价格。不能只看'便不便宜'，还要结合毛利和收入贡献看值不值得便宜。",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 19
+  },
+  {
+    "asset_id": "business_playbook:section:020",
+    "asset_type": "business_playbook",
+    "playbook_id": "section_020",
+    "title": "4.2 单服务点收入：货盘最核心的健康指标",
+    "content_type": "section",
+    "content": "4.2 单服务点收入：货盘最核心的健康指标\n单服务点收入同时承载0元结构、价格结构、高低客单结构、品项结构、赠单策略的结果。至少看三层：\n整体单服务点收入（含0元、含大师团）\n非0元单服务点收入\n非0非大师单服务点收入——最真实的货盘健康度\n单服务点收入下降时优先看：0元单占比是否上升？高价品项占比是否下降？核销结构是否向低价品倾斜？",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 20
+  },
+  {
+    "asset_id": "business_playbook:section:021",
+    "asset_type": "business_playbook",
+    "playbook_id": "section_021",
+    "title": "4.3 大师团趋势",
+    "content_type": "section",
+    "content": "4.3 大师团趋势\n大师团在连锁业务中占比（收入占比10%、人次占比2%、服务点占比~2.5%）关注点：\n大师团客单价是否持续下滑\n大师团单服务点收入是否微降\n大师团的城市排期和达成",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 21
+  },
+  {
+    "asset_id": "business_playbook:section:024",
+    "asset_type": "business_playbook",
+    "playbook_id": "section_024",
+    "title": "5.1 大区拆解",
+    "content_type": "section",
+    "content": "5.1 大区拆解\n达成状态用红绿灯：绿灯 ≥100%、黄灯80-100%、红灯<80%。城市和门店可以只展示红灯项，便于快速定位。",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 24
+  },
+  {
+    "asset_id": "business_playbook:section:026",
+    "asset_type": "business_playbook",
+    "playbook_id": "section_026",
+    "title": "5.3 预约口径必须讲清楚",
+    "content_type": "section",
+    "content": "5.3 预约口径必须讲清楚\n成熟分析必须区分六种预约状态：待确认、已确认、已完成、当日取消、当日作废、已过期。\n同时说明看板数据时效（T-1/T当日/T+1）、是否只看有单预约。防止把\"口径变化\"误判成\"经营变化\"。",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 26
+  },
+  {
+    "asset_id": "business_playbook:section:030",
+    "asset_type": "business_playbook",
+    "playbook_id": "section_030",
+    "title": "6.2 毛利分析三层拆法",
+    "content_type": "section",
+    "content": "6.2 毛利分析三层拆法\n收入侧：\n成本侧：",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 30
+  },
+  {
+    "asset_id": "business_playbook:section:032",
+    "asset_type": "business_playbook",
+    "playbook_id": "section_032",
+    "title": "7.1 时间进度分析法",
+    "content_type": "section",
+    "content": "7.1 时间进度分析法\n适用：日报、周报、月中复盘、月底追数。\n标准五问 >>\n当前时间进度是多少？\n收入进度是多少？\n已预约预估能补到多少？\n全月预估离目标还差多少？\n剩余gap靠什么补？",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 32
+  },
+  {
+    "asset_id": "business_playbook:section:033",
+    "asset_type": "business_playbook",
+    "playbook_id": "section_033",
+    "title": "7.2 量价拆解法",
+    "content_type": "section",
+    "content": "7.2 量价拆解法\n适用：收入、渠道、门店、品项异常。\n标准三问：规模掉了还是价格掉了？是短期活动影响还是长期结构变化？是整体都弱还是某几个维度在拖累？",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 33
+  },
+  {
+    "asset_id": "business_playbook:section:034",
+    "asset_type": "business_playbook",
+    "playbook_id": "section_034",
+    "title": "7.3 支付到核销转化法",
+    "content_type": "section",
+    "content": "7.3 支付到核销转化法\n适用：活动复盘、新客渠道复盘、新品复盘。\n核销周期影响是关键：双11/618低价订单可能持续核销2-3个月，期间会拉低客单价。例如\"近六周老客核销人次中核销11月份支付订单388/周，占总老客人次16%\"。",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 34
+  },
+  {
+    "asset_id": "business_playbook:section:035",
+    "asset_type": "business_playbook",
+    "playbook_id": "section_035",
+    "title": "7.4 结构分析法",
+    "content_type": "section",
+    "content": "7.4 结构分析法\n适用：单服务点收入下降、毛利下降、用户质量下降。\n结构分析最重要的能力：发现\"看起来没问题、实际上变差了\"的隐性风险。",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 35
+  },
+  {
+    "asset_id": "business_playbook:section:036",
+    "asset_type": "business_playbook",
+    "playbook_id": "section_036",
+    "title": "7.5 城市门店下钻法",
+    "content_type": "section",
+    "content": "7.5 城市门店下钻法\n适用场景：如果大区达成不均、老客收入偏弱、体验问题集中 >>\n标准顺序：\n先看大区（华东/华南/华中/华北）\n再看城市（仅展示红灯城市）\n再看门店（Bottom3门店达成率、新店问题）\n再看门店内部的渠道、品项、体验和效率",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 36
+  },
+  {
+    "asset_id": "business_playbook:section:038",
+    "asset_type": "business_playbook",
+    "playbook_id": "section_038",
+    "title": "8.1 收入不达预期",
+    "content_type": "section",
+    "content": "8.1 收入不达预期\n时间进度达成率 → 新客还是老客拖累 → 人次还是客单拖累 → 是否有活动/大师团/节假日影响 → 是否集中在某几个区域或门店",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 38
+  },
+  {
+    "asset_id": "business_playbook:section:039",
+    "asset_type": "business_playbook",
+    "playbook_id": "section_039",
+    "title": "8.2 新客收入弱",
+    "content_type": "section",
+    "content": "8.2 新客收入弱\n私域支付是否不足（支付新客占比是否下滑）\n老带新质量是否下降（客单/升单率/ROI）\n公域投放是否缩量或转化下降\n价格带是否向低价倾斜\n主推品客单是否过高导致新客规模收缩（3-4月曾出现此问题）",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 39
+  },
+  {
+    "asset_id": "business_playbook:section:040",
+    "asset_type": "business_playbook",
+    "playbook_id": "section_040",
+    "title": "8.3 老客收入弱",
+    "content_type": "section",
+    "content": "8.3 老客收入弱\n活跃用户池增速是否放缓\n活跃用户到院率是否下降\n待核销订单是否不足\n升单率和升单客单价是否下降\n近3个月是否主推高客单品、削弱了召回效果",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 40
+  },
+  {
+    "asset_id": "business_playbook:section:041",
+    "asset_type": "business_playbook",
+    "playbook_id": "section_041",
+    "title": "8.4 单服务点收入下降",
+    "content_type": "section",
+    "content": "8.4 单服务点收入下降\n0元单占比是否上升\n低价品是否放量（如\"玻尿酸赛道服务点-174个，单服务点收入-11%\"）\n活动价/大促价占比是否过高\n大师团结构是否变化",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 41
+  },
+  {
+    "asset_id": "business_playbook:section:042",
+    "asset_type": "business_playbook",
+    "playbook_id": "section_042",
+    "title": "8.5 毛利率下降",
+    "content_type": "section",
+    "content": "8.5 毛利率下降\n高耗材占比是否上升\n赠单中是否出现高耗品\n低毛利品是否放量",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 42
+  },
+  {
+    "asset_id": "business_playbook:section:043",
+    "asset_type": "business_playbook",
+    "playbook_id": "section_043",
+    "title": "8.6 核销人次突然下降（周度）",
+    "content_type": "section",
+    "content": "8.6 核销人次突然下降（周度）\n建议排查流程 >>\n看整体人次、人均服务点、客单三者的变化方向。\n拆新客/老客：各自较前5周均值的降幅。\n新客：按渠道拆（老带新、私域、公域），看支付/建档新客规模是否下降，核销率是否稳定。\n老客：按城市拆，看哪些城市降幅较大。\n排除升单问题：升单率和升单收入占比是否稳定。\n如果老客人次下降，按支付间隔拆解：当日/近1周/近2-3周/近10周/10周以上，定位是短期波动还是结构性问题。",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 43
+  },
+  {
+    "asset_id": "business_playbook:section:044",
+    "asset_type": "business_playbook",
+    "playbook_id": "section_044",
+    "title": "8.7 差评率上升",
+    "content_type": "section",
+    "content": "8.7 差评率上升\n是否集中在个别门店 → 是否集中在某一渠道 → 是服务问题还是效果问题 → 是否和等待时长、排班、供给紧张同步发生",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 44
+  },
+  {
+    "asset_id": "business_playbook:section:050",
+    "asset_type": "business_playbook",
+    "playbook_id": "section_050",
+    "title": "10.1 日报建议结构",
+    "content_type": "section",
+    "content": "10.1 日报建议结构\n整体大盘：医美收入(日/月环比、时间进度达成率) + 量价(客单价、核销人次) + 渠道占比\n用户拆解：新客(收入、客单价、核销人次、渠道占比) + 老客(收入、活跃池占比、到院率)\n品类拆解：大单品(占比+Top3) + 大师团(占比+Top3) + 常规品(占比+Top3)\n大区拆解：华东/华南/华中/华北 各自收入+环比+进度+Bottom3",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 50
+  },
+  {
+    "asset_id": "business_playbook:section:052",
+    "asset_type": "business_playbook",
+    "playbook_id": "section_052",
+    "title": "10.3 月报一般会在周报基础上增加",
+    "content_type": "section",
+    "content": "10.3 月报一般会在周报基础上增加\nKPI综合评分（连锁-人/货/场/拓各维度综合得分）\n全月业绩GAP预警（累计达成 vs 年度目标，是否存在GAP）\n获客效率趋势分析（获客成本占收比、各渠道单获客成本趋势）\n资源配置和经营效率（设备使用率红绿灯、床效和医生人效趋势）\n大注射持续追踪（整体大注射和大师团vs常规大注射的趋势）\n品项毛利专项分析",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 52
+  },
+  {
+    "asset_id": "business_playbook:section:054",
+    "asset_type": "business_playbook",
+    "playbook_id": "section_054",
+    "title": "10.5 每一页都尽量回答三个问题",
+    "content_type": "section",
+    "content": "10.5 每一页都尽量回答三个问题\n发生了什么（结果判断）\n为什么发生（原因拆解）\n接下来怎么办（动作建议）\n建议每次先写这三句话：本周/月最大亮点、当前最大风险、下周/月最重要动作。",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 54
+  },
+  {
+    "asset_id": "business_playbook:section:056",
+    "asset_type": "business_playbook",
+    "playbook_id": "section_056",
+    "title": "11.1 活动复盘框架",
+    "content_type": "section",
+    "content": "11.1 活动复盘框架\n活动复盘必须拆成两个阶段：支付阶段（卖得怎么样）+ 核销阶段（落了多少袋）。至少写清楚六件事：\n活动目标\n支付单量和GMV（线上/线下分开）\n核销率和核销金额\n待核销订单和待核销金额\n热销SKU + 新品vs老品的替代/共振效应\n对当周和当月收入的真实贡献 + 活动后影响追踪（低价订单核销周期2-3月）",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 56
+  },
+  {
+    "asset_id": "business_playbook:section:057",
+    "asset_type": "business_playbook",
+    "playbook_id": "section_057",
+    "title": "11.2 毛利及单服务点收入专题框架",
+    "content_type": "section",
+    "content": "11.2 毛利及单服务点收入专题框架\nStep 1 对齐考核及盯盘口径 → 当前阶段该重点看服务点数量还是非0元结构\nStep 2 讲结果 → 毛利率/单服务点收入变化多少\nStep 3 讲原因 → 收入侧(0元单/活动让利/改价) + 成本侧(高耗/医护手工费)\nStep 4 讲动作 → 控制高耗赠单、倾斜高毛利品、降采购成本",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 57
+  },
+  {
+    "asset_id": "business_playbook:section:058",
+    "asset_type": "business_playbook",
+    "playbook_id": "section_058",
+    "title": "11.3 老客经营专题框架",
+    "content_type": "section",
+    "content": "11.3 老客经营专题框架\n老客经营三个核心问题：\n池子是否变大（活跃用户池规模和增速）？\n用户是否愿意回来（到院率、待核销池）？\n回来后是否愿意升单（升单率、升单客单价、升单收入占比）？",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 58
+  },
+  {
+    "asset_id": "business_playbook:section:060",
+    "asset_type": "business_playbook",
+    "playbook_id": "section_060",
+    "title": "11.5 高价值专题清单",
+    "content_type": "section",
+    "content": "11.5 高价值专题清单\n附录A 核心公式速查\n附录B 常用结论表达模板\n附录C 关键参考值速查\n附录 D 核心指标体系\n详情文档 >>【经管中心】连锁经营指标体系概览\n点击图片可查看完整电子表格\n写在最后\n建议的路径：报数 → 拆数 → 找原因 → 提动作 → 做经营判断",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 60
+  },
+  {
+    "asset_id": "business_playbook:table:001",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_001",
+    "title": "一句话概括",
+    "content_type": "table",
+    "content": "一句话概括\n经营分析 = 结果判断 + 原因拆解 + 动作建议\n一份好的经营分析必须同时具备三层价值：有结果（KPI是否达标）、有归因（为什么好或差）、有动作（靠什么追、追哪块、谁来追）",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 1
+  },
+  {
+    "asset_id": "business_playbook:table:002",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_002",
+    "title": "经营全链路",
+    "content_type": "table",
+    "content": "经营全链路\n支付/GMV → 建档/预约 → 到院 → 核销 → 确认收入 → 毛利 → 税前利润\n支付是领先指标，收入是滞后结果。活动卖得好不代表当月收入好，还要看核销和履约。 大促（如双11、618）支付高峰后，低价订单可能持续核销数周甚至数月，影响后续月份的客单价和毛利。",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 2
+  },
+  {
+    "asset_id": "business_playbook:table:003",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_003",
+    "title": "层级 | 核心关注",
+    "content_type": "table",
+    "content": "层级 | 核心关注\n总盘 | 总收入、总利润、总达成率、时间进度达成率\n人 | 新客(分渠道)、老客(活跃/流失/当月核销新客)、老带新、活跃池、复核\n货 | 品项结构(大单品/常规品/大师团)、渗透率、单服务点收入、毛利率\n场 | 门店、城市、大区、供给/体验/效率、升单\n财 | 毛利、费用、占收比、利润、预算差异",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 3
+  },
+  {
+    "asset_id": "business_playbook:table:004",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_004",
+    "title": "概念 | 说明 | 使用场景",
+    "content_type": "table",
+    "content": "概念 | 说明 | 使用场景\n目标 | 月度收入目标（分医美/好物/供应链） | 对标基准\n实际 | 截至当前的实际达成 | 当前完成\n时间进度达成率 | 实际达成 / (目标 x 时间进度%) | 判断快慢\n已预约预估达成率 | 当前达成 + 已预约未核销金额 / 目标 | 看兑现空间\n全月预估达成率 | 基于趋势的全月预估 / 目标 | 风险预判\nGAP | 目标 - 预估达成 | 追数目标",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 4
+  },
+  {
+    "asset_id": "business_playbook:table:005",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_005",
+    "title": "公式 | 适用视角 | 典型场景",
+    "content_type": "table",
+    "content": "公式 | 适用视角 | 典型场景\n收入 = 核销人次 x 客单价 | 人、渠道、新老客、用户结构 | 新客收入下滑 → 人次掉还是客单掉\n收入 = 核销服务点数 x 单服务点收入 | 货盘、品项、价格结构、0元单 | 单服务点收入降 → 0元升还是品项变了",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 5
+  },
+  {
+    "asset_id": "business_playbook:table:006",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_006",
+    "title": "实战示例（来自实际周报）：",
+    "content_type": "table",
+    "content": "实战示例（来自实际周报）：\n\"近一周核销人次较前5周均值下降822降幅-13%，新老客均有下降。新客主要受老带新和私域支付/建档新客规模下降影响，各渠道核销率稳定；老客大部分城市均有下降，北京成都降幅较大。升单率及升单收入占比均较稳定，排除门店转化问题。\"",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 6
+  },
+  {
+    "asset_id": "business_playbook:table:007",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_007",
+    "title": "结构变量 | 为什么重要 | 参考值/影响",
+    "content_type": "table",
+    "content": "结构变量 | 为什么重要 | 参考值/影响\n0元单占比 | 稀释单服务点收入，改变新客质量 | 实际18-24%，行业5-15%，从21%升至24%即显著\n标准价/活动价/大促价 | 反映价格体系健康度 | 理想5:3:2，实际常见2:3:5\n大单品/常规品/大师团 | 决定收入上限和基本盘稳定性 | 大单品占比从34%→50%标志结构升级\n自研品/非自研品 | 自研毛利率76%+，决定利润质量 | 自研占比23%但毛利贡献36%\n新客渠道结构 | 不同渠道质量差异大 | 私域~45%/老带新~20%/公域~30%\n活跃/非活跃老客 | 活跃池决定老客收入基本面 | 活跃老客贡献85%+\n大师/非大师 | 大师团客单高但占比逐步萎缩 | 收入~10%、人次~2%",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 7
+  },
+  {
+    "asset_id": "business_playbook:table:008",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_008",
+    "title": "结果指标 | 对应过程指标 | 为什么重要",
+    "content_type": "table",
+    "content": "结果指标 | 对应过程指标 | 为什么重要\n核销收入 | 支付GMV、待核销金额、已预约金额 | 过程指标预判未来收入\n老客收入 | 活跃用户池、当月到院率、待核销订单 | 活跃池放缓即预示老客收入压力\n新客规模 | 建档数、支付新客数、各渠道投放消耗 | 支付新客放量但核销滞后说明兑现待观察",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 8
+  },
+  {
+    "asset_id": "business_playbook:table:009",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_009",
+    "title": "渠道 | 特征 | 核心指标 | 风险信号",
+    "content_type": "table",
+    "content": "渠道 | 特征 | 核心指标 | 风险信号\n线上私域 | 高客单、活动拉升核心阵地 | 支付新客占比(通常15-16%)、核销率、客单价 | 高客单策略过强压制规模；主推品切换致客单波动\n老带新 | 人次贡献第一、低成本(~300-400/人) | 建档/核销新客、付费转化率(~48%)、裂变系数(~2.1)、ROI(4-6) | 0元占比~45-55%、客单偏低、质量下滑\n公域-美团 | 获客成本最优(~500-900/人) | 建档30日核销率、核销新客成本、店均新客 | 单获客成本逐月上升\n公域-小红书 | 规模小但客单偏高(2000+) | 投放消耗、核销ROI | 成本高(~1000-1500/人)\n线下市场 | 波动大 | 核销新客数、客单价 | 建档口径、异常归因、大师团误记",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 9
+  },
+  {
+    "asset_id": "business_playbook:table:010",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_010",
+    "title": "新客分析标准五问：",
+    "content_type": "table",
+    "content": "新客分析标准五问：\n本月新客是规模没起来，还是客单没起来？\n哪个渠道贡献最大，哪个最拖后腿？\n私域支付有没有为后续核销蓄水？\n老带新是不是在用低质量用户换规模？\n公域投放是赚规模还是赚利润？",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 10
+  },
+  {
+    "asset_id": "business_playbook:table:011",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_011",
+    "title": "分层 | 定义 | 收入贡献 | 重点看",
+    "content_type": "table",
+    "content": "分层 | 定义 | 收入贡献 | 重点看\n活跃老客（历史活跃） | 近期有到院和核销行为的老客 | 85%+ | 到院率趋势（目标16-17%）\n非活跃老客（历史流失） | 较长时间未到院的老客 | ~10% | 召回效果、收入环比增长\n当月核销新客 | 本月新建档且当月即完成核销 | ~5% | 建档到核销转化效率",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 11
+  },
+  {
+    "asset_id": "business_playbook:table:012",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_012",
+    "title": "指标 | 定义/含义 | 参考值",
+    "content_type": "table",
+    "content": "指标 | 定义/含义 | 参考值\n老客收入 | 老客当期核销收入 | 占总收入~65%\n活跃用户当月到院率 | 活跃池中当月到院核销的比例 | 目标16-17%\n90天复核率 | 理论复核周期内再次到院核销的占比 | 衡量锁客能力\n老客升单率 | 到院后发生升单的比例 | 12月非0用户升单率下降1.7pp\n升单收入占比 | 升单收入/老客总收入 | 衡量价值挖掘深度\n活跃池收入占比 | 活跃老客收入/老客总收入 | 2026年4月达90.2%",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 12
+  },
+  {
+    "asset_id": "business_playbook:table:013",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_013",
+    "title": "主要洞察",
+    "content_type": "table",
+    "content": "主要洞察\n老客收入差，常常不是老客需求突然消失，而是活跃池增速放缓或到院率下降。高客单策略如果持续太久，会削弱老客召回。 老客短期修复最快的动作：做待核销促落袋、做升单、做活跃老客召回——而不是重新拉新。",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 13
+  },
+  {
+    "asset_id": "business_playbook:table:014",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_014",
+    "title": "指标 | 健康增长 | 低质量裂变",
+    "content_type": "table",
+    "content": "指标 | 健康增长 | 低质量裂变\n建档/核销 | 增长 | 快速增长但质量下降\n付费转化率 | 稳定(~48%) | 下降\n客单价 | 稳定 | 下降\n升单率 | 稳定 | 下降\nTOP5占比 | 分散 | 过高（裂变过于集中）\nROI | 正且稳定(4-6) | 明显走弱\n0元占比 | 可控 | 持续升高(>55%)",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 14
+  },
+  {
+    "asset_id": "business_playbook:table:015",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_015",
+    "title": "当老带新人次增长但客单和升单下降时，需要全国门店细化追踪，监测是否出现大范围低质量客户。",
+    "content_type": "table",
+    "content": "当老带新人次增长但客单和升单下降时，需要全国门店细化追踪，监测是否出现大范围低质量客户。",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 15
+  },
+  {
+    "asset_id": "business_playbook:table:016",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_016",
+    "title": "最新货盘分类",
+    "content_type": "table",
+    "content": "最新货盘分类\n货盘按三条线并行看：大单品（决定上限和结构高度）、常规品（决定盘子稳定性和基本盘）、大师团（高客单补充，但占比逐步萎缩）",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 16
+  },
+  {
+    "asset_id": "business_playbook:table:017",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_017",
+    "title": "维度 | 大单品 | 常规品 | 大师团",
+    "content_type": "table",
+    "content": "维度 | 大单品 | 常规品 | 大师团\n代表品项 | 新一代热玛吉、BBL HERO、爱拉丝提、奇迹童颜、漾活光彩针 | 玻尿酸、肉毒、水光微针、小光电、胶原蛋白、薇旖美 | 大师团-肤莱美、臻爱塑菲等\n经营定位 | 规模+利润双驱动，承担品牌心智 | 需求满足+锁客，收入稳定器 | 高客单补充，占比逐步萎缩\n核心看什么 | 规模、占比、达成率(红绿灯)、单服务点收入、毛利、渗透、供给 | 稳定性、渗透率、低价带拖累、是否成为锁客基础 | 客单趋势、城市排期、达成率\n收入占比参考 | ~34-50%（已破50%） | ~49-64% | ~2-10%（持续下降）\n典型风险 | 活动让利过多、耗材成本高、供给排期波动 | 低价带占比过高、0元单稀释 | 排期不稳定、客单/单服务点微降",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 17
+  },
+  {
+    "asset_id": "business_playbook:table:018",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_018",
+    "title": "0元单不是小噪音",
+    "content_type": "table",
+    "content": "0元单不是小噪音\n0元单上升 → 稀释单服务点收入 0元单 + 高值耗材 → 毛利被直接拖累\n0元单集中在老带新/APP激励/赠单 → 改变新客质量\n有高耗的0元单TOP品项：美版热玛吉(14%)、紧肤超水光(13%)、超声盾(9%)、艾维岚童颜针(9%)、薇旖美(7%) 赠单策略核心原则：尽可能赠无高耗的服务点，每月确定赠单额度。",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 18
+  },
+  {
+    "asset_id": "business_playbook:table:019",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_019",
+    "title": "大区 | 收入占比参考 | 每个大区必看",
+    "content_type": "table",
+    "content": "大区 | 收入占比参考 | 每个大区必看\n华东大区 | ~34% | 总/新客/老客收入达成 + 门店Bottom3\n华北大区 | ~31% | 总/新客/老客收入达成 + 门店Bottom3\n华南大区 | ~21% | 总/新客/老客收入达成 + 门店Bottom3\n华中大区 | ~14% | 总/新客/老客收入达成 + 门店Bottom3",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 19
+  },
+  {
+    "asset_id": "business_playbook:table:020",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_020",
+    "title": "维度 | 核心指标 | 判断逻辑",
+    "content_type": "table",
+    "content": "维度 | 核心指标 | 判断逻辑\n收入 | 目标达成率、环比增速 | 红灯门店需专项复盘\n效率 | 床效、医生人效、设备使用率(红绿灯) | 使用率<30%推品不足，>50%供给瓶颈\n体验 | 差评率、等待咨询/治疗时长 | 差评需拆来源(APP/美团)和类型(服务/效果)\n品项 | 单服务点收入、品项结构 | 小光电比例高的门店易拖累客单\n升单 | 升单率、升单收入占比、升单客单价 | 三者要一起看：率高但客单低=有动作无质量",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 20
+  },
+  {
+    "asset_id": "business_playbook:table:021",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_021",
+    "title": "关系 | 判断逻辑",
+    "content_type": "table",
+    "content": "关系 | 判断逻辑\n饱和度 vs 体验 | 太低=资源闲置，太高=体验风险\n人效 vs 收入 | 人效低且收入弱，先看门店规模和品项结构\n人力占收比 vs 利润 | 费用额不高但占收比高，根因在收入端",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 21
+  },
+  {
+    "asset_id": "business_playbook:table:022",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_022",
+    "title": "P&L标准链路 >>",
+    "content_type": "table",
+    "content": "P&L标准链路 >>\n收入 → 供应链成本 → 品项毛利 → 门店人力成本 → 门店费用 → 门店利润 → 市场品牌费用 → 中台费用 → 税前利润",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 22
+  },
+  {
+    "asset_id": "business_playbook:table:023",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_023",
+    "title": "大类 |  | 明细项 | 分析重点",
+    "content_type": "table",
+    "content": "大类 |  | 明细项 | 分析重点\n供应链成本 |  | 高耗、低耗、多点医生、租赁折旧、年费等 | 高耗增速是否快于价格提升\n门店人力成本 |  | 医护费用(提成+非提成)、其他人员费用 | 人力成本占收比\n门店费用 |  | 租金物业、装修摊销、水电维修、超额房租 | 新店面积推高租金风险\n品项毛利 |  | 毛利率、毛利额 | 收入侧+成本侧双向分析\n税前利润 |  | 金额 + 占收比 | 同时看金额差和占收比差",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 23
+  },
+  {
+    "asset_id": "business_playbook:table:024",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_024",
+    "title": "分析维度 | 看什么",
+    "content_type": "table",
+    "content": "分析维度 | 看什么\n定价结构 | 标准价/活动价/大促价服务点比例（理想5:3:2）\n院内改价 | 活动价vs实际成交价偏离（价差影响~9%）\n活动优惠让利 | 定价收入vs活动价收入差额（通常影响~20%）\n品项结构 | 高毛利品占比是否提升",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 24
+  },
+  {
+    "asset_id": "business_playbook:table:025",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_025",
+    "title": "成本项 | 分析重点",
+    "content_type": "table",
+    "content": "成本项 | 分析重点\n高值耗材 | 占收比趋势、0元单高耗成本和非0元单高耗成本分别看\n低值耗材 | 采购量波动、占收比趋势\n设备折旧/租赁 | 占收比趋势、新增设备推高风险\n多点医生 | 大师团合作医生为主，占收比低",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 25
+  },
+  {
+    "asset_id": "business_playbook:table:026",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_026",
+    "title": "利润分析四个核心习惯",
+    "content_type": "table",
+    "content": "利润分析四个核心习惯\n1. 同时看金额和占收比——费用低于预算但收入没达成，占收比仍可能恶化\n2. 先分收入问题，再分成本问题——利润不达预期时先区分收入被动vs成本主动\n3. 重点看高值耗材和人力成本——最常见的利润波动项\n4. 差异说明写成经营语言——如\"高耗成本增速(+38元/单)已超过价格提升速度(+29元/单)\"",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 26
+  },
+  {
+    "asset_id": "business_playbook:table:027",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_027",
+    "title": "实战示例（来自实际周报）",
+    "content_type": "table",
+    "content": "实战示例（来自实际周报）\n\"近一周核销人次较前5周均值下降822降幅-13%，新老客均有下降。新客主要受老带新和私域支付/建档新客规模下降影响，各渠道核销率稳定；老客大部分城市均有下降，北京成都降幅较大。升单率及升单收入占比均较稳定，排除门店转化问题。\"",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 27
+  },
+  {
+    "asset_id": "business_playbook:table:028",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_028",
+    "title": "表现 | 判断 | 后续动作",
+    "content_type": "table",
+    "content": "表现 | 判断 | 后续动作\n支付好、核销慢 | 兑现滞后，后续几周仍有释放空间 | 追踪待核销池转化率\n支付一般、核销好 | 存量池在释放（可能是前期活动订单） | 关注后续新增支付是否跟上\n支付和核销都弱 | 前端和后端都需要调整 | 全链路诊断\n支付规模创新高 | 下个月核销有望增量 | 关注核销节奏和客单结构",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 28
+  },
+  {
+    "asset_id": "business_playbook:table:029",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_029",
+    "title": "结构维度 | 看什么",
+    "content_type": "table",
+    "content": "结构维度 | 看什么\n0元单结构 | 占比趋势、集中品项（LDM赠单/韩版超塑/元气超光子等）、是否有高耗\n价格带结构 | 标准定价/活动价/大促价比例（理想5:3:2）\n品项结构 | 大单品/常规品/大师团占比变化\n渠道结构 | 私域/老带新/公域各自贡献占比变化\n新老客结构 | 新客~35% / 老客~65%是否偏离\n大师/非大师 | 大师团占比萎缩趋势（收入~10%、人次~2%）",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 29
+  },
+  {
+    "asset_id": "business_playbook:table:030",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_030",
+    "title": "总盘问题如果不下钻到门店，通常无法形成动作",
+    "content_type": "table",
+    "content": "总盘问题如果不下钻到门店，通常无法形成动作\n门店问题如果不放回城市和大区背景，也容易误判",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 30
+  },
+  {
+    "asset_id": "business_playbook:table:031",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_031",
+    "title": "时段 | 经营主线 | 分析教训",
+    "content_type": "table",
+    "content": "时段 | 经营主线 | 分析教训\n1月 | 超预期达成，非大师团接棒 | 超额达成不代表结构健康——注意老带新质量、0元单\n2月 | 春节恢复期，新客快于老客 | 恢复期新客靠渠道拉起，老客靠活跃池和客单\n3月 | 结构优化驱动，高客单拉升 | 日均人次仅+2%但收入+19%，说明结构比规模重要\n4月 | 活动驱动+大师团波动 | 区分活动冲高/活动后回落/工作日效应\n5-6月 | 老客和活跃池成最大风险 | 活动不能自动解决活跃池问题\n11月 | 规模高增+结构+利润同管 | 大单品、常规品、自研品要分开写\n12月 | 收官+量升价降 | 老客客单下滑归因：0元占比+升单质量",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 31
+  },
+  {
+    "asset_id": "business_playbook:table:032",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_032",
+    "title": "大促月份新老客收入、人次通常会创历史新高，但客单价可能受低价订单影响。",
+    "content_type": "table",
+    "content": "大促月份新老客收入、人次通常会创历史新高，但客单价可能受低价订单影响。\n大促前后的比较基线要特别注意：不能简单用大促月环比来判断经营趋势。\n大促后续几个月，要持续追踪\"大促订单核销\"对老客核销人次和客单价的影响。",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 32
+  },
+  {
+    "asset_id": "business_playbook:table:033",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_033",
+    "title": "时间节点 | 影响 | 分析要点",
+    "content_type": "table",
+    "content": "时间节点 | 影响 | 分析要点\n春节(1-2月) | 核销人次大幅下降后逐步恢复 | 用\"恢复至节前/1月日均X%\"衡量恢复进度\n618大促(6月) | 大幅支付蓄水+核销释放 | 支付阶段看GMV和订单结构；核销阶段看兑现率\n双11(11月) | 年度最大促销 | 线上/线下分别看；低价订单持续核销2-3个月\n双12+年底(12月) | 年底冲刺 | 医美+好物双端冲刺；待核销释放\nQ1目标冲刺(3月底) | 季度考核压力 | 关注GAP和预估达成\n大促后次月 | 活动后回落 | 不能简单用大促月环比判断经营趋势",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 33
+  },
+  {
+    "asset_id": "business_playbook:table:034",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_034",
+    "title": "矛盾 | 常见原因 | 诊断方向",
+    "content_type": "table",
+    "content": "矛盾 | 常见原因 | 诊断方向\n支付好看，收入没兑现 | 核销节奏慢、预约承接弱、待核销池 | 查待核销池规模和核销转化率\n收入达成，但质量不好 | 0元单占比高、高耗赠单、大促价过高 | 查价格结构、0元结构、毛利率\n客单上去了，规模掉了 | 私域/新客召回受压、老客活跃到院弱 | 查渠道人次、活跃池到院率\n大单品起来，利润未必好 | 活动让利、耗材成本、租赁折旧 | 查毛利率vs收入增长、成本占收比\n老客收入承压 | 活跃池增速放缓、到院率下降 | 查活跃池规模、到院率趋势",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 34
+  },
+  {
+    "asset_id": "business_playbook:table:035",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_035",
+    "title": "开头概要",
+    "content_type": "table",
+    "content": "开头概要",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 35
+  },
+  {
+    "asset_id": "business_playbook:table:036",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_036",
+    "title": "章节 | 内容",
+    "content_type": "table",
+    "content": "章节 | 内容\n开头概要 | 收入达成及波动 + 【人】客单x人次 + 【货】单服务点x服务点 + 【场】分区域 + 重点追踪\n1. 业绩达成 | 达成进度、新老客达成、单服务点收入/客单价\n2. 连锁-人 | KPI达成、新客获客(渠道转化)、老客运营(到院率/升单)、老带新\n3. 连锁-货 | 品类达成(大单品/常规品/大师团)、重点品项追踪、渗透率、复核率\n4. 连锁-场 | 门店体验(差评率/等待时长)、门店效率(床效/人效)、城市门店拆解\n5. 专题页 | 当期经营重点(大促复盘/新品复盘/毛利专项/活跃池等)",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 36
+  },
+  {
+    "asset_id": "business_playbook:table:037",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_037",
+    "title": "异常诊断四问",
+    "content_type": "table",
+    "content": "异常诊断四问\n1. 差额是多少？ 2. 差在规模、价格还是结构？ 3. 集中在哪个渠道/品项/区域/门店？ 4. 下周靠什么追回来？",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 37
+  },
+  {
+    "asset_id": "business_playbook:table:038",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_038",
+    "title": "参考定位 | 上线首月核心指标 | 月度复盘重点",
+    "content_type": "table",
+    "content": "参考定位 | 上线首月核心指标 | 月度复盘重点\n引流品 | 新客规模by渠道、新客客单价、新客升单率 | 获客成本、新客付费转化率、后续复核\n大单品 | 新客人次、首单价、升单率、私域渗透/转化率、老客渗透率、毛利率 | 占比趋势、对标品竞争力、毛利贡献\n利润品 | 毛利率、利润额占比 | 利润额绝对值、升单场景覆盖\n常规品 | 收入占比、渗透率 | 长期亏损预警、锁客效果评估",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 38
+  },
+  {
+    "asset_id": "business_playbook:table:039",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_039",
+    "title": "专题 | 核心分析点",
+    "content_type": "table",
+    "content": "专题 | 核心分析点\n大注射专题 | 整体大注射收入/人次/服务点趋势；大师团vs常规大注射结构变化；大师团占比萎缩趋势\n品项复核率专题 | 分赛道分品项的90天复核率；大单品 vs 常规品复核率对比；复核率与渠道来源的关系\n活跃用户池专题 | 池子总量和增速；流入来源和流出原因；哪些门店增长放缓\n毛利专项 | 收入侧（定价结构+院内改价）和成本侧（高耗/低耗/折旧/租赁）双向拆解\n0元单专项 | 0元单品项分布、成本影响、赠单策略优化\n新品上线复盘 | 定位是否达成、支付和核销趋势、对现有品项的替代效应\n大促活动复盘 | 支付/核销分阶段看；热销SKU；对当月和后续月份的收入贡献\n门店专项 | 单店经营诊断（活跃池+品项结构+升单+体验多维度）\n渠道ROI专项 | 各渠道全链路ROI（首日/30日/90日）；获客成本趋势",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 39
+  },
+  {
+    "asset_id": "business_playbook:table:040",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_040",
+    "title": "公式 | 用途",
+    "content_type": "table",
+    "content": "公式 | 用途\n收入 = 核销人次 x 客单价 | 量价拆解\n收入 = 核销服务点 x 单服务点收入 | 货盘拆解\n连锁总收入 = 医美收入 + 好物收入 | 总盘拆解\n医美收入 = 新客收入 + 老客收入 | 人群拆解\n新客收入 = 私域 + 老带新 + 公域(美团+小红书+KOL+线下) | 渠道拆解\n老客收入 = 活跃老客 + 非活跃老客 + 当月核销新客 | 老客分层\n时间进度达成率 = 实际达成 / (目标 x 时间进度%) | 进度判断\n获客成本占收比 = 获客总成本 / 新客收入 | 获客效率(~30-34%)\n公域ROI = 新客核销收入 / 获客成本 | 投放效率\n品项渗透率 = 品项核销人数 / 总核销人数 | 品项覆盖\n毛利率 = (收入 - 供应链成本) / 收入 | 利润质量(目标48%)\n活跃到院率 = 当月到院活跃用户 / 活跃用户池 | 老客运营(目标16-17%)\n升单率 = 到院后发生升单的用户 / 总到院用户 | 门店转化",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 40
+  },
+  {
+    "asset_id": "business_playbook:table:041",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_041",
+    "title": "场景 | 模板",
+    "content_type": "table",
+    "content": "场景 | 模板\n总盘 | 本月总收入时间进度达成率为X%，较目标仍有Y万gap。当前已预约预估可补至Z%，核心拖累来自老客收入和主推活动品兑现偏慢。\n新客 | 新客收入达成偏弱，核心不是客单问题，而是私域支付新客规模和老带新建档规模未达预期。公域整体ROI健康，但对总盘拉动有限。\n老客 | 老客收入偏弱，主要由于活跃用户池增速放缓、当月到院率不足，升单率整体稳定，说明问题主要在到院规模而非门店转化。\n单服务点收入 | 单服务点收入下降，主因是核销结构向低价品倾斜，叠加0元单占比上升，高客单品项贡献不足。\n毛利 | 毛利率低于目标，主要因高值耗材占收比提升，低毛利品项放量；虽然低耗和折旧端有节约，但不足以抵消高耗压力。\n活动 | 活动支付超额完成目标，但当前核销率偏低，待核销金额较高，预计后续两周仍将持续释放。\n核销人次波动 | 近一周核销人次较前5周均值下降X%，新客主要受老带新和私域规模下降影响；老客大部分城市均有下降，XX城降幅较大。升单率稳定，排除门店转化问题。\n品项结构 | 大单品贡献过半增量(+X万)，增幅最高(+X%)；大师团目标达成X%，GAP较大；服务点环比提升X%，单服务点收入环比提升X%。\n大区拆解 | 各大区总收入均增长，华东华南新客增长显著(华东+X%，华南+X%)，华中老客增长突出(+X%)；重点关注XX城老客达成落后。\n门店 | 门店收入偏弱，不是单一咨询问题，而是活跃用户池、品项结构、升单客单价三者共同偏弱，需门店专项复盘。",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 41
+  },
+  {
+    "asset_id": "business_playbook:table:042",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_042",
+    "title": "指标 | 参考值/目标 | 备注",
+    "content_type": "table",
+    "content": "指标 | 参考值/目标 | 备注\n活跃用户到院率 | 16-17% | 老客核心KPI\n公域ROI | ≥1.4 | 新客KPI\n获客成本占收比 | 30-34% | 越低越好\n0元单占比 | 18-24%(实际) / 5-15%(行业) | 持续优化方向\n定价/活动价/大促价 | 理想5:3:2 / 实际2:3:5 | 需逐步优化\n品项毛利率 | 目标48% | 品类差异大\n大单品毛利1 | ≥70% | 品项定位要求\n利润品毛利1 | ≥60% | 品项定位要求\n常规品毛利1 | ≥50% | 品项定位要求\n老带新付费转化率 | ~48% | 渠道健康度\n老带新裂变系数 | ~2.1 | 渠道增长效率\n老带新0元占比 | ~45-55% | 远高于其他渠道\n新客收入占比 | ~35% | 结构参考\n老客收入占比 | ~65% | 结构参考\n大单品收入占比 | 34-50% | 已破50%\n常规品收入占比 | 49-64% | 货盘结构\n大师团收入占比 | 2-10%(持续下降) | 货盘结构\nCR30收入占比 | ~83% | 品项集中度\n老带新获客成本 | ~300-400/人 | 最低渠道\n美团获客成本 | ~500-900/人 | 公域最低\n小红书/KOL获客成本 | ~1000-1500/人 | 相对较高",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 42
+  },
+  {
+    "asset_id": "business_playbook:table:043",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_043",
+    "title": "普通数据工程师 | 优秀数据工程师",
+    "content_type": "table",
+    "content": "普通数据工程师 | 优秀数据工程师\n只会报结果 | 先判断时间进度和经营健康度\n只看环比同比 | 把结果拆成量、价、结构、节奏四类原因\n只会说\"上升了\"\"下降了\" | 区分支付逻辑和核销逻辑\n不知道要下钻到哪里 | 把问题定位到渠道、门店、城市或品项\n说不出动作建议 | 把\"原因\"翻译成\"可执行动作\"",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 43
+  },
+  {
+    "asset_id": "business_playbook:table:044",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_044",
+    "title": "给分析师的一页纸工作清单",
+    "content_type": "table",
+    "content": "给分析师的一页纸工作清单\n每次开始分析前，请先问自己：\n这次我要先回答哪个经营问题。\n当前是看总盘，还是看某条线。\n这次更适合用量价拆解，还是结构拆解。\n我要重点看结果指标，还是过程指标。\n这次需要下钻到哪个层级。\n每次结束前，请再问自己：\n我有没有清楚说明是哪里出了问题。\n我有没有把问题拆到足够可执行。\n我有没有给出明确动作建议。\n我有没有区分短期追数和长期优化。",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 44
+  },
+  {
+    "asset_id": "business_playbook:table:045",
+    "asset_type": "business_playbook",
+    "playbook_id": "table_045",
+    "title": "如果2句话送给新入职的数据工程师",
+    "content_type": "table",
+    "content": "如果2句话送给新入职的数据工程师\n先看进度，再拆量价，再看结构，最后给动作。\n新氧连锁经营分析，有三个建议的习惯：\n先判断经营节奏，不要只看静态结果\n把问题拆到\"量、价、结构、履约\"这四层之一\n永远让分析落到动作，否则再漂亮的分析也只是复述现象",
+    "source_file": "【经管中心】一文掌握连锁分析拆解！.docx",
+    "source_index": 45
+  }
+]

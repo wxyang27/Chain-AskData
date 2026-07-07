@@ -1,0 +1,192 @@
+[
+  {
+    "asset_id": "dimension:DIM001",
+    "asset_type": "dimension",
+    "dimension_id": "DIM001",
+    "name": "新客/老客",
+    "english_name": "is_new",
+    "description": "用户是否为首次核销",
+    "value_range": "1=新客, 0=老客",
+    "fields": [
+      "is_new"
+    ],
+    "source_tables": [
+      "dm_opt_qy_user_execution_record_all_d"
+    ],
+    "affected_metrics": "核销GMV/收入/服务点/人数/人次/订单数/客单价/升单",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "维度字典",
+    "source_row": 2
+  },
+  {
+    "asset_id": "dimension:DIM002",
+    "asset_type": "dimension",
+    "dimension_id": "DIM002",
+    "name": "大师团",
+    "english_name": "is_master",
+    "description": "是否为大师团订单",
+    "value_range": "1=是, 0=否",
+    "fields": [
+      "is_master"
+    ],
+    "source_tables": [
+      "dm_opt_qy_user_execution_record_all_d"
+    ],
+    "affected_metrics": "核销GMV/收入/服务点/人数/人次/订单数/客单价/升单",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "维度字典",
+    "source_row": 3
+  },
+  {
+    "asset_id": "dimension:DIM003",
+    "asset_type": "dimension",
+    "dimension_id": "DIM003",
+    "name": "收入分类",
+    "english_name": "income_type",
+    "description": "品项的收入分类",
+    "value_range": "大单品, 常规品",
+    "fields": [
+      "income_type"
+    ],
+    "source_tables": [
+      "dm_opt_qy_user_execution_record_all_d"
+    ],
+    "affected_metrics": "核销GMV/收入/服务点/人数/人次/订单数/客单价/升单",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "维度字典",
+    "source_row": 4
+  },
+  {
+    "asset_id": "dimension:DIM004",
+    "asset_type": "dimension",
+    "dimension_id": "DIM004",
+    "name": "获客渠道",
+    "english_name": "channel_type",
+    "description": "用户的一级来源渠道",
+    "value_range": "私域, 公域, 老带新",
+    "fields": [
+      "channel_type"
+    ],
+    "source_tables": [
+      "dm_opt_qy_user_execution_record_all_d"
+    ],
+    "affected_metrics": "核销GMV/收入/服务点/人数/人次/订单数/客单价/升单",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "维度字典",
+    "source_row": 5
+  },
+  {
+    "asset_id": "dimension:DIM005",
+    "asset_type": "dimension",
+    "dimension_id": "DIM005",
+    "name": "品项名称",
+    "english_name": "product_name",
+    "description": "具体品项（如BBL HERO）",
+    "value_range": "自由文本, 支持REGEXP",
+    "fields": [
+      "product_name"
+    ],
+    "source_tables": [
+      "dm_opt_qy_user_execution_record_all_d"
+    ],
+    "affected_metrics": "品项渗透率/品项加购率/品项升单率",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "维度字典",
+    "source_row": 6
+  },
+  {
+    "asset_id": "dimension:DIM006",
+    "asset_type": "dimension",
+    "dimension_id": "DIM006",
+    "name": "订单金额",
+    "english_name": "order_amount",
+    "description": "订单金额区间（0元单）",
+    "value_range": "0元, 非0元",
+    "fields": [
+      "exe_amount / pay_amount"
+    ],
+    "source_tables": [
+      "多表"
+    ],
+    "affected_metrics": "0元单占比/0元核销订单数等",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "维度字典",
+    "source_row": 7
+  },
+  {
+    "asset_id": "dimension:DIM007",
+    "asset_type": "dimension",
+    "dimension_id": "DIM007",
+    "name": "支付渠道",
+    "english_name": "pay_channel",
+    "description": "线上/线下支付",
+    "value_range": "线上, 线下",
+    "fields": [
+      "channel"
+    ],
+    "source_tables": [
+      "dwd_ord_order_qzy_fact_all_d"
+    ],
+    "affected_metrics": "用户画像支付字段",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "维度字典",
+    "source_row": 8
+  },
+  {
+    "asset_id": "dimension:DIM008",
+    "asset_type": "dimension",
+    "dimension_id": "DIM008",
+    "name": "业务领域",
+    "english_name": "biz_domain",
+    "description": "连锁/医美/好物",
+    "value_range": "连锁, 医美, 好物",
+    "fields": [
+      "business_type"
+    ],
+    "source_tables": [
+      "dwd_ord_order_qzy_fact_all_d"
+    ],
+    "affected_metrics": "用户画像支付字段",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "维度字典",
+    "source_row": 9
+  },
+  {
+    "asset_id": "dimension:DIM009",
+    "asset_type": "dimension",
+    "dimension_id": "DIM009",
+    "name": "时间粒度",
+    "english_name": "time_grain",
+    "description": "统计周期",
+    "value_range": "日, 周, 月, 季, 90天滚动",
+    "fields": [
+      "dp / verify_date"
+    ],
+    "source_tables": [
+      "多表"
+    ],
+    "affected_metrics": "所有指标",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "维度字典",
+    "source_row": 10
+  },
+  {
+    "asset_id": "dimension:DIM010",
+    "asset_type": "dimension",
+    "dimension_id": "DIM010",
+    "name": "门店",
+    "english_name": "store",
+    "description": "连锁门店",
+    "value_range": "门店ID/名称",
+    "fields": [
+      "store_id / store_name"
+    ],
+    "source_tables": [
+      "多表"
+    ],
+    "affected_metrics": "门店维度看板指标",
+    "source_file": "【经管中心】一文掌握连锁指标字典！.xlsx",
+    "source_sheet": "维度字典",
+    "source_row": 11
+  }
+]
