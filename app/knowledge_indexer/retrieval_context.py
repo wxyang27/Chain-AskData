@@ -27,9 +27,9 @@ class RetrievalContext:
 
     def top_metric_ids(self, limit: int = 3) -> list[str]:
         return [
-            hit.metadata["canonical"]
+            hit.metadata.get("canonical") or hit.metadata["metric_id"]
             for hit in self.metrics[:limit]
-            if hit.metadata.get("canonical")
+            if hit.metadata.get("canonical") or hit.metadata.get("metric_id")
         ]
 
     def top_table_names(self, limit: int = 3) -> list[str]:

@@ -18,7 +18,9 @@ class AnswerComposer:
         self.validator = SqlValidator()
         self.knowledge_search = KnowledgeSearchService()
         self.intent_router = IntentRouter()
-        self.schema_graph_builder = SchemaGraphBuilder()
+        self.schema_graph_builder = SchemaGraphBuilder(
+            schema_indexes=self.knowledge_search.schema_indexes,
+        )
 
     def compose(self, question: str) -> QueryResponse:
         retrieval_context = self.knowledge_search.search_structured(question, top_k=10)

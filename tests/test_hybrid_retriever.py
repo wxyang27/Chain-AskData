@@ -4,6 +4,7 @@ from app.knowledge_indexer.hybrid_retriever import HybridRetriever, reciprocal_r
 from app.knowledge_indexer.keyword_extractor import KeywordExtractor
 from app.knowledge_indexer.loader import load_knowledge_chunks
 from app.knowledge_indexer.service import KnowledgeSearchService
+from app.schema_index.loader import SchemaIndexLoader
 
 
 class HybridRetrieverTestCase(unittest.TestCase):
@@ -37,6 +38,17 @@ class HybridRetrieverTestCase(unittest.TestCase):
         context = KnowledgeSearchService().search_structured("核销人数应该用哪个字段", top_k=8)
 
         self.assertIn("customer_id", context.top_field_names(limit=5))
+
+    def test_hybrid_retriever_consumes_schema_index_loader(self):
+        schema_indexes = SchemaIndexLoader().load()
+        retriever = HybridRetriever(chunks=[], schema_indexes=schema_indexes)
+
+        matches = retriever.retrieve("exe_income A002", vector_matches=[], top_k=5)
+        field_ids = [match["metadata"].get("field_id") for match in matches]
+        metric_ids = [match["metadata"].get("metric_id") for match in matches]
+
+        self.assertIn("dm_opt_qy_user_execution_record_all_d.exe_income", field_ids)
+        self.assertIn("A002", metric_ids)
 
 
 if __name__ == "__main__":

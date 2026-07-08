@@ -6,7 +6,11 @@ from app.knowledge_indexer.types import KnowledgeChunk
 
 
 GENERATED_ASSET_FILES = {
-    "metrics_full.json": "metric",
+    "dimensions.json": "dimension",
+    "tables.json": "table",
+}
+
+LEGACY_GENERATED_ASSET_FILES = {
     "user_profile_fields.json": "user_profile_field",
     "dimensions.json": "dimension",
     "data_sources.json": "data_source",
@@ -23,8 +27,36 @@ def load_generated_knowledge_chunks(
     if not generated_dir.exists():
         return []
 
+    assets_dir = generated_dir / "assets"
+    if assets_dir.exists():
+        return _load_consolidated_asset_chunks(assets_dir)
+
+    return _load_legacy_asset_chunks(generated_dir)
+
+
+def _load_consolidated_asset_chunks(assets_dir: Path) -> list[KnowledgeChunk]:
     chunks: list[KnowledgeChunk] = []
+    chunks.extend(_load_preferred_asset_file(assets_dir, "metrics.json", "", "metric"))
+    chunks.extend(_load_preferred_asset_file(assets_dir, "fields.json", "", "schema_field"))
     for filename, asset_type in GENERATED_ASSET_FILES.items():
+        path = assets_dir / filename
+        if not path.exists():
+            continue
+        records = json.loads(path.read_text(encoding="utf-8"))
+        for record in records:
+            chunk = _record_to_chunk(asset_type, record)
+            if chunk:
+                chunks.append(chunk)
+    chunks.extend(_load_business_asset_chunks(assets_dir / "business_assets.json"))
+
+    return chunks
+
+
+def _load_legacy_asset_chunks(generated_dir: Path) -> list[KnowledgeChunk]:
+    chunks: list[KnowledgeChunk] = []
+    chunks.extend(_load_preferred_asset_file(generated_dir, "metrics_merged.json", "metrics_full.json", "metric"))
+    chunks.extend(_load_preferred_asset_file(generated_dir, "fields_merged.json", "", "schema_field"))
+    for filename, asset_type in LEGACY_GENERATED_ASSET_FILES.items():
         path = generated_dir / filename
         if not path.exists():
             continue
@@ -37,9 +69,51 @@ def load_generated_knowledge_chunks(
     return chunks
 
 
+def _load_business_asset_chunks(path: Path) -> list[KnowledgeChunk]:
+    if not path.exists():
+        return []
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    chunks: list[KnowledgeChunk] = []
+    for record in payload.get("data_sources", []):
+        if chunk := _record_to_chunk("data_source", record):
+            chunks.append(chunk)
+    for record in payload.get("dashboard_metrics", []):
+        if chunk := _record_to_chunk("dashboard_metric", record):
+            chunks.append(chunk)
+    for record in payload.get("business_playbooks", []):
+        if chunk := _record_to_chunk("business_playbook", record):
+            chunks.append(chunk)
+    for record in payload.get("user_profile_fields", []):
+        if chunk := _record_to_chunk("user_profile_field", record):
+            chunks.append(chunk)
+    return chunks
+
+
+def _load_preferred_asset_file(
+    generated_dir: Path,
+    preferred_filename: str,
+    fallback_filename: str,
+    asset_type: str,
+) -> list[KnowledgeChunk]:
+    path = generated_dir / preferred_filename
+    if not path.exists() and fallback_filename:
+        path = generated_dir / fallback_filename
+    if not path.exists():
+        return []
+
+    records = json.loads(path.read_text(encoding="utf-8"))
+    return [
+        chunk
+        for record in records
+        if (chunk := _record_to_chunk(asset_type, record))
+    ]
+
+
 def _record_to_chunk(asset_type: str, record: dict[str, Any]) -> KnowledgeChunk | None:
     if asset_type == "metric":
         return _metric_chunk(record)
+    if asset_type == "schema_field":
+        return _schema_field_chunk(record)
     if asset_type == "user_profile_field":
         return _field_chunk(record)
     if asset_type == "dimension":
@@ -85,6 +159,50 @@ def _metric_chunk(record: dict[str, Any]) -> KnowledgeChunk:
                 "source_table": _first(record.get("source_tables", [])),
                 "source_file": record.get("source_file", ""),
                 "source_sheet": record.get("source_sheet", ""),
+                "review_status": record.get("review_status", ""),
+                "source_kind": record.get("source_kind", ""),
+            }
+        ),
+    )
+
+
+def _schema_field_chunk(record: dict[str, Any]) -> KnowledgeChunk:
+    document = "\n".join(
+        [
+            f"字段：{record['field_name']}",
+            f"业务含义：{record.get('business_name', '')}",
+            f"来源表：{record.get('full_table_name', '')}",
+            f"字段类型：{record.get('field_type', '')}",
+            f"字段说明：{record.get('description', '')}",
+            f"相关指标：{_join(record.get('used_by_metrics', []))}",
+            f"口径说明：{record.get('caliber', '')}",
+            f"样例值：{_join(record.get('sample_values', []))}",
+            f"枚举值：{_join(record.get('enum_values', []))}",
+            f"必备过滤：{_join(record.get('filters', []))}",
+            f"易错提醒：{_join(record.get('risk_notes', []))}",
+            _source_trace(record),
+        ]
+    )
+    return KnowledgeChunk(
+        chunk_id=f"generated_schema_field:{record['table_name']}:{record['field_name']}",
+        document=document,
+        metadata=_metadata(
+            {
+                "asset_type": "field",
+                "field_name": record["field_name"],
+                "business_name": record.get("business_name", ""),
+                "table_name": record["table_name"],
+                "full_table_name": record.get("full_table_name", ""),
+                "full_name": f"{record.get('full_table_name', '')}.{record['field_name']}",
+                "field_type": record.get("field_type", ""),
+                "canonical_name": record.get("field_name", ""),
+                "used_by_metrics": record.get("used_by_metrics", []),
+                "is_join_key": record.get("is_join_key", False),
+                "is_metric_field": record.get("is_metric_field", False),
+                "is_dimension_field": record.get("is_dimension_field", False),
+                "review_status": record.get("review_status", ""),
+                "source_kind": record.get("source_kind", ""),
+                "source_file": record.get("source_file", ""),
             }
         ),
     )

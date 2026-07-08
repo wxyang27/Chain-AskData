@@ -1,7 +1,8 @@
 import unittest
 
 from app.knowledge_indexer.retrieval_context import RetrievalContext, RetrievalHit
-from app.schema_graph.builder import SchemaGraphBuilder
+from app.schema_graph.builder import SchemaGraphBuilder, format_schema_graph
+from app.schema_index.loader import SchemaIndexLoader
 
 
 class SchemaGraphBuilderTestCase(unittest.TestCase):
@@ -86,6 +87,56 @@ class SchemaGraphBuilderTestCase(unittest.TestCase):
 
         self.assertIn("fields", graph.missing_evidence)
         self.assertIn("tables", graph.missing_evidence)
+
+    def test_builds_and_formats_schema_graph_from_schema_index_loader(self):
+        context = RetrievalContext(
+            query="exe_income by tenant",
+            fields=[
+                RetrievalHit(
+                    document="field exe_income",
+                    metadata={
+                        "asset_type": "field",
+                        "field_id": "dm_opt_qy_user_execution_record_all_d.exe_income",
+                        "field_name": "exe_income",
+                        "table_name": "dm_opt_qy_user_execution_record_all_d",
+                    },
+                    distance=0.1,
+                    rerank_score=20.0,
+                ),
+                RetrievalHit(
+                    document="field sy_hospital_name",
+                    metadata={
+                        "asset_type": "field",
+                        "field_id": "dim_qy_tenant_info_all_d.sy_hospital_name",
+                        "field_name": "sy_hospital_name",
+                        "table_name": "dim_qy_tenant_info_all_d",
+                    },
+                    distance=0.1,
+                    rerank_score=19.0,
+                ),
+            ],
+            metrics=[
+                RetrievalHit(
+                    document="metric A002",
+                    metadata={"asset_type": "metric", "metric_id": "A002"},
+                    distance=0.1,
+                    rerank_score=18.0,
+                )
+            ],
+        )
+        schema_indexes = SchemaIndexLoader().load()
+
+        graph = SchemaGraphBuilder(schema_indexes=schema_indexes).build(context)
+        graph_text = format_schema_graph(graph)
+
+        self.assertIn("dm_opt_qy_user_execution_record_all_d", graph.table_names)
+        self.assertIn("dim_qy_tenant_info_all_d", graph.table_names)
+        self.assertIn("exe_income", graph.field_names)
+        self.assertIn("A002", graph.metric_ids)
+        self.assertTrue(graph.relations)
+        self.assertIn("Table: soyoung_dw.dm_opt_qy_user_execution_record_all_d", graph_text)
+        self.assertIn("Field: exe_income", graph_text)
+        self.assertIn("Relation:", graph_text)
 
 
 if __name__ == "__main__":

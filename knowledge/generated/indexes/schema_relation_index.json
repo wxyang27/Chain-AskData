@@ -1,0 +1,20 @@
+[
+  {
+    "source_table": "dm_opt_qy_user_execution_record_all_d",
+    "source_field": "tenant_id",
+    "target_table": "dim_qy_tenant_info_all_d",
+    "target_field": "tenant_id",
+    "relation_type": "LEFT JOIN",
+    "condition": "a.tenant_id = b.tenant_id AND b.dp = DATE_SUB(CURRENT_DATE(),1)",
+    "relation_description": "核销事实按门店、大区、城市分析"
+  },
+  {
+    "source_table": "dm_opt_qy_order_info_all_d",
+    "source_field": "tenant_id",
+    "target_table": "dim_qy_tenant_info_all_d",
+    "target_field": "tenant_id",
+    "relation_type": "LEFT JOIN",
+    "condition": "a.tenant_id = b.tenant_id AND b.dp = DATE_SUB(CURRENT_DATE(),1)",
+    "relation_description": "支付订单或待核销库存按门店、大区、城市分析"
+  }
+]

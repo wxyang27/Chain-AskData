@@ -5,6 +5,8 @@ from typing import Any
 from app.knowledge_importer.docx_loader import AnalysisDocxLoader, DatabaseDocxLoader
 from app.knowledge_importer.excel_loader import IndicatorWorkbookLoader
 from app.knowledge_importer.models import ImportResult
+from app.knowledge_importer.reviewed_yaml_loader import ReviewedYamlAssetLoader
+from app.schema_index.builder import SchemaIndexBuilder
 
 
 DEFAULT_SOURCE_DIR = Path("docs/primary_knowledge")
@@ -29,6 +31,16 @@ class PrimaryKnowledgeImporter:
             workbook_assets["data_sources"],
         )
         playbooks = AnalysisDocxLoader().load_playbooks(self._find_analysis_docx(source_dir))
+        reviewed_loader = ReviewedYamlAssetLoader()
+        reviewed_assets = reviewed_loader.load(source_dir)
+        metrics_merged = reviewed_loader.merge_metrics(
+            workbook_assets["metrics"],
+            reviewed_assets["metrics_reviewed"],
+        )
+        fields_merged = reviewed_loader.merge_fields(
+            reviewed_assets["core_fields_review_base"],
+            reviewed_assets["fields_reviewed"],
+        )
 
         assets = {
             "metrics_full.json": workbook_assets["metrics"],
@@ -38,6 +50,44 @@ class PrimaryKnowledgeImporter:
             "dashboard_metrics.json": workbook_assets["dashboard_metrics"],
             "tables_full.json": tables,
             "business_playbooks.json": playbooks,
+            "metrics_reviewed.json": reviewed_assets["metrics_reviewed"],
+            "fields_reviewed.json": reviewed_assets["fields_reviewed"],
+            "metrics_merged.json": metrics_merged,
+            "fields_merged.json": fields_merged,
+        }
+        consolidated_assets = {
+            "metrics.json": metrics_merged,
+            "fields.json": fields_merged,
+            "tables.json": tables,
+            "dimensions.json": workbook_assets["dimensions"],
+            "business_assets.json": {
+                "data_sources": workbook_assets["data_sources"],
+                "dashboard_metrics": workbook_assets["dashboard_metrics"],
+                "business_playbooks": playbooks,
+                "user_profile_fields": workbook_assets["user_profile_fields"],
+            },
+        }
+        schema_indexes = SchemaIndexBuilder().build(
+            metrics=metrics_merged,
+            fields=fields_merged,
+            tables=tables,
+        )
+        manifest = {
+            "schema_version": 1,
+            "assets": {
+                "metrics": len(metrics_merged),
+                "fields": len(fields_merged),
+                "tables": len(tables),
+                "dimensions": len(workbook_assets["dimensions"]),
+                "data_sources": len(workbook_assets["data_sources"]),
+                "dashboard_metrics": len(workbook_assets["dashboard_metrics"]),
+                "business_playbooks": len(playbooks),
+                "user_profile_fields": len(workbook_assets["user_profile_fields"]),
+            },
+            "indexes": {
+                filename.replace(".json", ""): len(records)
+                for filename, records in schema_indexes.items()
+            },
         }
 
         files: dict[str, Path] = {}
@@ -48,6 +98,14 @@ class PrimaryKnowledgeImporter:
                 encoding="utf-8",
             )
             files[filename] = path
+        self._write_json_group(output_dir / "assets", consolidated_assets, files)
+        self._write_json_group(output_dir / "indexes", schema_indexes, files)
+        manifest_path = output_dir / "manifest.json"
+        manifest_path.write_text(
+            json.dumps(manifest, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        files["manifest.json"] = manifest_path
 
         return ImportResult(
             output_dir=output_dir,
@@ -59,9 +117,32 @@ class PrimaryKnowledgeImporter:
                 "dashboard_metrics": len(workbook_assets["dashboard_metrics"]),
                 "tables": len(tables),
                 "business_playbooks": len(playbooks),
+                "metrics_reviewed": len(reviewed_assets["metrics_reviewed"]),
+                "fields_reviewed": len(reviewed_assets["fields_reviewed"]),
+                "metrics_merged": len(metrics_merged),
+                "fields_merged": len(fields_merged),
+                "assets_metrics": len(metrics_merged),
+                "assets_fields": len(fields_merged),
+                "assets_tables": len(tables),
+                "assets_dimensions": len(workbook_assets["dimensions"]),
             },
             files=files,
         )
+
+    def _write_json_group(
+        self,
+        directory: Path,
+        payloads: dict[str, Any],
+        files: dict[str, Path],
+    ) -> None:
+        directory.mkdir(parents=True, exist_ok=True)
+        for filename, records in payloads.items():
+            path = directory / filename
+            path.write_text(
+                json.dumps(records, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+            files[str(path)] = path
 
     def _find_indicator_workbook(self, source_dir: Path) -> Path:
         return self._find_one(source_dir, "*.xlsx", "指标字典")

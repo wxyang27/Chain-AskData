@@ -1,0 +1,492 @@
+[
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dim_hospital_info",
+    "full_name": "soyoung_dw.dim_hospital_info",
+    "layer": "DIM",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dim_inp_private_staff_info_all_d",
+    "full_name": "soyoung_dw.dim_inp_private_staff_info_all_d",
+    "layer": "DIM",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dim_opt_qy_activity_info_all_d",
+    "full_name": "soyoung_dw.dim_opt_qy_activity_info_all_d",
+    "layer": "DIM",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dim_opt_qy_hospital_income_target_m",
+    "full_name": "soyoung_dw.dim_opt_qy_hospital_income_target_m",
+    "layer": "DIM",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dim_opt_qy_income_target_m",
+    "full_name": "soyoung_dw.dim_opt_qy_income_target_m",
+    "layer": "DIM",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dim_opt_qy_item_product_all_d",
+    "full_name": "soyoung_dw.dim_opt_qy_item_product_all_d",
+    "layer": "DIM",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dim_opt_qy_staff_monthly_target",
+    "full_name": "soyoung_dw.dim_opt_qy_staff_monthly_target",
+    "layer": "DIM",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dim_opt_qy_standard_product_correspondence_info",
+    "full_name": "soyoung_dw.dim_opt_qy_standard_product_correspondence_info",
+    "layer": "DIM",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dim_product_info",
+    "full_name": "soyoung_dw.dim_product_info",
+    "layer": "DIM",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dim_qy_product_ware_relation_all_d",
+    "full_name": "soyoung_dw.dim_qy_product_ware_relation_all_d",
+    "layer": "DIM",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dim_qy_sc_warehouse_product_info_all_d",
+    "full_name": "soyoung_dw.dim_qy_sc_warehouse_product_info_all_d",
+    "layer": "DIM",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dim_qy_tenant_info_all_d",
+    "full_name": "soyoung_dw.dim_qy_tenant_info_all_d",
+    "layer": "DIM",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dim_user_qy_crm_customer_info_all_d",
+    "full_name": "soyoung_dw.dim_user_qy_crm_customer_info_all_d",
+    "layer": "DIM",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dm_inp_private_user_addc_fact_all_d",
+    "full_name": "soyoung_dw.dm_inp_private_user_addc_fact_all_d",
+    "layer": "DM",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dm_inp_private_user_interact_summary_all_d",
+    "full_name": "soyoung_dw.dm_inp_private_user_interact_summary_all_d",
+    "layer": "DM",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_private_weiban_kpi_data_all_d",
+    "full_name": "soyoung_dw.dm_opt_private_weiban_kpi_data_all_d",
+    "layer": "DM",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_area_tenant_resource_stats_all_d",
+    "full_name": "soyoung_dw.dm_opt_qy_area_tenant_resource_stats_all_d",
+    "layer": "DM",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_order_info_all_d",
+    "full_name": "soyoung_dw.dm_opt_qy_order_info_all_d",
+    "layer": "DM",
+    "theme": "连锁业务订单信息全量日表",
+    "grain": "支付GMV/订单数等指标来源",
+    "partition_field": "dp",
+    "table_summary": "连锁业务订单信息全量日表 连锁业务订单信息全量日表 支付GMV/订单数等指标来源 order_id pay_amount uid pay_date refund_flag"
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_user_execution_record_all_d",
+    "full_name": "soyoung_dw.dm_opt_qy_user_execution_record_all_d",
+    "layer": "DM",
+    "theme": "连锁业务核销记录全量日表，包含用户、品项、金额、服务点等维度",
+    "grain": "核心事实表，大部分核销/升单指标来源",
+    "partition_field": "dp",
+    "table_summary": "连锁业务核销记录全量日表，包含用户、品项、金额、服务点等维度 连锁业务核销记录全量日表，包含用户、品项、金额、服务点等维度 核心事实表，大部分核销/升单指标来源 exe_amount exe_income exe_cnt uid customer_id verify_date_id order_id is_new is_master is_valid product_name income_type channel_type"
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_user_summary_info_all_d",
+    "full_name": "soyoung_dw.dm_opt_qy_user_summary_info_all_d",
+    "layer": "DM",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_visit_record_all_d",
+    "full_name": "soyoung_dw.dm_opt_qy_visit_record_all_d",
+    "layer": "DM",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dm_ware_tenant_stock_stats_all_d",
+    "full_name": "soyoung_dw.dm_ware_tenant_stock_stats_all_d",
+    "layer": "DM",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dwd_content_meituan_evaluate_all_d",
+    "full_name": "soyoung_dw.dwd_content_meituan_evaluate_all_d",
+    "layer": "DWD",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dwd_content_post_qy_evaluate_detail_all_d",
+    "full_name": "soyoung_dw.dwd_content_post_qy_evaluate_detail_all_d",
+    "layer": "DWD",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dwd_inp_private_user_fact_all_d",
+    "full_name": "soyoung_dw.dwd_inp_private_user_fact_all_d",
+    "layer": "DWD",
+    "theme": "私域用户标签与加C状态",
+    "grain": "加C相关字段来源",
+    "partition_field": "dp",
+    "table_summary": "私域用户标签与加C状态 私域用户标签与加C状态 加C相关字段来源 uid is_private is_valid_add_c is_wz_add_c is_store_add_c is_group"
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dwd_inp_qy_crm_admin_user_all_d",
+    "full_name": "soyoung_dw.dwd_inp_qy_crm_admin_user_all_d",
+    "layer": "DWD",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dwd_opt_qy_crm_admin_schedule_all_d",
+    "full_name": "soyoung_dw.dwd_opt_qy_crm_admin_schedule_all_d",
+    "layer": "DWD",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dwd_opt_qy_crm_customer_allocate_record_all_d",
+    "full_name": "soyoung_dw.dwd_opt_qy_crm_customer_allocate_record_all_d",
+    "layer": "DWD",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dwd_opt_qy_crm_customer_biz_info_all_d",
+    "full_name": "soyoung_dw.dwd_opt_qy_crm_customer_biz_info_all_d",
+    "layer": "DWD",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dwd_opt_qy_crm_customer_customer_tag_all_d",
+    "full_name": "soyoung_dw.dwd_opt_qy_crm_customer_customer_tag_all_d",
+    "layer": "DWD",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dwd_opt_qy_crm_resources_occupy_all_d",
+    "full_name": "soyoung_dw.dwd_opt_qy_crm_resources_occupy_all_d",
+    "layer": "DWD",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dwd_opt_qy_customer_followup_all_d",
+    "full_name": "soyoung_dw.dwd_opt_qy_customer_followup_all_d",
+    "layer": "DWD",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dwd_opt_qy_fission_relationship_all_d",
+    "full_name": "soyoung_dw.dwd_opt_qy_fission_relationship_all_d",
+    "layer": "DWD",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dwd_opt_qy_reserve_all_d",
+    "full_name": "soyoung_dw.dwd_opt_qy_reserve_all_d",
+    "layer": "DWD",
+    "theme": "用户预约记录",
+    "grain": "预约相关字段来源",
+    "partition_field": "dp",
+    "table_summary": "用户预约记录 用户预约记录 预约相关字段来源 uid reserve_date order_id gmv"
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dwd_opt_qy_visit_log_all_d",
+    "full_name": "soyoung_dw.dwd_opt_qy_visit_log_all_d",
+    "layer": "DWD",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dwd_opt_qzy_reserve_all_d",
+    "full_name": "soyoung_dw.dwd_opt_qzy_reserve_all_d",
+    "layer": "DWD",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dwd_ord_order_qy_execution_record_all_d",
+    "full_name": "soyoung_dw.dwd_ord_order_qy_execution_record_all_d",
+    "layer": "DWD",
+    "theme": "核销执行记录明细",
+    "grain": "部分用户画像核销字段来源",
+    "partition_field": "dp",
+    "table_summary": "核销执行记录明细 核销执行记录明细 部分用户画像核销字段来源 uid verify_date exe_amount exe_income"
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dwd_ord_order_qy_execution_record_detail_all_d",
+    "full_name": "soyoung_dw.dwd_ord_order_qy_execution_record_detail_all_d",
+    "layer": "DWD",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dwd_ord_order_qzy_fact_all_d",
+    "full_name": "soyoung_dw.dwd_ord_order_qzy_fact_all_d",
+    "layer": "DWD",
+    "theme": "订单明细事实表，含支付与核销信息",
+    "grain": "用户画像支付字段来源(线上/线下/医美/好物)",
+    "partition_field": "dp",
+    "table_summary": "订单明细事实表，含支付与核销信息 订单明细事实表，含支付与核销信息 用户画像支付字段来源(线上/线下/医美/好物) order_id uid pay_amount pay_date channel business_type"
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dwd_ord_order_store_order_all_d",
+    "full_name": "soyoung_dw.dwd_ord_order_store_order_all_d",
+    "layer": "DWD",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dwd_ord_order_yz_qzy_child_all_d",
+    "full_name": "soyoung_dw.dwd_ord_order_yz_qzy_child_all_d",
+    "layer": "DWD",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dwd_qy_sc_product_entry_exit_detail_all_d",
+    "full_name": "soyoung_dw.dwd_qy_sc_product_entry_exit_detail_all_d",
+    "layer": "DWD",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dws_content_qy_evaluate_summary_all_d",
+    "full_name": "soyoung_dw.dws_content_qy_evaluate_summary_all_d",
+    "layer": "DWS",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dws_inp_private_user_union_id_topic_d",
+    "full_name": "soyoung_dw.dws_inp_private_user_union_id_topic_d",
+    "layer": "DWS",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dws_inp_qy_staff_topic_all_d",
+    "full_name": "soyoung_dw.dws_inp_qy_staff_topic_all_d",
+    "layer": "DWS",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_core_summary_all_d",
+    "full_name": "soyoung_dw.dws_opt_qy_core_summary_all_d",
+    "layer": "DWS",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_tenant_topic_d",
+    "full_name": "soyoung_dw.dws_opt_qy_tenant_topic_d",
+    "layer": "DWS",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dws_qy_sc_financial_pss_stats_all_d",
+    "full_name": "soyoung_dw.dws_qy_sc_financial_pss_stats_all_d",
+    "layer": "DWS",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  },
+  {
+    "database_name": "soyoung_dw",
+    "table_name": "dws_qy_sc_ware_stock_stats_all_d",
+    "full_name": "soyoung_dw.dws_qy_sc_ware_stock_stats_all_d",
+    "layer": "DWS",
+    "theme": "",
+    "grain": "",
+    "partition_field": "dp",
+    "table_summary": ""
+  }
+]

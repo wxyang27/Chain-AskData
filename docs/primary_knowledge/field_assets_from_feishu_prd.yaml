@@ -1,0 +1,565 @@
+# 字段级资产 — 从飞书 PRD 文档提取的增量字段
+# 来源：
+#   - 【PRD】APP数据看板 (H80FdR7wHo987bxgZvWcdTmsnch)
+#   - 【PRD】奇迹胶原品项经营看板 (DvgBwNM2yiS0CPkrh2Ic2kT9nqf)
+# 生成时间：2026-07-08
+# 审核状态：待审核 (放在 docs/primary_knowledge/ 供人工复核后合入 knowledge/schema/)
+# 
+# 说明：
+#   标注 [新增表] = core_tables.yaml 中尚未登记的表
+#   标注 [补充字段] = core_tables.yaml 已有该表，但 core_fields.yaml 缺字段定义
+#   标注 [新增字段] = 当前 core_fields.yaml 未收录的字段
+
+fields:
+
+# =============================================================================
+# 表1: dm_opt_qy_user_summary_info_all_d  [补充字段]
+# 已在 core_tables.yaml 登记，但 core_fields.yaml 缺字段，本次从文档补充
+# =============================================================================
+- table_name: dm_opt_qy_user_summary_info_all_d
+  full_table_name: soyoung_dw.dm_opt_qy_user_summary_info_all_d
+  field_name: user_id
+  field_type: join_key
+  business_name: 用户ID
+  description: 用户唯一标识，用于跨表关联核销、支付与 APP 活跃数据
+  used_by_metrics: []
+  caliber: "dm_opt_qy_user_summary_info_all_d 的 user_id 与核销表的 uid 关联（LEFT JOIN 关联活跃规模/新老客分析）；注意与 customer_id 体系不同"
+  sample_values: []
+  enum_values: []
+  is_join_key: true
+  is_metric_field: false
+  is_dimension_field: false
+  filters:
+    - dp = CURRENT_DATE() - 1
+  risk_notes:
+    - "user_id 与 customer_id 跨体系关联会丢失部分覆盖"
+    - "支付表关联用 uid，核销表关联用 customer_id 或 uid，确认后再 JOIN"
+
+- table_name: dm_opt_qy_user_summary_info_all_d
+  full_table_name: soyoung_dw.dm_opt_qy_user_summary_info_all_d
+  field_name: first_use_date
+  field_type: date
+  business_name: 首次核销日期
+  description: 用户首次核销的日期，用于判断核销新客/老客、计算核销渗透率
+  used_by_metrics: []
+  caliber: "核销新客判定：first_use_date = 当前统计日；核销老客：first_use_date < 当前统计日"
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters:
+    - dp = CURRENT_DATE() - 1
+  risk_notes:
+    - "first_use_date 是快照维度，需关注 dp 分区是否为最新"
+    - "支付域新客使用 is_pay_new，核销域新客使用 is_new（事实表）或 first_use_date（汇总表），不要混用"
+
+
+# =============================================================================
+# 表2: dwd_md_app_log_nocheat  [新增表]
+# APP 埋点日志（去作弊），核心活跃数据源，未在 core_tables.yaml 登记
+# =============================================================================
+- table_name: dwd_md_app_log_nocheat
+  full_table_name: soyoung_dw.dwd_md_app_log_nocheat
+  field_name: device_id
+  field_type: count_key
+  business_name: 设备ID
+  description: APP 设备唯一标识，DAU/MAU/页面UV 的去重键
+  used_by_metrics: []
+  caliber: "用户活跃统计使用 COUNT(DISTINCT device_id) 作为去重依据"
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: true
+  is_dimension_field: false
+  filters:
+    - "app_id IN (131, 132)"
+    - "type = 2"
+  risk_notes:
+    - "device_id 不等于用户ID（uid），不能替代 customer_id 做核销人数统计"
+    - "同一个用户可能有多台设备，device_id 去重会放大用户数"
+
+- table_name: dwd_md_app_log_nocheat
+  full_table_name: soyoung_dw.dwd_md_app_log_nocheat
+  field_name: type
+  field_type: filter
+  business_name: 日志类型
+  description: "日志类型标记，type=2 表示有效活跃行为"
+  used_by_metrics: []
+  caliber: "统计活跃用户（DAU/MAU/页面UV）时过滤 type = 2"
+  sample_values: ["2"]
+  enum_values: ["2"]
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: false
+  filters:
+    - "type = 2"
+  risk_notes:
+    - "不加 type=2 会把非活跃行为（如后台心跳）计入活跃用户，严重虚高"
+
+- table_name: dwd_md_app_log_nocheat
+  full_table_name: soyoung_dw.dwd_md_app_log_nocheat
+  field_name: app_id
+  field_type: filter
+  business_name: 应用ID
+  description: "APP 标识，131/132 为连锁业务核心应用"
+  used_by_metrics: []
+  caliber: "APP 范围过滤使用 app_id IN (131, 132)"
+  sample_values: ["131", "132"]
+  enum_values: ["131", "132"]
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: false
+  filters:
+    - "app_id IN (131, 132)"
+  risk_notes:
+    - "不加 app_id 会把非连锁业务 APP 流量计入，需确认业务所需 app_id 范围"
+
+- table_name: dwd_md_app_log_nocheat
+  full_table_name: soyoung_dw.dwd_md_app_log_nocheat
+  field_name: curr_page_id
+  field_type: dimension
+  business_name: 页面ID
+  description: 用户当前浏览页面的标识
+  used_by_metrics: []
+  caliber: "页面活跃 UV 按 curr_page_id 区分，典型值见 dim_buried_point_info_all_d"
+  sample_values: ["27941", "27957", "27972", "27986", "28885"]
+  enum_values:
+    - "27941-首页"
+    - "27957-项目页面"
+    - "27972-商详页面"
+    - "27986-提单页面"
+    - "28885-社区Feed页面"
+    - "29086-群聊页面"
+    - "26959-我的页面"
+    - "28593-日记详情页面"
+    - "28843-话题详情页面"
+    - "26877-搜索结果页面"
+    - "28637-肤测结果页面"
+    - "28573-评价列表页面"
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes:
+    - "page_id 数值含义需要联查 dim_buried_point_info_all_d 获取中文名称"
+    - "新增页面后需同步更新埋点维度表"
+
+- table_name: dwd_md_app_log_nocheat
+  full_table_name: soyoung_dw.dwd_md_app_log_nocheat
+  field_name: uid
+  field_type: join_key
+  business_name: 用户ID
+  description: "APP 埋点中的用户标识，用于关联支付/核销表做跨域分析（如核销用户 APP 活跃渗透）"
+  used_by_metrics: []
+  caliber: "通过 uid 关联支付表、核销表进行用户口径分析；跨体系关联需关注 uid 映射覆盖率"
+  sample_values: []
+  enum_values: []
+  is_join_key: true
+  is_metric_field: false
+  is_dimension_field: false
+  filters: []
+  risk_notes:
+    - "uid 在支付域和 APP 日志域通常一致，但与核销域 customer_id 不完全映射"
+    - "核销用户活跃渗透需要 uid 与 user_id/customer_id 的映射表"
+
+
+# =============================================================================
+# 表3: dws_md_app_page_summary  [新增表]
+# APP 页面级汇总表，停留时长/浏览量，未在 core_tables.yaml 登记
+# =============================================================================
+- table_name: dws_md_app_page_summary
+  full_table_name: soyoung_dw.dws_md_app_page_summary
+  field_name: device_id
+  field_type: count_key
+  business_name: 设备ID
+  description: APP 页面设备唯一标识
+  used_by_metrics: []
+  caliber: "COUNT(DISTINCT device_id) 用于页面UV统计"
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: true
+  is_dimension_field: false
+  filters:
+    - "app_id IN (131, 132)"
+  risk_notes:
+    - "device_id 不等于用户ID"
+    - "页面级汇总表已聚合，注意与明细表的粒度差异"
+
+- table_name: dws_md_app_page_summary
+  full_table_name: soyoung_dw.dws_md_app_page_summary
+  field_name: curr_page_id
+  field_type: dimension
+  business_name: 页面ID
+  description: 用户浏览页面标识，与 dwd_md_app_log_nocheat 中的 curr_page_id 同义
+  used_by_metrics: []
+  caliber: "页面维度拆分使用 curr_page_id"
+  sample_values: ["27957", "27972", "28637", "28885"]
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters:
+    - "curr_page_id > 0"
+  risk_notes:
+    - "page_id 与 dwd_md_app_log_nocheat 应保持一致"
+
+- table_name: dws_md_app_page_summary
+  full_table_name: soyoung_dw.dws_md_app_page_summary
+  field_name: stay_time
+  field_type: measure
+  business_name: 停留时长
+  description: 用户在页面上的停留时间（秒），用于计算人均停留时长
+  used_by_metrics: []
+  caliber: "人均停留时长 = SUM(stay_time) / COUNT(DISTINCT device_id)"
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: true
+  is_dimension_field: false
+  filters: []
+  risk_notes:
+    - "停留时长可能因后台切前台导致虚高，需配合 not_back_visit_cnt 过滤"
+
+- table_name: dws_md_app_page_summary
+  full_table_name: soyoung_dw.dws_md_app_page_summary
+  field_name: not_back_visit_cnt
+  field_type: filter
+  business_name: 非回访访问次数
+  description: 过滤后台回访的虚高访问
+  used_by_metrics: []
+  caliber: "用户行为数据统计过滤 not_back_visit_cnt > 0"
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: false
+  filters:
+    - "not_back_visit_cnt > 0"
+  risk_notes:
+    - "不加此过滤可能将后台切回前台的事件计入页面访问"
+
+- table_name: dws_md_app_page_summary
+  full_table_name: soyoung_dw.dws_md_app_page_summary
+  field_name: app_id
+  field_type: filter
+  business_name: 应用ID
+  description: "APP 范围过滤，131/132 为连锁业务"
+  used_by_metrics: []
+  caliber: "过滤 app_id IN (131, 132)"
+  sample_values: ["131", "132"]
+  enum_values: ["131", "132"]
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: false
+  filters:
+    - "app_id IN (131, 132)"
+  risk_notes:
+    - "与 dwd_md_app_log_nocheat 中的 app_id 同义"
+
+
+# =============================================================================
+# 表4: dws_md_qy_app_device_startup_type_d  [新增表]
+# APP 设备启动类型日汇总，未在 core_tables.yaml 登记
+# =============================================================================
+- table_name: dws_md_qy_app_device_startup_type_d
+  full_table_name: soyoung_dw.dws_md_qy_app_device_startup_type_d
+  field_name: device_id
+  field_type: count_key
+  business_name: 设备ID
+  description: APP 设备唯一标识
+  used_by_metrics: []
+  caliber: "用于统计不同启动类型的设备数"
+  sample_values: []
+  enum_values: []
+  is_join_key: true
+  is_metric_field: false
+  is_dimension_field: false
+  filters:
+    - "app_id IN (131, 132)"
+  risk_notes:
+    - "用于与 dwd_md_app_log_nocheat 关联做用户来源拆分"
+
+- table_name: dws_md_qy_app_device_startup_type_d
+  full_table_name: soyoung_dw.dws_md_qy_app_device_startup_type_d
+  field_name: startup_type
+  field_type: dimension
+  business_name: 启动类型
+  description: APP 启动来源分类，用于分析用户触达渠道效果
+  used_by_metrics: []
+  caliber: "按 startup_type 拆分设备数，了解不同触达方式（PUSH、微信h5、灵动岛等）的拉活效果"
+  sample_values: ["用户启动", "PUSH", "微信h5", "灵动岛", "非自启动", "短信"]
+  enum_values:
+    - 用户启动
+    - PUSH
+    - 微信h5
+    - 灵动岛
+    - 非自启动
+    - 短信
+    - 其他
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes:
+    - "'其他'类别可能包含多种未分类启动方式，占比大时需关注数据质量"
+
+- table_name: dws_md_qy_app_device_startup_type_d
+  full_table_name: soyoung_dw.dws_md_qy_app_device_startup_type_d
+  field_name: app_id
+  field_type: filter
+  business_name: 应用ID
+  description: "APP 范围过滤"
+  used_by_metrics: []
+  caliber: "过滤 app_id IN (131, 132)"
+  sample_values: ["131", "132"]
+  enum_values: ["131", "132"]
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: false
+  filters:
+    - "app_id IN (131, 132)"
+  risk_notes: []
+
+
+# =============================================================================
+# 表5: dim_buried_point_info_all_d  [新增表]
+# 埋点信息维度表（页面名称映射），未在 core_tables.yaml 登记
+# =============================================================================
+- table_name: dim_buried_point_info_all_d
+  full_table_name: soyoung_dw.dim_buried_point_info_all_d
+  field_name: page_id
+  field_type: dimension_key
+  business_name: 页面ID
+  description: 埋点页面标识，与日志表中的 curr_page_id 对应
+  used_by_metrics: []
+  caliber: "与 dwd_md_app_log_nocheat.curr_page_id 或 dws_md_app_page_summary.curr_page_id 关联获取页面中文名"
+  sample_values: ["27941", "27957", "27972"]
+  enum_values: []
+  is_join_key: true
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes:
+    - "page_id 枚举需与埋点团队对齐，新增页面后同步更新"
+
+- table_name: dim_buried_point_info_all_d
+  full_table_name: soyoung_dw.dim_buried_point_info_all_d
+  field_name: page_name
+  field_type: dimension
+  business_name: 页面名称
+  description: 页面的中文名称，如"首页""项目页面""商详页面"等
+  used_by_metrics: []
+  caliber: "用于将 page_id 翻译为可读的页面名称"
+  sample_values: ["首页", "项目页面", "商详页面", "提单页面"]
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes:
+    - "无"
+
+
+# =============================================================================
+# 表6: dim_date_info  [新增表]
+# 日期维度表，时间维度转换，未在 core_tables.yaml 登记
+# =============================================================================
+- table_name: dim_date_info
+  full_table_name: soyoung_dw.dim_date_info
+  field_name: date
+  field_type: date
+  business_name: 日期
+  description: 标准日期字段，用于日期补全与时间维度关联
+  used_by_metrics: []
+  caliber: "用于 LEFT JOIN 补全缺失日期，生成连续日期的数据序列"
+  sample_values: []
+  enum_values: []
+  is_join_key: true
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes:
+    - "不做业务数据过滤，仅用于日期关联。不要用 dim_date_info.date 替代 executed_date 或 pay_date"
+
+- table_name: dim_date_info
+  full_table_name: soyoung_dw.dim_date_info
+  field_name: year_week
+  field_type: dimension
+  business_name: 年周
+  description: 年份+周数格式，如"2026年第27周"
+  used_by_metrics: []
+  caliber: "用于周维度聚合，格式为'YYYY年第WW周'，可通过 REPLACE 转换为 ISO 周格式"
+  sample_values: ["2026年第27周"]
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes:
+    - "year_week 格式可能因系统升级变化，建议在 SQL 中做显式格式化"
+
+
+# =============================================================================
+# 表7: dwd_opt_qy_visit_log_all_d  [新增表]
+# 到店签到日志，未在 core_tables.yaml 登记
+# =============================================================================
+- table_name: dwd_opt_qy_visit_log_all_d
+  full_table_name: soyoung_dw.dwd_opt_qy_visit_log_all_d
+  field_name: visit_status_code
+  field_type: filter
+  business_name: 签到状态码
+  description: 签到记录的有效状态，用于过滤无效签到
+  used_by_metrics: []
+  caliber: "有效签到过滤 visit_status_code NOT IN (1, 8)"
+  sample_values: ["0", "1", "2", "8"]
+  enum_values:
+    - "0-正常签到"
+    - "1-无效签到（需排除）"
+    - "8-无效签到（需排除）"
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: false
+  filters:
+    - "visit_status_code NOT IN (1, 8)"
+  risk_notes:
+    - "不加此过滤会将无效/测试签到计入到店用户数，严重虚高"
+
+
+# =============================================================================
+# 表8: dim_device_market_chnl_info  [新增表]
+# 设备激活渠道信息，未在 core_tables.yaml 登记
+# =============================================================================
+- table_name: dim_device_market_chnl_info
+  full_table_name: soyoung_dw.dim_device_market_chnl_info
+  field_name: device_id
+  field_type: join_key
+  business_name: 设备ID
+  description: 设备唯一标识，用于关联设备级激活渠道信息
+  used_by_metrics: []
+  caliber: "与 dwd_md_app_log_nocheat 等表通过 device_id 关联"
+  sample_values: []
+  enum_values: []
+  is_join_key: true
+  is_metric_field: false
+  is_dimension_field: false
+  filters:
+    - "app_id IN (131, 132)"
+  risk_notes:
+    - "仅反映设备首次激活时的渠道归属，后续换渠道无法追踪"
+
+- table_name: dim_device_market_chnl_info
+  full_table_name: soyoung_dw.dim_device_market_chnl_info
+  field_name: app_id
+  field_type: filter
+  business_name: 应用ID
+  description: "APP 范围过滤"
+  used_by_metrics: []
+  caliber: "过滤 app_id IN (131, 132)"
+  sample_values: ["131", "132"]
+  enum_values: ["131", "132"]
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: false
+  filters:
+    - "app_id IN (131, 132)"
+  risk_notes: []
+
+
+# =============================================================================
+# 表9: dm_opt_qy_order_info_all_d  [补充字段]
+# 已在 core_tables.yaml + core_fields.yaml 覆盖，从文档补充增量字段
+# =============================================================================
+- table_name: dm_opt_qy_order_info_all_d
+  full_table_name: soyoung_dw.dm_opt_qy_order_info_all_d
+  field_name: used_num
+  field_type: filter
+  business_name: 已使用次数
+  description: 订单已核销/已使用的次数，退款判定条件之一
+  used_by_metrics: []
+  caliber: "退款订单判定：used_num = 0 AND cash_back_date IS NOT NULL"
+  sample_values: ["0", "1"]
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: false
+  filters:
+    - "used_num = 0（用于退款判定）"
+  risk_notes:
+    - "退款判定是 used_num = 0 AND cash_back_date IS NOT NULL 的组合条件，单用 used_num 不够"
+
+- table_name: dm_opt_qy_order_info_all_d
+  full_table_name: soyoung_dw.dm_opt_qy_order_info_all_d
+  field_name: cash_back_date
+  field_type: date
+  business_name: 退款日期
+  description: 订单退款的发生日期，退款判定条件之一
+  used_by_metrics: []
+  caliber: "退款判定：used_num = 0 AND cash_back_date IS NOT NULL；退款 Gmv 按 cash_back_date 归因"
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters:
+    - "cash_back_date IS NOT NULL（用于退款判定）"
+  risk_notes:
+    - "退款 GMV 的统计口径不是当日退款（is_paydate_cash），而是历史退款（cash_back_date）"
+    - "部分退款场景 cash_back_date 可能为 NULL"
+
+- table_name: dm_opt_qy_order_info_all_d
+  full_table_name: soyoung_dw.dm_opt_qy_order_info_all_d
+  field_name: app_id
+  field_type: filter
+  business_name: 应用ID
+  description: "订单来源 APP 标识，区分连锁业务与社区业务"
+  used_by_metrics: []
+  caliber: "APP 线上交易需过滤 app_id IN (131, 132)，剔除社区业务订单"
+  sample_values: ["131", "132"]
+  enum_values: ["131", "132"]
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: false
+  filters:
+    - "app_id IN (131, 132)"
+  risk_notes:
+    - "不加 app_id 过滤会把社区/好物等非连锁业务订单计入，跨域 GMV 虚高"
+
+
+# =============================================================================
+# 表10: dm_opt_qy_user_execution_record_all_d  [补充字段]
+# 已在 core_tables.yaml + core_fields.yaml 覆盖，从文档补充增量字段
+# =============================================================================
+- table_name: dm_opt_qy_user_execution_record_all_d
+  full_table_name: soyoung_dw.dm_opt_qy_user_execution_record_all_d
+  field_name: is_new
+  field_type: filter
+  business_name: 核销新客标记
+  description: 标识该条核销记录是否属于该用户的首次核销，用于新客/老客口径拆分
+  used_by_metrics:
+    - new_customer_execution_income
+    - new_old_customer_execution
+  caliber: "核销域新客使用 is_new = 1，支付域新客使用 is_pay_new = 1，两者口径不同不可混用"
+  sample_values: ["0", "1"]
+  enum_values:
+    - "0-老客"
+    - "1-新客"
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters:
+    - "is_new = 1（新客）"
+  risk_notes:
+    - "核销域新客 is_new ≠ 支付域新客 is_pay_new，跨域对比必须注明"
+    - "is_new 标记由首核日期判定，与注册日期无直接关系"
+
+# =============================================================================
+# 统计信息
+# =============================================================================
+# 新增表: 8 张 (dwd_md_app_log_nocheat / dws_md_app_page_summary / 
+#          dws_md_qy_app_device_startup_type_d / dim_buried_point_info_all_d /
+#          dim_date_info / dwd_opt_qy_visit_log_all_d / dim_device_market_chnl_info)
+# 补充字段表: 3 张 (dm_opt_qy_user_summary_info_all_d / dm_opt_qy_order_info_all_d /
+#            dm_opt_qy_user_execution_record_all_d)
+# 新增字段: 23 个

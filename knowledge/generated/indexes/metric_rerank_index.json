@@ -1,0 +1,1512 @@
+[
+  {
+    "asset_type": "metric",
+    "metric_id": "A001",
+    "metric_name": "核销gmv",
+    "metric_type": "atomic",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：核销gmv 指标编码：A001 指标类型：atomic 定义：统计周期内，连锁业务总核销gmv 公式：SUM(exe_amount) 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT  SUM(exe_amount) 核销gmv\nFROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE   dp = DATE_SUB(CURRENT_DATE(),1)\nAND     is_valid = 1\n 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "A002",
+    "metric_name": "核销收入",
+    "metric_type": "atomic",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：核销收入 指标编码：A002 指标类型：atomic 定义：统计周期内，连锁业务总核销收入 公式：SUM(exe_income) 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT  SUM(exe_income) 核销收入\nFROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE   dp = DATE_SUB(CURRENT_DATE(),1)\nAND     is_valid = 1\n 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "A003",
+    "metric_name": "核销客单价",
+    "metric_type": "atomic",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：核销客单价 指标编码：A003 指标类型：atomic 定义：统计周期内，总核销收入/总核销人次 公式：SUM(exe_income) / COUNT(DISTINCT verify_date_id) 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT SUM(exe_income)/COUNT(DISTINCT verify_date_id) 核销客单价\nFROM  soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_valid = 1\n 备注：⚠ 原SQL使用verify_date_id统计人次，请确认是否等同于核销人次"
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "A004",
+    "metric_name": "核销服务点数",
+    "metric_type": "atomic",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：核销服务点数 指标编码：A004 指标类型：atomic 定义：统计周期内，总核销服务点数 公式：SUM(exe_cnt) 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT  SUM(exe_cnt) 核销服务点数\nFROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE   dp = DATE_SUB(CURRENT_DATE(),1)\nAND     is_valid = 1\n 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "A005",
+    "metric_name": "核销人数",
+    "metric_type": "atomic",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：核销人数 指标编码：A005 指标类型：atomic 定义：统计周期内，总核销用户数 公式：COUNT(DISTINCT customer_id) 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT COUNT(DISTINCT customer_id) 核销人数\nFROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE   dp = DATE_SUB(CURRENT_DATE(),1)\nAND     is_valid = 1\n 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "A006",
+    "metric_name": "核销人次",
+    "metric_type": "atomic",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：核销人次 指标编码：A006 指标类型：atomic 定义：统计周期内，总核销人次 公式：COUNT(DISTINCT verify_date_id) 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT  count(DISTINCT verify_date_id) 核销人次\nFROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE   dp = DATE_SUB(CURRENT_DATE(),1)\nAND     is_valid = 1\n 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "A007",
+    "metric_name": "核销订单数",
+    "metric_type": "atomic",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：核销订单数 指标编码：A007 指标类型：atomic 定义：统计周期内，总核销订单数 公式：COUNT(DISTINCT main_order_id) 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT  count(DISTINCT main_order_id) 核销订单数\nFROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE   dp = DATE_SUB(CURRENT_DATE(),1)\nAND     is_valid = 1\n 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "A008",
+    "metric_name": "支付gmv",
+    "metric_type": "atomic",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：支付gmv 指标编码：A008 指标类型：atomic 定义：统计周期内，总支付gmv(剔除当日退款) 公式：SUM(pay_gmv) 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：select sum(pay_gmv) as 支付gmv\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_paydate_cash = 0\n 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "A009",
+    "metric_name": "支付订单数",
+    "metric_type": "atomic",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：支付订单数 指标编码：A009 指标类型：atomic 定义：统计周期内，总支付订单数(剔除当日退款) 公式：COUNT(DISTINCT main_order_id) 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：select count(distinct main_order_id) as 支付订单数\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_paydate_cash = 0\n 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "A010",
+    "metric_name": "支付人数",
+    "metric_type": "atomic",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：支付人数 指标编码：A010 指标类型：atomic 定义：统计周期内，总支付人数(剔除当日退款) 公式：COUNT(DISTINCT uid) 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT  COUNT(DISTINCT uid) as 支付人数\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_paydate_cash = 0\n 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "A011",
+    "metric_name": "支付客单价",
+    "metric_type": "atomic",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：支付客单价 指标编码：A011 指标类型：atomic 定义：统计周期内，总支付GMV/总支付人次(剔除当日退款) 公式：SUM(pay_gmv) / COUNT(DISTINCT CONCAT(uid, pay_date)) 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT sum(pay_gmv)/count(distinct concat(uid,pay_date)) as 支付客单价\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_paydate_cash = 0\n 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "A012",
+    "metric_name": "待核销gmv",
+    "metric_type": "atomic",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：待核销gmv 指标编码：A012 指标类型：atomic 定义：统计周期内，总待核销gmv 公式：SUM(left_gmv) 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT sum(left_gmv) as 待核销gmv\nFROM  soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND left_num > 0\n 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "A013",
+    "metric_name": "待核销服务点",
+    "metric_type": "atomic",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：待核销服务点 指标编码：A013 指标类型：atomic 定义：统计周期内，总待核销服务点 公式：SUM(left_num) 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT sum(left_num) as 待核销服务点\nFROM  soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND left_num > 0\n 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "A014",
+    "metric_name": "待核销订单数",
+    "metric_type": "atomic",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：待核销订单数 指标编码：A014 指标类型：atomic 定义：统计周期内，总待核销订单数 公式：COUNT(DISTINCT main_order_id) 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT COUNT(DISTINCT main_order_id) as 待核销订单数\nFROM  soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND left_num > 0\n 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "A015",
+    "metric_name": "升单订单数",
+    "metric_type": "atomic",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：升单订单数 指标编码：A015 指标类型：atomic 定义：统计周期内，升单的总订单数 公式：COUNT(DISTINCT main_order_id) 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT COUNT(DISTINCT main_order_id) as 升单订单数\nFROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE   dp = DATE_SUB(current_date(),1)\nAND     is_up = 1\nAND     is_valid = 1\n 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "A016",
+    "metric_name": "升单人数",
+    "metric_type": "atomic",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：升单人数 指标编码：A016 指标类型：atomic 定义：统计周期内，升单的总用户数 公式：COUNT(DISTINCT customer_id) 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT COUNT(DISTINCT customer_id) AS 升单人数\nFROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE   dp = DATE_SUB(current_date(),1)\nAND     is_up = 1\nAND     is_valid = 1\n 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "A017",
+    "metric_name": "升单人次",
+    "metric_type": "atomic",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：升单人次 指标编码：A017 指标类型：atomic 定义：统计周期内，升单的总人次 公式：COUNT(DISTINCT verify_date_id) 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT  COUNT(DISTINCT verify_date_id) AS 升单人次\nFROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE   dp = DATE_SUB(current_date(),1)\nAND     is_up = 1\nAND     is_valid = 1\n 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "A018",
+    "metric_name": "库存数",
+    "metric_type": "atomic",
+    "source_tables": [
+      "soyoung_dw.dws_qy_sc_ware_stock_stats_all_d"
+    ],
+    "rerank_text": "指标：库存数 指标编码：A018 指标类型：atomic 定义：截止至今，总库存数量 公式：SUM(warehouse_stock_num_td) 来源表：['soyoung_dw.dws_qy_sc_ware_stock_stats_all_d'] SQL：SELECT ware_name,\n       ROUND(SUM(warehouse_stock_num_td), 0) AS 库存数\nFROM soyoung_dw.dws_qy_sc_ware_stock_stats_all_d\nWHERE pt = DATE_SUB(CURRENT_DATE(), 1)\nGROUP BY ware_name\n 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "A019",
+    "metric_name": "相控微针升单率",
+    "metric_type": "atomic",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：相控微针升单率 指标编码：A019 指标类型：atomic 定义：统计周期内，原单为相控微针且当日发生升单的核销人次/相控微针原单核销人次 公式：升单人次 / 原单核销人次 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT a.standard_name,\n       COUNT(DISTINCT IF(b.verify_date_id IS NOT NULL,a.verify_date_id,NULL))\n       / COUNT(DISTINCT a.verify_date_id) 升单率\nFROM (\n    SELECT standard_name, verify_date_id\n    FROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\n    WHERE dp = DATE_SUB(current_date(),1)\n    AND is_valid = 1\n    AND standard_name REGEXP '相控微针'\n    AND ord_up_type_name = '原单'\n) a\nLEFT JOIN (\n    SELECT standard_name, verify_date_id\n    FROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\n    WHERE dp = DATE_SUB(current_date(),1)\n    AND ord_up_type_name = '升单'\n    AND is_valid = 1\n) b ON a.verify_date_id = b.verify_date_id\nGROUP BY a.standard_name\n 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D001",
+    "metric_name": "新客核销gmv",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：新客核销gmv 指标编码：D001 指标类型：derived 定义：统计周期内，新客核销gmv之和 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT SUM(exe_amount) 新客核销gmv\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_new = 1\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D002",
+    "metric_name": "老客核销gmv",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：老客核销gmv 指标编码：D002 指标类型：derived 定义：统计周期内，老客核销gmv之和 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT SUM(exe_amount) 老客核销gmv\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_new = 0\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D003",
+    "metric_name": "大师团核销gmv",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：大师团核销gmv 指标编码：D003 指标类型：derived 定义：统计周期内，大师团核销gmv之和 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT SUM(exe_amount) 大师团核销gmv\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category = '大师团'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D004",
+    "metric_name": "大单品核销gmv",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：大单品核销gmv 指标编码：D004 指标类型：derived 定义：统计周期内，收入分类为大单品的核销gmv之和 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT SUM(exe_amount) 大单品核销gmv\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category = '大单品'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D005",
+    "metric_name": "常规品核销gmv",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：常规品核销gmv 指标编码：D005 指标类型：derived 定义：统计周期内，常规品核销gmv之和 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT SUM(exe_amount) 常规品核销gmv\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category ='常规品'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D006",
+    "metric_name": "私域核销gmv",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：私域核销gmv 指标编码：D006 指标类型：derived 定义：统计周期内，获客渠道为私域的所有用户核销gmv之和 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT SUM(exe_amount) 私域核销gmv\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel='私域'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D007",
+    "metric_name": "公域核销gmv",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：公域核销gmv 指标编码：D007 指标类型：derived 定义：统计周期内，获客渠道为公域的所有用户核销gmv之和 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT SUM(exe_amount) 公域核销gmv\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel='公域'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D008",
+    "metric_name": "老带新核销gmv",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：老带新核销gmv 指标编码：D008 指标类型：derived 定义：统计周期内，获客渠道为老带新的所有用户核销gmv之和 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT SUM(exe_amount) 老带新核销gmv\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel='老带新'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D009",
+    "metric_name": "BBL HERO核销gmv",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：BBL HERO核销gmv 指标编码：D009 指标类型：derived 定义：统计周期内，爱拉丝提核销gmv之和 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT SUM(exe_amount) BBL HERO核销gmv\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND standard_name REGEXP 'BBL HERO'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D010",
+    "metric_name": "新客核销收入",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：新客核销收入 指标编码：D010 指标类型：derived 定义：统计周期内，新客核销收入之和 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT SUM(exe_income) 新客核销收入\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_new = 1\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D011",
+    "metric_name": "老客核销收入",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：老客核销收入 指标编码：D011 指标类型：derived 定义：统计周期内，老客核销收入之和 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT SUM(exe_income) 老客核销收入\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_new = 0\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D012",
+    "metric_name": "大师团核销收入",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：大师团核销收入 指标编码：D012 指标类型：derived 定义：统计周期内，大师团核销收入之和 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT SUM(exe_income) 大师团核销收入\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category='大师团'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D013",
+    "metric_name": "大单品核销收入",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：大单品核销收入 指标编码：D013 指标类型：derived 定义：统计周期内，收入分类为大单品的核销收入之和 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT SUM(exe_income) 大单品核销收入\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category='大单品'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D014",
+    "metric_name": "常规品核销收入",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：常规品核销收入 指标编码：D014 指标类型：derived 定义：统计周期内，常规品核销收入之和 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT SUM(exe_income) 常规品核销收入\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category='常规品'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D015",
+    "metric_name": "私域核销收入",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：私域核销收入 指标编码：D015 指标类型：derived 定义：统计周期内，获客渠道为私域的所有用户核销收入之和 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT SUM(exe_income) 私域核销收入\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel = '私域'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D016",
+    "metric_name": "公域核销收入",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：公域核销收入 指标编码：D016 指标类型：derived 定义：统计周期内，获客渠道为公域的所有用户核销收入之和 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT SUM(exe_income) 公域核销收入\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel = '公域'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D017",
+    "metric_name": "老带新核销收入",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：老带新核销收入 指标编码：D017 指标类型：derived 定义：统计周期内，获客渠道为老带新的所有用户核销收入之和 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT SUM(exe_income) 老带新核销收入\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel = '老带新'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D018",
+    "metric_name": "BBL HERO核销收入",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：BBL HERO核销收入 指标编码：D018 指标类型：derived 定义：统计周期内，BBL HERO核销收入之和 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT SUM(exe_income) BBL HERO核销收入\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND standard_name REGEXP 'BBL HERO'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D019",
+    "metric_name": "新客核销服务点数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：新客核销服务点数 指标编码：D019 指标类型：derived 定义：统计周期内，新客核销服务点之和 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT SUM(exe_cnt) 新客核销服务点数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_new = 1\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D020",
+    "metric_name": "老客核销服务点数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：老客核销服务点数 指标编码：D020 指标类型：derived 定义：统计周期内，老客核销服务点之和 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT SUM(exe_cnt) 老客核销服务点数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_new = 0\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D021",
+    "metric_name": "大师团核销服务点数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：大师团核销服务点数 指标编码：D021 指标类型：derived 定义：统计周期内，大师团核销服务点之和 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT SUM(exe_cnt) 大师团核销服务点数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category='大师团'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D022",
+    "metric_name": "大单品核销服务点数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：大单品核销服务点数 指标编码：D022 指标类型：derived 定义：统计周期内，收入类别为大单品的核销服务点之和 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT SUM(exe_cnt) 大单品核销服务点数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category='大单品'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D023",
+    "metric_name": "常规品核销服务点数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：常规品核销服务点数 指标编码：D023 指标类型：derived 定义：统计周期内，常规品核销服务点之和 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT SUM(exe_cnt) 常规品核销服务点数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category='常规品'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D024",
+    "metric_name": "私域核销服务点数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：私域核销服务点数 指标编码：D024 指标类型：derived 定义：统计周期内，获客渠道为私域的所有用户核销服务点之和 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT SUM(exe_cnt) 私域核销服务点数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel = '私域'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D025",
+    "metric_name": "公域核销服务点数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：公域核销服务点数 指标编码：D025 指标类型：derived 定义：统计周期内，获客渠道为公域的所有用户核销服务点之和 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT SUM(exe_cnt) 公域核销服务点数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel = '公域'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D026",
+    "metric_name": "老带新核销服务点数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：老带新核销服务点数 指标编码：D026 指标类型：derived 定义：统计周期内，获客渠道为老带新的所有用户核销服务点之和 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT SUM(exe_cnt) 老带新核销服务点数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel = '老带新'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D027",
+    "metric_name": "BBL HERO核销服务点数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：BBL HERO核销服务点数 指标编码：D027 指标类型：derived 定义：统计周期内，爱拉丝提核销服务点之和 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT SUM(exe_cnt) BBL HERO核销服务点数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND standard_name REGEXP 'BBL HERO'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D028",
+    "metric_name": "新客核销用户数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：新客核销用户数 指标编码：D028 指标类型：derived 定义：统计周期内，新客核销总人数 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT COUNT(DISTINCT customer_id) 新客核销用户数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_new = 1\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D029",
+    "metric_name": "老客核销用户数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：老客核销用户数 指标编码：D029 指标类型：derived 定义：统计周期内，老客核销总人数 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT COUNT(DISTINCT customer_id) 老客核销用户数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_new = 0\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D030",
+    "metric_name": "大师团核销用户数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：大师团核销用户数 指标编码：D030 指标类型：derived 定义：统计周期内，大师团核销总人数 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT COUNT(DISTINCT customer_id) 大师团核销用户数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category = '大师团'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D031",
+    "metric_name": "大单品核销用户数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：大单品核销用户数 指标编码：D031 指标类型：derived 定义：统计周期内，收入类别为大单品的核销总人数 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT COUNT(DISTINCT customer_id) 大单品核销用户数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category = '大单品'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D032",
+    "metric_name": "大单品品项核销用户数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：大单品品项核销用户数 指标编码：D032 指标类型：derived 定义：统计周期内，所有大单品品项核销总人数 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT COUNT(DISTINCT customer_id) 大单品核销用户数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND standard_name REGEXP 'BBL HERO|奇迹童颜|新一代热玛吉|爱拉丝提'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D033",
+    "metric_name": "常规品核销用户数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：常规品核销用户数 指标编码：D033 指标类型：derived 定义：统计周期内，常规品核销总人数 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT COUNT(DISTINCT customer_id) 常规品核销用户数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category = '常规品'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D034",
+    "metric_name": "私域核销用户数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：私域核销用户数 指标编码：D034 指标类型：derived 定义：统计周期内，获客渠道为私域的所有用户核销总人数 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT COUNT(DISTINCT customer_id) 私域核销用户数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel='私域'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D035",
+    "metric_name": "公域核销用户数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：公域核销用户数 指标编码：D035 指标类型：derived 定义：统计周期内，获客渠道为公域的所有用户核销总人数 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT COUNT(DISTINCT customer_id) 公域核销用户数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel='公域'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D036",
+    "metric_name": "老带新核销用户数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：老带新核销用户数 指标编码：D036 指标类型：derived 定义：统计周期内，获客渠道为老带新的所有用户核销总人数 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT COUNT(DISTINCT customer_id) 老带新核销用户数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel='老带新'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D037",
+    "metric_name": "BBL HERO核销用户数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：BBL HERO核销用户数 指标编码：D037 指标类型：derived 定义：统计周期内，爱拉丝提核销总人数 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT COUNT(DISTINCT customer_id) BBL HERO核销用户数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND standard_name REGEXP 'BBL HERO'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D038",
+    "metric_name": "新客核销人次",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：新客核销人次 指标编码：D038 指标类型：derived 定义：统计周期内，新客核销总人次 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT COUNT(DISTINCT verify_date_id) 新客核销人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_new = 1\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D039",
+    "metric_name": "老客核销人次",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：老客核销人次 指标编码：D039 指标类型：derived 定义：统计周期内，老客核销总人次 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT COUNT(DISTINCT verify_date_id) 老客核销人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_new = 0\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D040",
+    "metric_name": "大师团核销人次",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：大师团核销人次 指标编码：D040 指标类型：derived 定义：统计周期内，大师团核销总人次 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT COUNT(DISTINCT verify_date_id) 大师团核销人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category='大师团'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D041",
+    "metric_name": "大单品核销人次",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：大单品核销人次 指标编码：D041 指标类型：derived 定义：统计周期内，收入类别为大单品的核销总人次 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT COUNT(DISTINCT verify_date_id) 大单品核销人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category='大单品'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D042",
+    "metric_name": "大单品品项核销人次",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：大单品品项核销人次 指标编码：D042 指标类型：derived 定义：统计周期内，所有大单品品项核销总人次 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT COUNT(DISTINCT verify_date_id) 大单品核销人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND standard_name REGEXP 'BBL HERO|奇迹童颜|新一代热玛吉|爱拉丝提'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D043",
+    "metric_name": "常规品核销人次",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：常规品核销人次 指标编码：D043 指标类型：derived 定义：统计周期内，常规品核销总人次 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT COUNT(DISTINCT verify_date_id) 常规品核销人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category='常规品'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D044",
+    "metric_name": "私域核销人次",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：私域核销人次 指标编码：D044 指标类型：derived 定义：统计周期内，获客渠道为私域的所有用户核销总人次 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT COUNT(DISTINCT verify_date_id) 私域核销人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel='私域'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D045",
+    "metric_name": "公域核销人次",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：公域核销人次 指标编码：D045 指标类型：derived 定义：统计周期内，获客渠道为公域的所有用户核销总人次 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT COUNT(DISTINCT verify_date_id) 公域核销人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel='公域'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D046",
+    "metric_name": "老带新核销人次",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：老带新核销人次 指标编码：D046 指标类型：derived 定义：统计周期内，获客渠道为老带新的所有用户核销总人次 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT COUNT(DISTINCT verify_date_id) 老带新核销人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel='老带新'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D047",
+    "metric_name": "BBL HERO核销人次",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：BBL HERO核销人次 指标编码：D047 指标类型：derived 定义：统计周期内，BBL HERO核销总人次 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT COUNT(DISTINCT verify_date_id) BBL HERO核销人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND standard_name REGEXP 'BBL HERO'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D048",
+    "metric_name": "新客核销订单数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：新客核销订单数 指标编码：D048 指标类型：derived 定义：统计周期内，新客核销总订单数 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT count(DISTINCT main_order_id) 新客核销订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_new = 1\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D049",
+    "metric_name": "新客0元核销订单数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：新客0元核销订单数 指标编码：D049 指标类型：derived 定义：统计周期内，新客0元核销总订单数 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT count(DISTINCT main_order_id) 新客0元核销订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_new = 1\nAND is_valid = 1\nAND exe_income = 0 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D050",
+    "metric_name": "老客核销订单数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：老客核销订单数 指标编码：D050 指标类型：derived 定义：统计周期内，老客核销总订单数 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT count(DISTINCT main_order_id) 老客核销订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_new = 0\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D051",
+    "metric_name": "老客0元核销订单数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：老客0元核销订单数 指标编码：D051 指标类型：derived 定义：统计周期内，老客0元核销总订单数 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT count(DISTINCT main_order_id) 老客0元核销订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_new = 0\nAND is_valid = 1\nAND exe_income = 0 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D052",
+    "metric_name": "大师团核销订单数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：大师团核销订单数 指标编码：D052 指标类型：derived 定义：统计周期内，大师团核销总订单数 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT count(DISTINCT main_order_id) 大师团核销订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category = '大师团'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D053",
+    "metric_name": "大师团0元核销订单数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：大师团0元核销订单数 指标编码：D053 指标类型：derived 定义：统计周期内，大师团0元核销总订单数 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT count(DISTINCT main_order_id) 大师团0元核销订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category = '大师团'\nAND is_valid = 1\nAND exe_income = 0 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D054",
+    "metric_name": "大单品核销订单数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：大单品核销订单数 指标编码：D054 指标类型：derived 定义：统计周期内，收入类别为大单品的核销总订单数 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT count(DISTINCT main_order_id) 大单品核销订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category = '大单品'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D055",
+    "metric_name": "大单品品项核销订单数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：大单品品项核销订单数 指标编码：D055 指标类型：derived 定义：统计周期内，所有大单品品项核销总订单数 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT count(DISTINCT main_order_id) 大单品核销订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND standard_name REGEXP 'BBL HERO|奇迹童颜|新一代热玛吉|爱拉丝提'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D056",
+    "metric_name": "大单品0元核销订单数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：大单品0元核销订单数 指标编码：D056 指标类型：derived 定义：统计周期内，大单品0元核销订单数 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT count(DISTINCT main_order_id) 大单品0元核销订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category = '大单品'\nAND is_valid = 1\nAND exe_income = 0 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D057",
+    "metric_name": "常规品核销订单数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：常规品核销订单数 指标编码：D057 指标类型：derived 定义：统计周期内，常规品核销总订单数 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT count(DISTINCT main_order_id) 常规品核销订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category = '常规品'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D058",
+    "metric_name": "常规品0元核销订单数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：常规品0元核销订单数 指标编码：D058 指标类型：derived 定义：统计周期内，常规品0元单核销总订单数 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT count(DISTINCT main_order_id) 常规品0元核销订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category = '常规品'\nAND is_valid = 1\nAND exe_income = 0 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D059",
+    "metric_name": "私域核销订单数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：私域核销订单数 指标编码：D059 指标类型：derived 定义：统计周期内，获客渠道为私域的所有用户核销总订单数 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT count(DISTINCT main_order_id) 私域核销订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel = '私域'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D060",
+    "metric_name": "私域0元核销订单数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：私域0元核销订单数 指标编码：D060 指标类型：derived 定义：统计周期内，获客渠道为私域的所有用户0元核销总订单数 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT count(DISTINCT main_order_id) 私域0元核销订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel = '私域'\nAND is_valid = 1\nAND exe_income = 0 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D061",
+    "metric_name": "公域核销订单数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：公域核销订单数 指标编码：D061 指标类型：derived 定义：统计周期内，获客渠道为公域的所有用户核销总订单数 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT count(DISTINCT main_order_id) 公域核销订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel = '公域'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D062",
+    "metric_name": "公域0元核销订单数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：公域0元核销订单数 指标编码：D062 指标类型：derived 定义：统计周期内，获客渠道为公域的所有用户0元核销总订单数 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT count(DISTINCT main_order_id) 公域0元核销订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel = '公域'\nAND is_valid = 1\nAND exe_income = 0 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D063",
+    "metric_name": "老带新核销订单数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：老带新核销订单数 指标编码：D063 指标类型：derived 定义：统计周期内，获客渠道为老带新的所有用户核销总订单数 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT count(DISTINCT main_order_id) 老带新核销订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel = '老带新'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D064",
+    "metric_name": "老带新0元核销订单数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：老带新0元核销订单数 指标编码：D064 指标类型：derived 定义：统计周期内，获客渠道为老带新的所有用户0元核销总订单数 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT count(DISTINCT main_order_id) 老带新0元核销订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel = '老带新'\nAND is_valid = 1\nAND exe_income = 0 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D065",
+    "metric_name": "BBL HERO核销订单数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：BBL HERO核销订单数 指标编码：D065 指标类型：derived 定义：统计周期内，爱拉丝提核销总订单数 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT count(DISTINCT main_order_id) BBL HERO核销订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND standard_name REGEXP 'BBL HERO'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D066",
+    "metric_name": "BBL HERO0元核销订单数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：BBL HERO0元核销订单数 指标编码：D066 指标类型：derived 定义：统计周期内，BBL HERO(爱拉丝提)0元核销总订单数 公式： 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT count(DISTINCT main_order_id) BBL HERO0元核销订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND standard_name REGEXP 'BBL HERO'\nAND is_valid = 1\nAND exe_income = 0 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D067",
+    "metric_name": "新客核销客单价",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：新客核销客单价 指标编码：D067 指标类型：derived 定义：统计周期内，新客核销收入/新客核销人次 公式：新客核销收入 / 新客核销人次 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT SUM(exe_income)/count(DISTINCT verify_date_id) 新客核销客单价\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_new = 1\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D068",
+    "metric_name": "老客核销客单价",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：老客核销客单价 指标编码：D068 指标类型：derived 定义：统计周期内，老客核销收入/老客核销人次 公式：老客核销收入 / 老客核销人次 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT SUM(exe_income)/count(DISTINCT verify_date_id) 老客核销客单价\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_new = 0\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D069",
+    "metric_name": "大师团核销客单价",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：大师团核销客单价 指标编码：D069 指标类型：derived 定义：统计周期内，大师团核销收入/大师团核销人次 公式：大师团核销收入 / 大师团核销人次 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT SUM(exe_income)/count(DISTINCT verify_date_id) 大师团核销客单价\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category='大师团'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D070",
+    "metric_name": "大单品核销客单价",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：大单品核销客单价 指标编码：D070 指标类型：derived 定义：统计周期内，大单品的核销收入/收入类别为大单品的核销人次 公式：大单品核销收入 / 大单品核销人次 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT SUM(exe_income)/count(DISTINCT verify_date_id) 大单品核销客单价\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category='大单品'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D071",
+    "metric_name": "常规品核销客单价",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：常规品核销客单价 指标编码：D071 指标类型：derived 定义：统计周期内，常规品核销收入/常规品核销人次 公式：常规品核销收入 / 常规品核销人次 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT SUM(exe_income)/count(DISTINCT verify_date_id) 常规品核销客单价\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category='常规品'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D072",
+    "metric_name": "私域核销客单价",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：私域核销客单价 指标编码：D072 指标类型：derived 定义：统计周期内，获客渠道为私域的所有用户核销收入之和/获客渠道为私域的所有用户核销人次 公式：私域核销收入 / 私域核销人次 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT SUM(exe_income)/count(DISTINCT verify_date_id) 私域核销客单价\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel = '私域'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D073",
+    "metric_name": "公域核销客单价",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：公域核销客单价 指标编码：D073 指标类型：derived 定义：统计周期内，获客渠道为公域的所有用户核销收入/获客渠道为公域的所有用户核销人次 公式：公域核销收入 / 公域核销人次 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT SUM(exe_income)/count(DISTINCT verify_date_id) 公域核销客单价\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel = '公域'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D074",
+    "metric_name": "老带新核销客单价",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：老带新核销客单价 指标编码：D074 指标类型：derived 定义：统计周期内，获客渠道为老带新的所有用户核销收入之和/获客渠道为老带新的所有用户核销人次 公式：老带新核销收入 / 老带新核销人次 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT SUM(exe_income)/count(DISTINCT verify_date_id) 老带新核销客单价\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND cx_first_channel = '老带新'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D075",
+    "metric_name": "BBL HERO核销客单价",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：BBL HERO核销客单价 指标编码：D075 指标类型：derived 定义：统计周期内，BBL HERO核销收入之和/BBL HERO核销人次 公式：BBL HERO核销收入 / BBL HERO核销人次 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT SUM(exe_income)/count(DISTINCT verify_date_id) BBL HERO核销客单价\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND standard_name REGEXP 'BBL HERO'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D076",
+    "metric_name": "相控微针升单客单价",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：相控微针升单客单价 指标编码：D076 指标类型：derived 定义：统计周期内，原单为相控微针且当日发生升单的核销收入之和/原单为相控微针且当日发生升单的核销人次 公式：相控微针升单客单价核销收入 / 相控微针升单客单价核销人次 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT a.standard_name ,\nsum(if(a.verify_date_id = b.verify_date_id,b.exe_income,0))/nullif(count(distinct if(b.verify_date_id is not null,a.verify_date_id,null)),0) 相控微针升单客单价\nFROM (\nSELECT standard_name\n,verify_date_id\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nand is_valid = 1\nAND standard_name REGEXP '相控微针'\nAND ord_up_type_name = '原单'\n) a\nLEFT JOIN (\nSELECT\nstandard_name\n,verify_date_id\n,exe_income\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND ord_up_type_name = '升单'\nAND is_valid = 1\n) b\nON a.verify_date_id = b.verify_date_id\nGROUP BY a.standard_name\n; 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D077",
+    "metric_name": "新客支付订单数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：新客支付订单数 指标编码：D077 指标类型：derived 定义：统计周期内，新客支付总订单数 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT COUNT(DISTINCT main_order_id) AS 新客支付订单数\nFROM soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_pay_new=1\nAND is_paydate_cash = 0\n; 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D078",
+    "metric_name": "新客0元支付订单数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：新客0元支付订单数 指标编码：D078 指标类型：derived 定义：统计周期内，新客支付金额为0的支付总订单数 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT COUNT(DISTINCT main_order_id) AS 新客0元支付订单数\nFROM soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_pay_new=1\nAND is_paydate_cash = 0\nAND pay_gmv = 0\n; 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D079",
+    "metric_name": "老客支付订单数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：老客支付订单数 指标编码：D079 指标类型：derived 定义：统计周期内，老客支付总订单数 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT COUNT(DISTINCT main_order_id) AS 老客支付订单数\nFROM soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_pay_new=0\nAND is_paydate_cash = 0\n; 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D080",
+    "metric_name": "老客0元支付订单数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：老客0元支付订单数 指标编码：D080 指标类型：derived 定义：统计周期内，老客支付金额为0的支付总订单数 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT COUNT(DISTINCT main_order_id) AS 老客0元支付订单数\nFROM soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_pay_new=0\nAND is_paydate_cash = 0\nAND pay_gmv = 0\n; 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D081",
+    "metric_name": "大单品支付订单数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：大单品支付订单数 指标编码：D081 指标类型：derived 定义：统计周期内，所有大单品支付总订单数 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT COUNT(DISTINCT main_order_id) AS 大单品支付订单数\nFROM soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category = '大单品'\nAND is_paydate_cash = 0\n; 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D082",
+    "metric_name": "BBL HERO支付订单数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：BBL HERO支付订单数 指标编码：D082 指标类型：derived 定义：统计周期内，BBL HERO支付总订单数 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT COUNT(DISTINCT main_order_id) AS BBL HERO支付订单数\nFROM soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND standard_name REGEXP 'BBL HERO'\nAND is_paydate_cash = 0\n; 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D083",
+    "metric_name": "新客支付gmv",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：新客支付gmv 指标编码：D083 指标类型：derived 定义：统计周期内，新客支付总gmv 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：select sum(pay_gmv) as 新客支付gmv\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_pay_new=1\nAND is_paydate_cash = 0\n; 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D084",
+    "metric_name": "老客支付gmv",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：老客支付gmv 指标编码：D084 指标类型：derived 定义：统计周期内，老客支付总gmv 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：select sum(pay_gmv) as 老客支付gmv\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_pay_new=0\nAND is_paydate_cash = 0\n; 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D085",
+    "metric_name": "大单品支付gmv",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：大单品支付gmv 指标编码：D085 指标类型：derived 定义：统计周期内，所有大单品品项支付总gmv 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：select sum(pay_gmv) as 大单品支付gmv\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category = \"大单品\"\nAND is_paydate_cash = 0\n; 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D086",
+    "metric_name": "BBL HERO支付gmv",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：BBL HERO支付gmv 指标编码：D086 指标类型：derived 定义：统计周期内，BBL HERO支付总gmv 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：select sum(pay_gmv) as BBL HERO支付gmv\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND standard_name REGEXP 'BBL HERO'\nAND is_paydate_cash = 0\n; 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D087",
+    "metric_name": "新客支付人数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：新客支付人数 指标编码：D087 指标类型：derived 定义：统计周期内，新客支付总人数 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT COUNT(DISTINCT uid) as 新客支付人数\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_pay_new=1\nAND is_paydate_cash = 0\n; 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D088",
+    "metric_name": "老客支付人数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：老客支付人数 指标编码：D088 指标类型：derived 定义：统计周期内，老客支付总人数 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT COUNT(DISTINCT uid) as 老客支付人数\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_pay_new=0\nAND is_paydate_cash = 0\n; 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D089",
+    "metric_name": "大单品支付人数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：大单品支付人数 指标编码：D089 指标类型：derived 定义：统计周期内，所有大单品品项支付总人数 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT COUNT(DISTINCT uid) as 大单品支付人数\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category = '大单品'\nAND is_paydate_cash = 0\n; 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D090",
+    "metric_name": "BBL HERO支付人数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：BBL HERO支付人数 指标编码：D090 指标类型：derived 定义：统计周期内，BBL HERO支付总人数 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT COUNT(DISTINCT uid) as BBL HERO支付人数\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND standard_name REGEXP 'BBL HERO'\nAND is_paydate_cash = 0\n; 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D091",
+    "metric_name": "新客支付客单价",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：新客支付客单价 指标编码：D091 指标类型：derived 定义：统计周期内，新客支付总gmv/新客总支付人次 公式：新客支付GMV / 新客支付人次 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：select sum(pay_gmv)/count(distinct concat(uid,pay_date)) as 新客支付客单价\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_pay_new=1\nAND is_paydate_cash = 0\n; 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D092",
+    "metric_name": "老客支付客单价",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：老客支付客单价 指标编码：D092 指标类型：derived 定义：统计周期内，老客支付总gmv/老客总支付人次 公式：老客支付GMV / 老客支付人次 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：select sum(pay_gmv)/count(distinct concat(uid,pay_date)) as 老客支付客单价\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_pay_new=0\nAND is_paydate_cash = 0\n; 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D093",
+    "metric_name": "大单品支付客单价",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：大单品支付客单价 指标编码：D093 指标类型：derived 定义：统计周期内，所有大单品品项支付总gmv/所有大单品品项总支付人次 公式：大单品支付GMV / 大单品支付人次 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：select sum(pay_gmv)/count(distinct concat(uid,pay_date)) as 大单品支付客单价\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category = '大单品'\nAND is_paydate_cash = 0\n; 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D094",
+    "metric_name": "BBL HERO支付客单价",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：BBL HERO支付客单价 指标编码：D094 指标类型：derived 定义：统计周期内，BBL HERO支付总gmv/BBL HERO总支付人次 公式：BBL HERO支付GMV / BBL HERO支付人次 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：select sum(pay_gmv)/count(distinct concat(uid,pay_date)) as BBL HERO支付客单价\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND standard_name REGEXP 'BBL HERO'\nAND is_paydate_cash = 0\n; 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D095",
+    "metric_name": "新客待核销gmv",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：新客待核销gmv 指标编码：D095 指标类型：derived 定义：统计周期内，新客总待核销gmv 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT\nsum(left_gmv) as 新客待核销gmv\nFROM soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_pay_new=1\nAND left_num > 0\n; 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D096",
+    "metric_name": "老客待核销gmv",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：老客待核销gmv 指标编码：D096 指标类型：derived 定义：统计周期内，老客总待核销gmv 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT\nsum(left_gmv) as 老客待核销gmv\nFROM soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_pay_new=0\nAND left_num > 0\n; 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D097",
+    "metric_name": "大单品待核销gmv",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：大单品待核销gmv 指标编码：D097 指标类型：derived 定义：统计周期内，所有大单品品项总待核销gmv 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT\nsum(left_gmv) as 大单品待核销gmv\nFROM soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category = '大单品'\nAND left_num > 0\n; 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D098",
+    "metric_name": "BBL HERO待核销gmv",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：BBL HERO待核销gmv 指标编码：D098 指标类型：derived 定义：统计周期内，BBL HERO总待核销gmv 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT\nsum(left_gmv) as BBL HERO待核销gmv\nFROM soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND standard_name REGEXP 'BBL HERO'\nAND left_num > 0\n; 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D099",
+    "metric_name": "新客待核销服务点",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：新客待核销服务点 指标编码：D099 指标类型：derived 定义：统计周期内，新客总待核销服务点 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT sum(left_num) as 新客待核销服务点\nFROM soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_pay_new=1\nAND left_num > 0\n; 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D100",
+    "metric_name": "老客待核销服务点",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：老客待核销服务点 指标编码：D100 指标类型：derived 定义：统计周期内，老客总待核销服务点 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT sum(left_num) as 老客待核销服务点\nFROM soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_pay_new=0\nAND left_num > 0\n; 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D101",
+    "metric_name": "大单品待核销服务点",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：大单品待核销服务点 指标编码：D101 指标类型：derived 定义：统计周期内，所有大单品品项总待核销服务点 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT sum(left_num) as 大单品待核销服务点\nFROM soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category = '大单品'\nAND left_num > 0\n; 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D102",
+    "metric_name": "BBL HERO待核销服务点",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：BBL HERO待核销服务点 指标编码：D102 指标类型：derived 定义：统计周期内，BBL HERO总待核销服务点 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT sum(left_num) as BBL HERO待核销服务点\nFROM soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND standard_name REGEXP 'BBL HERO'\nAND left_num > 0\n; 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D103",
+    "metric_name": "新客升单人数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：新客升单人数 指标编码：D103 指标类型：derived 定义：统计周期内，新客升单人数 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT\nCOUNT(DISTINCT uid) AS 新客升单人数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND is_new = 1\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D104",
+    "metric_name": "老客升单人数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：老客升单人数 指标编码：D104 指标类型：derived 定义：统计周期内，老客升单人数 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT\nCOUNT(DISTINCT uid) AS 老客升单人数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND is_new = 0\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D105",
+    "metric_name": "大师团升单人数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：大师团升单人数 指标编码：D105 指标类型：derived 定义：统计周期内，大师团升单人数 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT\nCOUNT(DISTINCT uid) AS 大师团升单人数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND revenue_category = '大师团'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D106",
+    "metric_name": "大单品升单人数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：大单品升单人数 指标编码：D106 指标类型：derived 定义：统计周期内，收入类别为大单品的升单人数 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT\nCOUNT(DISTINCT uid) AS 大单品升单人数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND revenue_category = '大单品'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D107",
+    "metric_name": "常规品升单人数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：常规品升单人数 指标编码：D107 指标类型：derived 定义：统计周期内，常规品升单人数 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT\nCOUNT(DISTINCT uid) AS 常规品升单人数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND revenue_category = '常规品'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D108",
+    "metric_name": "私域升单人数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：私域升单人数 指标编码：D108 指标类型：derived 定义：统计周期内，获客渠道为私域的所有用户升单人数 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT\nCOUNT(DISTINCT uid) AS 私域升单人数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND cx_first_channel = '私域'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D109",
+    "metric_name": "公域升单人数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：公域升单人数 指标编码：D109 指标类型：derived 定义：统计周期内，获客渠道为公域的所有用户升单人数 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT\nCOUNT(DISTINCT uid) AS 公域升单人数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND cx_first_channel = '公域'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D110",
+    "metric_name": "老带新升单人数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：老带新升单人数 指标编码：D110 指标类型：derived 定义：统计周期内，获客渠道为老带新的所有用户升单人数 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT\nCOUNT(DISTINCT uid) AS 老带新升单人数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND cx_first_channel = '老带新'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D111",
+    "metric_name": "BBL HERO升单人数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：BBL HERO升单人数 指标编码：D111 指标类型：derived 定义：统计周期内，BBL HERO升单人数 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT\nCOUNT(DISTINCT uid) AS BBL HERO升单人数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND standard_name REGEXP 'BBL HERO'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D112",
+    "metric_name": "新客升单订单数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：新客升单订单数 指标编码：D112 指标类型：derived 定义：统计周期内，新客升单订单数 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT\nCOUNT(DISTINCT main_order_id) as 新客升单订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND is_new = 1\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D113",
+    "metric_name": "老客升单订单数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：老客升单订单数 指标编码：D113 指标类型：derived 定义：统计周期内，老客升单订单数 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT\nCOUNT(DISTINCT main_order_id) as 老客升单订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND is_new = 0\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D114",
+    "metric_name": "大师团升单订单数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：大师团升单订单数 指标编码：D114 指标类型：derived 定义：统计周期内，大师团升单订单数 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT\nCOUNT(DISTINCT main_order_id) as 大师团升单订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND revenue_category = '大师团'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D115",
+    "metric_name": "大单品升单订单数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：大单品升单订单数 指标编码：D115 指标类型：derived 定义：统计周期内，收入类别为大单品的升单订单数 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT\nCOUNT(DISTINCT main_order_id) as 大单品升单订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND revenue_category = '大单品'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D116",
+    "metric_name": "常规品升单订单数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：常规品升单订单数 指标编码：D116 指标类型：derived 定义：统计周期内，常规品升单订单数 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT\nCOUNT(DISTINCT main_order_id) as 常规品升单订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND revenue_category = '常规品'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D117",
+    "metric_name": "私域升单订单数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：私域升单订单数 指标编码：D117 指标类型：derived 定义：统计周期内，获客渠道为私域的所有用户升单订单数 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT\nCOUNT(DISTINCT main_order_id) as 私域升单订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND cx_first_channel = '私域'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D118",
+    "metric_name": "公域升单订单数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：公域升单订单数 指标编码：D118 指标类型：derived 定义：统计周期内，获客渠道为公域的所有用户升单订单数 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT\nCOUNT(DISTINCT main_order_id) as 公域升单订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND cx_first_channel = '公域'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D119",
+    "metric_name": "老带新升单订单数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：老带新升单订单数 指标编码：D119 指标类型：derived 定义：统计周期内，获客渠道为老带新的所有用户升单订单数 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT\nCOUNT(DISTINCT main_order_id) as 老带新升单订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND cx_first_channel = '老带新'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D120",
+    "metric_name": "BBL HERO升单订单数",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：BBL HERO升单订单数 指标编码：D120 指标类型：derived 定义：统计周期内，BBL HERO升单订单数 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT\nCOUNT(DISTINCT main_order_id) as BBL HERO升单订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND standard_name REGEXP 'BBL HERO'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D121",
+    "metric_name": "新客升单人次",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：新客升单人次 指标编码：D121 指标类型：derived 定义：统计周期内，新客升单人次 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT COUNT(DISTINCT verify_date_id) AS 新客升单人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND is_new = 1\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D122",
+    "metric_name": "老客升单人次",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：老客升单人次 指标编码：D122 指标类型：derived 定义：统计周期内，老客升单人次 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT COUNT(DISTINCT verify_date_id) AS 老客升单人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND is_new = 0\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D123",
+    "metric_name": "大师团升单人次",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：大师团升单人次 指标编码：D123 指标类型：derived 定义：统计周期内，大师团升单人次 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT COUNT(DISTINCT verify_date_id) AS 大师团升单人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND revenue_category = '大师团'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D124",
+    "metric_name": "大单品升单人次",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：大单品升单人次 指标编码：D124 指标类型：derived 定义：统计周期内，收入类别为大单品的升单人次 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT COUNT(DISTINCT verify_date_id) AS 大单品升单人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND revenue_category = '大单品'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D125",
+    "metric_name": "常规品品升单人次",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：常规品品升单人次 指标编码：D125 指标类型：derived 定义：统计周期内，常规品升单人次 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT COUNT(DISTINCT verify_date_id) AS 常规品升单人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND revenue_category = '常规品'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D126",
+    "metric_name": "私域升单人次",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：私域升单人次 指标编码：D126 指标类型：derived 定义：统计周期内，获客渠道为私域的所有用户升单人次 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT COUNT(DISTINCT verify_date_id) AS 私域升单人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND cx_first_channel = '私域'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D127",
+    "metric_name": "公域升单人次",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：公域升单人次 指标编码：D127 指标类型：derived 定义：统计周期内，获客渠道为公域的所有用户升单人次 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT COUNT(DISTINCT verify_date_id) AS 公域升单人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND cx_first_channel = '公域'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D128",
+    "metric_name": "老带新升单人次",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：老带新升单人次 指标编码：D128 指标类型：derived 定义：统计周期内，获客渠道为老带新的所有用户升单人次 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT COUNT(DISTINCT verify_date_id) AS 老带新升单人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND cx_first_channel = '老带新'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D129",
+    "metric_name": "BBL HERO升单人次",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_order_info_all_d"
+    ],
+    "rerank_text": "指标：BBL HERO升单人次 指标编码：D129 指标类型：derived 定义：统计周期内，BBL HERO升单人次 公式： 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT COUNT(DISTINCT verify_date_id) AS BBL HERO升单人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND standard_name REGEXP 'BBL HERO'\nAND is_valid = 1 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D130",
+    "metric_name": "相控微针升单率",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：相控微针升单率 指标编码：D130 指标类型：derived 定义：统计周期内，原单为相控微针且当日发生升单的核销人次/相控微针原单核销人次 公式：升单人次 / 原单核销人次 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT a.standard_name ,COUNT(DISTINCT IF(b.verify_date_id IS NOT NULL,a.verify_date_id,NULL)) / COUNT(DISTINCT a.verify_date_id)升单率\nFROM (\nSELECT standard_name\n,verify_date_id\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nand is_valid = 1\nAND standard_name REGEXP '相控微针'\nAND ord_up_type_name = '原单'\n) a\nLEFT JOIN (\nSELECT\nstandard_name\n,verify_date_id\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND ord_up_type_name = '升单'\nAND is_valid = 1\n) b\nON a.verify_date_id = b.verify_date_id\nGROUP BY a.standard_name\n; 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D131",
+    "metric_name": "BBL HERO加购率",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：BBL HERO加购率 指标编码：D131 指标类型：derived 定义：统计周期内，品项的升单核销人次/总核销人次 公式：升单核销人次 / 总核销人次 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT\nCOUNT(DISTINCT CASE WHEN standard_name regexp \"BBL HERO\" and is_up =1 then verify_date_id end)/\nCOUNT(DISTINCT verify_date_id) as 加购率\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_valid = 1\n; 备注："
+  },
+  {
+    "asset_type": "metric",
+    "metric_id": "D132",
+    "metric_name": "BBL HERO渗透率",
+    "metric_type": "derived",
+    "source_tables": [
+      "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+    ],
+    "rerank_text": "指标：BBL HERO渗透率 指标编码：D132 指标类型：derived 定义：90日内，核销过BBL HERO的用户数/总核销用户数量 公式：品项核销用户数 / 总核销用户数 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT\nROUND(\nCOUNT(DISTINCT case when product_name regexp \"BBL HERO\" then customer_id end) * 1.0 /\nNULLIF(COUNT(DISTINCT customer_id), 0), 4 ) as 渗透率\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(), 1)\nAND executed_date BETWEEN DATE_SUB(DATE_SUB(CURRENT_DATE(), 1), 89) AND DATE_SUB(CURRENT_DATE(), 1) -- 截至昨天的滚动90天\nAND is_valid = 1; 备注："
+  }
+]

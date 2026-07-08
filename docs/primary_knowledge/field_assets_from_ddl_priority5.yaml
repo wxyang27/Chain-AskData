@@ -1,0 +1,1499 @@
+# 字段级资产 — 基于 ODPS DDL 梳理（5张优先表）
+# 来源：soyoung_dw MaxCompute 项目 DDL
+# 生成时间：2026-07-08 15:24
+# 审核状态：待审核 → 确认后合入 knowledge/schema/
+# 提取方法：pyodps.table_schema → 按字段类型分类 → 筛选关键字段
+#
+# 字段类型分类：
+#   count_key       — 人数/人次/订单数等去重计数键
+#   amount          — 金额/收入/GMV/成本/毛利
+#   join_key        — 主键/关联键（可跨表 JOIN）
+#   dimension       — 门店/城市/大区/品项/渠道等维度
+#   dimension_key   — 维度表的主键
+#   date            — 日期字段
+#   partition       — dp 分区
+#   filter          — 状态过滤字段
+#   measure         — 服务点/库存等非金额度量
+#   profile         — 用户画像字段（标签/属性）
+
+fields:
+
+# =============================================================================
+# 表1: dm_opt_qy_user_summary_info_all_d (用户汇总表，211列，选取约35个关键字段)
+# =============================================================================
+
+# --- 主键 / join key ---
+- table_name: dm_opt_qy_user_summary_info_all_d
+  full_table_name: soyoung_dw.dm_opt_qy_user_summary_info_all_d
+  field_name: user_id
+  field_type: join_key
+  business_name: 用户ID (uid)
+  description: 用户唯一标识，跨表关联的主键。支付域用 uid，核销域用 customer_id 关联
+  used_by_metrics: []
+  caliber: "与 dwd_md_app_log.uid 和订单表的 uid 对应，与核销表关联时需通过 crm_customer_id 或 customer_id 映射"
+  sample_values: []
+  enum_values: []
+  is_join_key: true
+  is_metric_field: false
+  is_dimension_field: false
+  filters: [dp = DATE_SUB(CURRENT_DATE(), 1)]
+  risk_notes:
+    - "user_id 不等于 customer_id，跨表关联必须确认映射关系"
+    - "不要与 organization_id 等门店主键混用"
+
+- table_name: dm_opt_qy_user_summary_info_all_d
+  full_table_name: soyoung_dw.dm_opt_qy_user_summary_info_all_d
+  field_name: crm_customer_id
+  field_type: join_key
+  business_name: CRM客户ID
+  description: CRM 系统中的客户唯一标识，用于与 CRM 维表关联
+  used_by_metrics: []
+  caliber: "与 dim_user_qy_crm_customer_info_all_d.crm_customer_id 关联"
+  sample_values: []
+  enum_values: []
+  is_join_key: true
+  is_metric_field: false
+  is_dimension_field: false
+  filters: [dp = DATE_SUB(CURRENT_DATE(), 1)]
+  risk_notes:
+    - "crm_customer_id 是 CRM 体系主键，与数仓 customer_id 有映射关系但非直接等同"
+
+# --- 日期字段 ---
+- table_name: dm_opt_qy_user_summary_info_all_d
+  full_table_name: soyoung_dw.dm_opt_qy_user_summary_info_all_d
+  field_name: first_order_date_qy
+  field_type: date
+  business_name: 连锁首单日期
+  description: 用户在连锁业务（含线上+线下）的首次支付日期
+  used_by_metrics: []
+  caliber: "首单日期用于判断支付新客/老客，含线上+线下全渠道"
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters: [dp = DATE_SUB(CURRENT_DATE(), 1)]
+  risk_notes:
+    - "区分 first_order_date_qy（全渠道）和 first_order_date_qy_online / _offline"
+
+- table_name: dm_opt_qy_user_summary_info_all_d
+  full_table_name: soyoung_dw.dm_opt_qy_user_summary_info_all_d
+  field_name: last_order_date_qy
+  field_type: date
+  business_name: 连锁末单日期
+  description: 用户在连锁业务最近一次支付日期
+  used_by_metrics: []
+  caliber: "末单日期用于计算最近一次消费时间、流失判断"
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters: [dp = DATE_SUB(CURRENT_DATE(), 1)]
+  risk_notes:
+    - "末单日期 = NULL 表示用户从未在连锁业务支付过"
+
+- table_name: dm_opt_qy_user_summary_info_all_d
+  full_table_name: soyoung_dw.dm_opt_qy_user_summary_info_all_d
+  field_name: first_addc_date
+  field_type: date
+  business_name: 首次加C日期
+  description: 用户首次添加企业微信好友的日期
+  used_by_metrics: []
+  caliber: "首次加C日期用于评估私域转化时效"
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes:
+    - "仅对私域渠道用户有意义"
+
+- table_name: dm_opt_qy_user_summary_info_all_d
+  full_table_name: soyoung_dw.dm_opt_qy_user_summary_info_all_d
+  field_name: create_date
+  field_type: date
+  business_name: 客户建档日期
+  description: CRM 系统建档日期
+  used_by_metrics: []
+  caliber: "建档日期用做客户生命周期起点参考，但不等于首消日期"
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes:
+    - "建档日期晚于实际首单日期时，客户生命周期应以首单日期为准"
+
+# --- 门店字段 ---
+- table_name: dm_opt_qy_user_summary_info_all_d
+  full_table_name: soyoung_dw.dm_opt_qy_user_summary_info_all_d
+  field_name: organization_id
+  field_type: dimension_key
+  business_name: 归属门店ID
+  description: 用户归属的连锁门店ID
+  used_by_metrics: []
+  caliber: "organization_id 是 CRM 体系的门店主键，不一定与数仓 tenant_id 一一对应"
+  sample_values: []
+  enum_values: []
+  is_join_key: true
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes:
+    - "organization_id 可能与 tenant_id 不同，关联门店维表时确认映射"
+
+- table_name: dm_opt_qy_user_summary_info_all_d
+  full_table_name: soyoung_dw.dm_opt_qy_user_summary_info_all_d
+  field_name: organization_name
+  field_type: dimension
+  business_name: 归属门店名称
+  description: 用户归属门店的中文名称
+  used_by_metrics: []
+  caliber: ""
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes:
+    - "门店名称可能重复或变更，跨期对比建议使用 organization_id"
+
+# --- 城市 / 大区字段 ---
+- table_name: dm_opt_qy_user_summary_info_all_d
+  full_table_name: soyoung_dw.dm_opt_qy_user_summary_info_all_d
+  field_name: city_name
+  field_type: dimension
+  business_name: 归属城市
+  description: 用户归属门店所在城市
+  used_by_metrics: []
+  caliber: "城市名称用于用户归属地的城市维度分析"
+  sample_values: ["北京市", "武汉市", "杭州市"]
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes:
+    - "该字段来自 CRM 门店归属，可能与核销发生地城市不同"
+
+- table_name: dm_opt_qy_user_summary_info_all_d
+  full_table_name: soyoung_dw.dm_opt_qy_user_summary_info_all_d
+  field_name: area_name
+  field_type: dimension
+  business_name: 归属大区
+  description: 用户归属门店所在大区
+  used_by_metrics: []
+  caliber: "大区名称用于区域维度分析"
+  sample_values: ["华北", "华南", "华中", "华东"]
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes:
+    - "area_name 可能使用简称，与看板大区名称不完全对齐"
+
+# --- 渠道字段 ---
+- table_name: dm_opt_qy_user_summary_info_all_d
+  full_table_name: soyoung_dw.dm_opt_qy_user_summary_info_all_d
+  field_name: cx_first_channel
+  field_type: dimension
+  business_name: 获客一级渠道
+  description: 用户获客的一级渠道分类
+  used_by_metrics: []
+  caliber: "典型值：私域、公域、老带新。与 dm_opt_qy_user_execution_record 的 cx_first_channel 含义可能不同"
+  sample_values: ["私域", "公域", "老带新"]
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes:
+    - "用户维表的 cx_first_channel 反映用户生命周期渠道，可能在后续行为中变化"
+    - "核销事实表上的 cx_first_channel 以核销时为准"
+
+- table_name: dm_opt_qy_user_summary_info_all_d
+  full_table_name: soyoung_dw.dm_opt_qy_user_summary_info_all_d
+  field_name: channel_name_l1
+  field_type: dimension
+  business_name: CRM渠道一级名称
+  description: CRM 系统中的客户来源一级渠道
+  used_by_metrics: []
+  caliber: ""
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes:
+    - "CRM 渠道分类可能与数仓 cx_first_channel 口径不完全对齐"
+
+# --- 金额字段 ---
+- table_name: dm_opt_qy_user_summary_info_all_d
+  full_table_name: soyoung_dw.dm_opt_qy_user_summary_info_all_d
+  field_name: total_order_gmv_qy
+  field_type: amount
+  business_name: 累计支付GMV(连锁)
+  description: 用户在连锁业务（线上+线下）的累计支付 GMV
+  used_by_metrics: []
+  caliber: "SUM(total_order_gmv_qy) 可用于分群维度下的累计 GMV 统计；个人维度可直接使用"
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: true
+  is_dimension_field: false
+  filters: [dp = DATE_SUB(CURRENT_DATE(), 1)]
+  risk_notes:
+    - "total_order_gmv_qy 含线上+线下，与 first_order_gmv_qy_online 口径不同"
+    - "该字段为用户级汇总，不包含当日退款剔除，但与订单表支付gmv口径可能不完全一致"
+
+- table_name: dm_opt_qy_user_summary_info_all_d
+  full_table_name: soyoung_dw.dm_opt_qy_user_summary_info_all_d
+  field_name: total_actual_no_use_gmv
+  field_type: amount
+  business_name: 累计未核销GMV
+  description: 用户购买但尚未完成核销的累计金额
+  used_by_metrics: []
+  caliber: ""
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: true
+  is_dimension_field: false
+  filters: [dp = DATE_SUB(CURRENT_DATE(), 1)]
+  risk_notes:
+    - "total_actual_no_use_gmv 的'未核销'口径不等于待核销 left_gmv"
+
+# --- 人数/人次字段 ---
+- table_name: dm_opt_qy_user_summary_info_all_d
+  full_table_name: soyoung_dw.dm_opt_qy_user_summary_info_all_d
+  field_name: total_order_cnt_qy
+  field_type: count_key
+  business_name: 累计订单数(连锁)
+  description: 用户在连锁业务的累计支付订单数
+  used_by_metrics: []
+  caliber: ""
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: true
+  is_dimension_field: false
+  filters: [dp = DATE_SUB(CURRENT_DATE(), 1)]
+  risk_notes:
+    - "total_order_cnt_qy 含全渠道; online/offline 需分别取对应字段"
+
+- table_name: dm_opt_qy_user_summary_info_all_d
+  full_table_name: soyoung_dw.dm_opt_qy_user_summary_info_all_d
+  field_name: total_order_use_cnt
+  field_type: count_key
+  business_name: 累计核销次数(去重)
+  description: 用户累计核销的次数（按订单去重）
+  used_by_metrics: []
+  caliber: ""
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: true
+  is_dimension_field: false
+  filters: [dp = DATE_SUB(CURRENT_DATE(), 1)]
+  risk_notes:
+    - "total_order_use_cnt 按订单去重，不等于核销人次(verify_date_id)"
+
+# --- 状态过滤字段 ---
+- table_name: dm_opt_qy_user_summary_info_all_d
+  full_table_name: soyoung_dw.dm_opt_qy_user_summary_info_all_d
+  field_name: activate_180d_tag
+  field_type: filter
+  business_name: 近180天活跃标记
+  description: "0=近180天未活跃(流失)，1=近180天有核销(活跃)"
+  used_by_metrics: []
+  caliber: "末次核销日期在180天内为活跃(1)，否则为流失(0)"
+  sample_values: ["0", "1"]
+  enum_values: ["0-流失", "1-活跃"]
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters: [activate_180d_tag = 1]
+  risk_notes:
+    - "180天窗口是固定窗口，业务变更时需重新确认阈值"
+
+- table_name: dm_opt_qy_user_summary_info_all_d
+  full_table_name: soyoung_dw.dm_opt_qy_user_summary_info_all_d
+  field_name: is_ds
+  field_type: filter
+  business_name: 是否大师团
+  description: "1=大师团用户，0=非大师团"
+  used_by_metrics: []
+  caliber: "用户是否在历史上消费过大师团品类"
+  sample_values: ["0", "1"]
+  enum_values: ["0-非大师团", "1-大师团"]
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes:
+    - "is_ds 是用户级标签(历史上消费过即为1)，不同于单次核销的 revenue_category=大师团"
+
+- table_name: dm_opt_qy_user_summary_info_all_d
+  full_table_name: soyoung_dw.dm_opt_qy_user_summary_info_all_d
+  field_name: is_addc
+  field_type: filter
+  business_name: 是否私域加C
+  description: 用户是否添加过企业微信好友
+  used_by_metrics: []
+  caliber: ""
+  sample_values: ["0", "1"]
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes:
+    - "is_addc=0 可能是未添加或数据缺失，非等价于非私域用户"
+
+# --- 用户画像字段 ---
+- table_name: dm_opt_qy_user_summary_info_all_d
+  full_table_name: soyoung_dw.dm_opt_qy_user_summary_info_all_d
+  field_name: membership_level
+  field_type: profile
+  business_name: 会员等级
+  description: 用户当前会员等级（L1-L8）
+  used_by_metrics: []
+  caliber: "会员等级用于用户分群、画像分析，高价值用户筛选"
+  sample_values: ["1", "2", "3", "4", "5", "6", "7", "8"]
+  enum_values: ["L1", "L2", "L3", "L4", "L5", "L6", "L7", "L8"]
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes:
+    - "membership_level 为当前时点快照，历史会员等级不可追溯"
+    - "L1-L3 入门 / L4-L5 成长 / L6-L7 核心 / L8 顶级"
+
+- table_name: dm_opt_qy_user_summary_info_all_d
+  full_table_name: soyoung_dw.dm_opt_qy_user_summary_info_all_d
+  field_name: gender
+  field_type: profile
+  business_name: 性别
+  description: "0=未知, 1=男, 2=女"
+  used_by_metrics: []
+  caliber: ""
+  sample_values: ["0", "1", "2"]
+  enum_values: ["0-未知", "1-男", "2-女"]
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes:
+    - "性别=0(未知)占比可能较大，分析时需单独标注"
+
+- table_name: dm_opt_qy_user_summary_info_all_d
+  full_table_name: soyoung_dw.dm_opt_qy_user_summary_info_all_d
+  field_name: tag_name_list
+  field_type: profile
+  business_name: 用户标签
+  description: CRM系统用户动态标签，逗号分隔
+  used_by_metrics: []
+  caliber: ""
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes:
+    - "标签可能未及时更新或存在缺失"
+    - "标签口径由CRM团队维护，变更时需同步"
+
+# --- dp 分区 ---
+- table_name: dm_opt_qy_user_summary_info_all_d
+  full_table_name: soyoung_dw.dm_opt_qy_user_summary_info_all_d
+  field_name: dp
+  field_type: partition
+  business_name: 分区字段
+  description: "全量快照分区，格式 yyyy-MM-dd"
+  used_by_metrics: []
+  caliber: "全量快照表必须指定 dp = DATE_SUB(CURRENT_DATE(), 1)，取最新版本数据"
+  sample_values: ["2026-07-07"]
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: false
+  filters:
+    - "dp = DATE_SUB(CURRENT_DATE(), 1)"
+  risk_notes:
+    - "该表为全量快照，dp 只锁最新版本，不做时间区间筛选"
+
+
+# =============================================================================
+# 表2: dws_opt_qy_core_summary_all_d (经营核心汇总表，54列，选取约15个关键字段)
+# =============================================================================
+
+# --- 主键 / join key ---
+- table_name: dws_opt_qy_core_summary_all_d
+  full_table_name: soyoung_dw.dws_opt_qy_core_summary_all_d
+  field_name: tenant_id
+  field_type: join_key
+  business_name: 门店ID
+  description: 连锁门店唯一标识，跨表门店关联主键
+  used_by_metrics: [store_income_top10, store_unverified_top10]
+  caliber: "门店维表、核销表、支付表均以 tenant_id 作为门店主键"
+  sample_values: []
+  enum_values: []
+  is_join_key: true
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes:
+    - "不要与 hospital_id、organization_id 混淆"
+    - "tenant_id 在多表间口径一致，是最可靠的门店关联键"
+
+- table_name: dws_opt_qy_core_summary_all_d
+  full_table_name: soyoung_dw.dws_opt_qy_core_summary_all_d
+  field_name: customer_id
+  field_type: join_key
+  business_name: 客户ID
+  description: 客户唯一标识，用于核销域用户关联
+  used_by_metrics: [execution_user_count]
+  caliber: "核销人数统计使用 COUNT(DISTINCT customer_id)"
+  sample_values: []
+  enum_values: []
+  is_join_key: true
+  is_metric_field: false
+  is_dimension_field: false
+  filters: []
+  risk_notes:
+    - "customer_id 不等于 uid（支付域用户ID），关联需确认映射"
+
+- table_name: dws_opt_qy_core_summary_all_d
+  full_table_name: soyoung_dw.dws_opt_qy_core_summary_all_d
+  field_name: product_id
+  field_type: join_key
+  business_name: 商品ID
+  description: 商品/SPU 维度标识
+  used_by_metrics: []
+  caliber: "商品级关联使用 product_id，品项级关联使用 product_standard_name"
+  sample_values: []
+  enum_values: []
+  is_join_key: true
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes:
+    - "product_id 是 SPU 维度，不等于 item_product_id（品项口径键）"
+
+# --- 日期字段 ---
+- table_name: dws_opt_qy_core_summary_all_d
+  full_table_name: soyoung_dw.dws_opt_qy_core_summary_all_d
+  field_name: st_day
+  field_type: date
+  business_name: 统计日期
+  description: "数据统计日期，格式 yyyy-MM-dd"
+  used_by_metrics: []
+  caliber: "按 st_day 确定业务发生日期，与 dp 分区字段含义不同"
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes:
+    - "st_day 是业务日期，dp 是快照分区日期，不要混淆"
+
+# --- 门店 / 城市 / 大区 ---
+- table_name: dws_opt_qy_core_summary_all_d
+  full_table_name: soyoung_dw.dws_opt_qy_core_summary_all_d
+  field_name: tenant_name
+  field_type: dimension
+  business_name: 门店名称
+  description: 连锁门店的中文名称
+  used_by_metrics: []
+  caliber: "门店展示使用 tenant_name，但排序/关联使用 tenant_id"
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes:
+    - "tenant_name 与 dim_qy_tenant_info_all_d.sy_hospital_name 可能不同"
+    - "门店名称可能已改名，跨期对比需注意"
+
+- table_name: dws_opt_qy_core_summary_all_d
+  full_table_name: soyoung_dw.dws_opt_qy_core_summary_all_d
+  field_name: area_name
+  field_type: dimension
+  business_name: 大区名称
+  description: 门店所属大区
+  used_by_metrics: [area_income_rank]
+  caliber: "大区维度使用 area_name，典型值为华中/华北/华南/华东"
+  sample_values: ["华中", "华北", "华南", "华东"]
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes:
+    - "大区枚举值可能变动，跨期分析需确认一致性"
+
+- table_name: dws_opt_qy_core_summary_all_d
+  full_table_name: soyoung_dw.dws_opt_qy_core_summary_all_d
+  field_name: city_name
+  field_type: dimension
+  business_name: 城市名称
+  description: 门店所在城市
+  used_by_metrics: [city_income_rank]
+  caliber: "城市维度拆分使用 city_name 或 city_id"
+  sample_values: ["北京市", "武汉市", "杭州市"]
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes:
+    - "部分门店的城市归属可能与大区不对齐，建议同时验证"
+
+# --- 品项字段 ---
+- table_name: dws_opt_qy_core_summary_all_d
+  full_table_name: soyoung_dw.dws_opt_qy_core_summary_all_d
+  field_name: product_standard_name
+  field_type: dimension
+  business_name: 品项标准名称
+  description: 品项的标准统一名称
+  used_by_metrics: [standard_item_income, item_penetration_rate_by_customer]
+  caliber: "品项筛选使用 standard_name REGEXP 或 product_standard_name 精确匹配"
+  sample_values: ["BBL HERO", "奇迹童颜", "新一代热玛吉", "爱拉丝提"]
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes:
+    - "product_standard_name 与 dm_opt_qy_user_execution_record.standard_name 应对齐"
+    - "品项名称可能因版本迭代变化，REGEXP 匹配需定期维护关键词"
+
+- table_name: dws_opt_qy_core_summary_all_d
+  full_table_name: soyoung_dw.dws_opt_qy_core_summary_all_d
+  field_name: revenue_category
+  field_type: dimension
+  business_name: 收入分类
+  description: 品项的收入分类（大单品/常规品/大师团）
+  used_by_metrics: [revenue_category_execution_income]
+  caliber: "品类拆分使用 revenue_category IN ('大单品','常规品','大师团')"
+  sample_values: ["大师团", "大单品", "常规品"]
+  enum_values: ["大师团", "大单品", "常规品"]
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters:
+    - "revenue_category IN ('大单品', '常规品', '大师团')"
+  risk_notes:
+    - "大师团/非大师团口径需显式说明（含/不含大师团）"
+
+# --- 渠道字段 ---
+- table_name: dws_opt_qy_core_summary_all_d
+  full_table_name: soyoung_dw.dws_opt_qy_core_summary_all_d
+  field_name: channel_name
+  field_type: dimension
+  business_name: 获客一级渠道
+  description: 用户获客的一级渠道名称
+  used_by_metrics: [channel_execution]
+  caliber: "渠道拆分使用 channel_name"
+  sample_values: ["私域", "公域", "老带新"]
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes:
+    - "该表 channel_name 对应 cx_first_channel，但可能与事实表字段名不一致"
+
+# --- 金额字段 ---
+- table_name: dws_opt_qy_core_summary_all_d
+  full_table_name: soyoung_dw.dws_opt_qy_core_summary_all_d
+  field_name: exe_income
+  field_type: amount
+  business_name: 核销收入
+  description: 核销实收收入（未除以税率）
+  used_by_metrics: [A002]
+  caliber: "核销收入使用 SUM(exe_income)，不是核销GMV"
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: true
+  is_dimension_field: false
+  filters: []
+  risk_notes:
+    - "该汇总表可能已含默认口径过滤，与明细表口径需交叉验证"
+
+- table_name: dws_opt_qy_core_summary_all_d
+  full_table_name: soyoung_dw.dws_opt_qy_core_summary_all_d
+  field_name: exe_amount
+  field_type: amount
+  business_name: 核销GMV
+  description: 核销业务额（含赠送/未实收）
+  used_by_metrics: [A001]
+  caliber: "核销GMV使用 SUM(exe_amount)，不等于核销收入"
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: true
+  is_dimension_field: false
+  filters: []
+  risk_notes:
+    - "exe_amount 通常大于 exe_income（含赠送/未实收）"
+
+- table_name: dws_opt_qy_core_summary_all_d
+  full_table_name: soyoung_dw.dws_opt_qy_core_summary_all_d
+  field_name: exe_total_income
+  field_type: amount
+  business_name: 核销总收入(含升单)
+  description: 含升单在内的核销实收总收入
+  used_by_metrics: []
+  caliber: ""
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: true
+  is_dimension_field: false
+  filters: []
+  risk_notes:
+    - "exe_total_income 含升单部分; exe_income 为不含升单的原单收入，二者口径不同"
+
+- table_name: dws_opt_qy_core_summary_all_d
+  full_table_name: soyoung_dw.dws_opt_qy_core_summary_all_d
+  field_name: exe_total_cost
+  field_type: amount
+  business_name: 耗材成本
+  description: 品项对应的耗材成本
+  used_by_metrics: []
+  caliber: ""
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: true
+  is_dimension_field: false
+  filters: []
+  risk_notes:
+    - "exe_total_cost 已按品项分摊，单个订单级的真实成本不可反推"
+
+# --- 人数/人次字段 ---
+- table_name: dws_opt_qy_core_summary_all_d
+  full_table_name: soyoung_dw.dws_opt_qy_core_summary_all_d
+  field_name: exe_cnt
+  field_type: measure
+  business_name: 核销服务点
+  description: 核销服务点数
+  used_by_metrics: [A004]
+  caliber: "使用 SUM(exe_cnt)"
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: true
+  is_dimension_field: false
+  filters: []
+  risk_notes:
+    - "exe_cnt 是服务点数，不等于人次也不等于人数"
+
+- table_name: dws_opt_qy_core_summary_all_d
+  full_table_name: soyoung_dw.dws_opt_qy_core_summary_all_d
+  field_name: exe_num
+  field_type: count_key
+  business_name: 核销人次
+  description: 核销人次
+  used_by_metrics: [A006]
+  caliber: "核销人次使用 SUM(exe_num) 或 COUNT(DISTINCT verify_date_id)"
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: true
+  is_dimension_field: false
+  filters: []
+  risk_notes:
+    - "汇总表的 exe_num 不等于明细表的 COUNT(DISTINCT verify_date_id) 在同一天的结果"
+
+# --- 状态过滤字段 ---
+- table_name: dws_opt_qy_core_summary_all_d
+  full_table_name: soyoung_dw.dws_opt_qy_core_summary_all_d
+  field_name: customer_is_new
+  field_type: filter
+  business_name: 是否门店新客
+  description: "1=新客，0=老客。按门店维度定义新客"
+  used_by_metrics: []
+  caliber: "新老客拆分使用 customer_is_new = 1/0"
+  sample_values: ["0", "1"]
+  enum_values: ["0-老客", "1-新客"]
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes:
+    - "customer_is_new 是门店级新客，不等于 is_new（核销域全连锁新客）"
+
+- table_name: dws_opt_qy_core_summary_all_d
+  full_table_name: soyoung_dw.dws_opt_qy_core_summary_all_d
+  field_name: is_qy
+  field_type: filter
+  business_name: 是否连锁用户
+  description: "1=连锁，0=非连锁"
+  used_by_metrics: []
+  caliber: ""
+  sample_values: ["0", "1"]
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: false
+  filters: [is_qy = 1]
+  risk_notes:
+    - "部分表 is_qy 用 bigint，部分用 int，注意类型一致性"
+
+# --- dp 分区 ---
+- table_name: dws_opt_qy_core_summary_all_d
+  full_table_name: soyoung_dw.dws_opt_qy_core_summary_all_d
+  field_name: dp
+  field_type: partition
+  business_name: 分区字段
+  description: "日期分区，格式 yyyy-MM-dd"
+  used_by_metrics: []
+  caliber: "dp = DATE_SUB(CURRENT_DATE(), 1) 取最新分区"
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: false
+  filters:
+    - "dp = DATE_SUB(CURRENT_DATE(), 1)"
+  risk_notes:
+    - "按 st_day 过滤业务日期，dp 只锁最新快照版本"
+
+
+# =============================================================================
+# 表3: dws_opt_qy_gross_margin_stats_all_d (毛利率分析表，27列，选取约12个关键字段)
+# =============================================================================
+
+# --- 门店/城市/大区 ---
+- table_name: dws_opt_qy_gross_margin_stats_all_d
+  full_table_name: soyoung_dw.dws_opt_qy_gross_margin_stats_all_d
+  field_name: tenant_id
+  field_type: join_key
+  business_name: 门店ID
+  description: 连锁门店唯一标识
+  used_by_metrics: []
+  caliber: "门店分析使用 tenant_id"
+  sample_values: []
+  enum_values: []
+  is_join_key: true
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes: []
+
+- table_name: dws_opt_qy_gross_margin_stats_all_d
+  full_table_name: soyoung_dw.dws_opt_qy_gross_margin_stats_all_d
+  field_name: area_name
+  field_type: dimension
+  business_name: 大区名称
+  description: 门店所属大区
+  used_by_metrics: []
+  caliber: ""
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes: []
+
+- table_name: dws_opt_qy_gross_margin_stats_all_d
+  full_table_name: soyoung_dw.dws_opt_qy_gross_margin_stats_all_d
+  field_name: city_name
+  field_type: dimension
+  business_name: 城市名称
+  description: 门店所在城市
+  used_by_metrics: []
+  caliber: ""
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes: []
+
+# --- 品项字段 ---
+- table_name: dws_opt_qy_gross_margin_stats_all_d
+  full_table_name: soyoung_dw.dws_opt_qy_gross_margin_stats_all_d
+  field_name: standard_name
+  field_type: dimension
+  business_name: 品项标准名称
+  description: 品项标准统一名称
+  used_by_metrics: []
+  caliber: "品项维度拆分使用 standard_name"
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes:
+    - "standard_name 在各表中字段名一致，是品项维度的推荐字段"
+
+- table_name: dws_opt_qy_gross_margin_stats_all_d
+  full_table_name: soyoung_dw.dws_opt_qy_gross_margin_stats_all_d
+  field_name: revenue_category
+  field_type: dimension
+  business_name: 营收分类
+  description: 品项的营收分类
+  used_by_metrics: []
+  caliber: "品类拆分使用 revenue_category"
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes: []
+
+# --- 渠道字段 ---
+- table_name: dws_opt_qy_gross_margin_stats_all_d
+  full_table_name: soyoung_dw.dws_opt_qy_gross_margin_stats_all_d
+  field_name: cx_first_channel
+  field_type: dimension
+  business_name: 获客一级渠道
+  description: 用户获客渠道
+  used_by_metrics: []
+  caliber: ""
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes: []
+
+# --- 金额字段（毛利率核心） ---
+- table_name: dws_opt_qy_gross_margin_stats_all_d
+  full_table_name: soyoung_dw.dws_opt_qy_gross_margin_stats_all_d
+  field_name: exe_income
+  field_type: amount
+  business_name: 核销收入
+  description: 核销实收收入
+  used_by_metrics: []
+  caliber: "毛利率分析的核心收入指标"
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: true
+  is_dimension_field: false
+  filters: []
+  risk_notes:
+    - "该表 exe_income 为 decimal(16,6)，精度高于其他表的 double 类型"
+
+- table_name: dws_opt_qy_gross_margin_stats_all_d
+  full_table_name: soyoung_dw.dws_opt_qy_gross_margin_stats_all_d
+  field_name: ware_cost
+  field_type: amount
+  business_name: 耗材成本
+  description: 品项对应的耗材成本
+  used_by_metrics: []
+  caliber: "SUM(ware_cost) / SUM(exe_income) 为耗材率"
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: true
+  is_dimension_field: false
+  filters: []
+  risk_notes: []
+
+- table_name: dws_opt_qy_gross_margin_stats_all_d
+  full_table_name: soyoung_dw.dws_opt_qy_gross_margin_stats_all_d
+  field_name: manual_fee
+  field_type: amount
+  business_name: 医生手工费
+  description: 医生手工费/提成
+  used_by_metrics: []
+  caliber: "SUM(manual_fee) / SUM(exe_income) 为手工费率"
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: true
+  is_dimension_field: false
+  filters: []
+  risk_notes: []
+
+- table_name: dws_opt_qy_gross_margin_stats_all_d
+  full_table_name: soyoung_dw.dws_opt_qy_gross_margin_stats_all_d
+  field_name: gross_margin_amt
+  field_type: amount
+  business_name: 毛利额
+  description: "毛利额 = 收入 - 耗材成本 - 手工费"
+  used_by_metrics: []
+  caliber: "毛利润 = exe_income - ware_cost - manual_fee"
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: true
+  is_dimension_field: false
+  filters: []
+  risk_notes:
+    - "该表的毛利润只含耗材+手工费，不含其他间接成本"
+    - "毛利率 = gross_margin_amt / exe_income"
+
+- table_name: dws_opt_qy_gross_margin_stats_all_d
+  full_table_name: soyoung_dw.dws_opt_qy_gross_margin_stats_all_d
+  field_name: ware_manual_cost
+  field_type: amount
+  business_name: 成本合计
+  description: "耗材成本 + 医生手工费"
+  used_by_metrics: []
+  caliber: "ware_manual_cost = ware_cost + manual_fee"
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: true
+  is_dimension_field: false
+  filters: []
+  risk_notes: []
+
+# --- 日期/分区 ---
+- table_name: dws_opt_qy_gross_margin_stats_all_d
+  full_table_name: soyoung_dw.dws_opt_qy_gross_margin_stats_all_d
+  field_name: stat_date
+  field_type: date
+  business_name: 统计日期
+  description: 业务统计日期
+  used_by_metrics: []
+  caliber: "按 stat_date 确定数据所属日期"
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes:
+    - "stat_date 为业务日期，dp 为分区日期"
+
+- table_name: dws_opt_qy_gross_margin_stats_all_d
+  full_table_name: soyoung_dw.dws_opt_qy_gross_margin_stats_all_d
+  field_name: dp
+  field_type: partition
+  business_name: 分区字段
+  description: "日期分区，格式 yyyy-mm-dd"
+  used_by_metrics: []
+  caliber: "dp = DATE_SUB(CURRENT_DATE(), 1)"
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: false
+  filters:
+    - "dp = DATE_SUB(CURRENT_DATE(), 1)"
+  risk_notes: []
+
+
+# =============================================================================
+# 表4: dws_opt_qy_tenant_topic_d (门店主题表，55列，选取约12个关键字段)
+# =============================================================================
+
+# --- 主键 / join key ---
+- table_name: dws_opt_qy_tenant_topic_d
+  full_table_name: soyoung_dw.dws_opt_qy_tenant_topic_d
+  field_name: tenant_id
+  field_type: join_key
+  business_name: 门店ID
+  description: 连锁门店唯一标识，与维表/事实表统一
+  used_by_metrics: [store_income_top10, store_unverified_top10]
+  caliber: "门店关联使用 tenant_id"
+  sample_values: []
+  enum_values: []
+  is_join_key: true
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes: []
+
+# --- 门店/城市 ---
+- table_name: dws_opt_qy_tenant_topic_d
+  full_table_name: soyoung_dw.dws_opt_qy_tenant_topic_d
+  field_name: tenant_name
+  field_type: dimension
+  business_name: 门店名称
+  description: 门店的标准名称
+  used_by_metrics: []
+  caliber: ""
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes:
+    - "tenant_name 为标准名，可能与别名 tenant_alias_name 不同"
+
+- table_name: dws_opt_qy_tenant_topic_d
+  full_table_name: soyoung_dw.dws_opt_qy_tenant_topic_d
+  field_name: city_name
+  field_type: dimension
+  business_name: 城市名称
+  description: 门店所在城市
+  used_by_metrics: []
+  caliber: ""
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes: []
+
+# --- 金额字段 ---
+- table_name: dws_opt_qy_tenant_topic_d
+  full_table_name: soyoung_dw.dws_opt_qy_tenant_topic_d
+  field_name: income
+  field_type: amount
+  business_name: 门店收入
+  description: "门店收入 = 核销业务额 / 1.06（已扣除税）"
+  used_by_metrics: []
+  caliber: "门店收入口径 = exe_amount / 1.06，不等同于 exe_income"
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: true
+  is_dimension_field: false
+  filters: []
+  risk_notes:
+    - "income 扣除了增值税率(1.06)，与核销表原始 exe_income / exe_amount 不可直接对比"
+    - "收入口径与毛利率表的 exe_income 差异约 6%"
+
+- table_name: dws_opt_qy_tenant_topic_d
+  full_table_name: soyoung_dw.dws_opt_qy_tenant_topic_d
+  field_name: new_income
+  field_type: amount
+  business_name: 新客收入
+  description: 门店新客贡献的收入
+  used_by_metrics: []
+  caliber: ""
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: true
+  is_dimension_field: false
+  filters: []
+  risk_notes:
+    - "new_income 与 old_income 之和应等于 income"
+
+- table_name: dws_opt_qy_tenant_topic_d
+  full_table_name: soyoung_dw.dws_opt_qy_tenant_topic_d
+  field_name: up_amount
+  field_type: amount
+  business_name: 升单金额
+  description: 门店升单贡献的收入金额
+  used_by_metrics: []
+  caliber: ""
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: true
+  is_dimension_field: false
+  filters: []
+  risk_notes: []
+
+# --- 人数/人次 ---
+- table_name: dws_opt_qy_tenant_topic_d
+  full_table_name: soyoung_dw.dws_opt_qy_tenant_topic_d
+  field_name: exe_user_cnt
+  field_type: count_key
+  business_name: 核销人次
+  description: 门店核销人次
+  used_by_metrics: []
+  caliber: ""
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: true
+  is_dimension_field: false
+  filters: []
+  risk_notes:
+    - "exe_user_cnt 字段名叫'人次'但可能是人数，需要看实际口径确认"
+
+- table_name: dws_opt_qy_tenant_topic_d
+  full_table_name: soyoung_dw.dws_opt_qy_tenant_topic_d
+  field_name: exe_cnt
+  field_type: measure
+  business_name: 核销服务点
+  description: 门店核销服务点数
+  used_by_metrics: []
+  caliber: ""
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: true
+  is_dimension_field: false
+  filters: []
+  risk_notes: []
+
+- table_name: dws_opt_qy_tenant_topic_d
+  full_table_name: soyoung_dw.dws_opt_qy_tenant_topic_d
+  field_name: up_user_cnt
+  field_type: count_key
+  business_name: 升单人数
+  description: 门店升单的核销人数
+  used_by_metrics: []
+  caliber: ""
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: true
+  is_dimension_field: false
+  filters: []
+  risk_notes: []
+
+# --- 状态过滤 ---
+- table_name: dws_opt_qy_tenant_topic_d
+  full_table_name: soyoung_dw.dws_opt_qy_tenant_topic_d
+  field_name: is_open
+  field_type: filter
+  business_name: 营业状态
+  description: "1=营业中，0=非营业"
+  used_by_metrics: []
+  caliber: "门店经营分析过滤 is_open = 1"
+  sample_values: ["0", "1"]
+  enum_values: ["0-非营业", "1-营业中"]
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: false
+  filters:
+    - "is_open = 1"
+  risk_notes:
+    - "非营业门店含闭店/装修/未开业，不加过滤会把无效门店计入排名"
+
+- table_name: dws_opt_qy_tenant_topic_d
+  full_table_name: soyoung_dw.dws_opt_qy_tenant_topic_d
+  field_name: is_ceshi
+  field_type: filter
+  business_name: 是否测试门店
+  description: "1=测试门店，需排除"
+  used_by_metrics: []
+  caliber: "分析时过滤 is_ceshi <> 1"
+  sample_values: ["0", "1"]
+  enum_values: ["0-正式门店", "1-测试门店"]
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: false
+  filters:
+    - "is_ceshi <> 1"
+  risk_notes:
+    - "测试门店数据会严重干扰经营分析"
+
+# --- 日期/分区 ---
+- table_name: dws_opt_qy_tenant_topic_d
+  full_table_name: soyoung_dw.dws_opt_qy_tenant_topic_d
+  field_name: dp
+  field_type: partition
+  business_name: 分区字段
+  description: "日期分区，格式 yyyy-MM-dd"
+  used_by_metrics: []
+  caliber: "dp = DATE_SUB(CURRENT_DATE(), 1)"
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: false
+  filters:
+    - "dp = DATE_SUB(CURRENT_DATE(), 1)"
+  risk_notes: []
+
+
+# =============================================================================
+# 表5: dim_user_qy_crm_customer_info_all_d (CRM客户维表，81列，选取约15个关键字段)
+# =============================================================================
+
+# --- 主键 / join key ---
+- table_name: dim_user_qy_crm_customer_info_all_d
+  full_table_name: soyoung_dw.dim_user_qy_crm_customer_info_all_d
+  field_name: crm_customer_id
+  field_type: join_key
+  business_name: CRM客户ID
+  description: CRM 系统中的客户唯一标识
+  used_by_metrics: []
+  caliber: "与 dm_opt_qy_user_summary_info_all_d.crm_customer_id 关联获取用户画像"
+  sample_values: []
+  enum_values: []
+  is_join_key: true
+  is_metric_field: false
+  is_dimension_field: false
+  filters: [dp = DATE_SUB(CURRENT_DATE(), 1)]
+  risk_notes:
+    - "crm_customer_id 是 CRM 体系主键，非数仓标准 customer_id"
+
+- table_name: dim_user_qy_crm_customer_info_all_d
+  full_table_name: soyoung_dw.dim_user_qy_crm_customer_info_all_d
+  field_name: uid
+  field_type: join_key
+  business_name: 用户ID (uid)
+  description: 数仓标准用户ID，与订单表/支付表的 uid 一致
+  used_by_metrics: []
+  caliber: "与 dm_opt_qy_order_info_all_d.uid 关联"
+  sample_values: []
+  enum_values: []
+  is_join_key: true
+  is_metric_field: false
+  is_dimension_field: false
+  filters: [dp = DATE_SUB(CURRENT_DATE(), 1)]
+  risk_notes:
+    - "uid 是支付域用户ID，联核销域数据需要确认 customer_id 映射"
+
+- table_name: dim_user_qy_crm_customer_info_all_d
+  full_table_name: soyoung_dw.dim_user_qy_crm_customer_info_all_d
+  field_name: union_id
+  field_type: join_key
+  business_name: 小程序UnionID
+  description: 微信小程序用户的 UnionID，私域链路专用
+  used_by_metrics: []
+  caliber: "通过 union_id 关联小程序行为数据与 CRM 用户画像"
+  sample_values: []
+  enum_values: []
+  is_join_key: true
+  is_metric_field: false
+  is_dimension_field: false
+  filters: []
+  risk_notes:
+    - "union_id 仅在私域链路完整，公域用户可能为 NULL"
+    - "一个用户可能有多个 union_id（多微信号），关联时注意去重"
+
+# --- 城市 / 大区 ---
+- table_name: dim_user_qy_crm_customer_info_all_d
+  full_table_name: soyoung_dw.dim_user_qy_crm_customer_info_all_d
+  field_name: city_name
+  field_type: dimension
+  business_name: 客户城市
+  description: CRM 登记的客户所在城市
+  used_by_metrics: []
+  caliber: "此城市来自 CRM 档案，非核销发生城市"
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes:
+    - "CRM 城市与核销发生城市可能不同"
+
+# --- 渠道字段 ---
+- table_name: dim_user_qy_crm_customer_info_all_d
+  full_table_name: soyoung_dw.dim_user_qy_crm_customer_info_all_d
+  field_name: cx_first_channel
+  field_type: dimension
+  business_name: 获客一级渠道
+  description: 用户获客的一级渠道
+  used_by_metrics: []
+  caliber: ""
+  sample_values: ["私域", "公域", "老带新"]
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes:
+    - "维表中的 cx_first_channel 为用户注册时渠道，后续可能有变化"
+
+- table_name: dim_user_qy_crm_customer_info_all_d
+  full_table_name: soyoung_dw.dim_user_qy_crm_customer_info_all_d
+  field_name: channel_name
+  field_type: dimension
+  business_name: CRM一级渠道
+  description: CRM 系统中的客户来源渠道名称
+  used_by_metrics: []
+  caliber: ""
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes:
+    - "CRM 渠道分类体系与数仓 cx_first_channel 分类体系不完全一致"
+
+# --- 用户画像字段 ---
+- table_name: dim_user_qy_crm_customer_info_all_d
+  full_table_name: soyoung_dw.dim_user_qy_crm_customer_info_all_d
+  field_name: membership_level
+  field_type: profile
+  business_name: 会员等级
+  description: 客户当前会员等级
+  used_by_metrics: []
+  caliber: "用于会员等级分析、高价值用户筛选"
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes:
+    - "membership_level 可能是 string 类型（'L1'-'L8'）或 bigint（1-8），需检查实际值"
+
+- table_name: dim_user_qy_crm_customer_info_all_d
+  full_table_name: soyoung_dw.dim_user_qy_crm_customer_info_all_d
+  field_name: gender
+  field_type: profile
+  business_name: 性别
+  description: 客户性别
+  used_by_metrics: []
+  caliber: ""
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes: []
+
+- table_name: dim_user_qy_crm_customer_info_all_d
+  full_table_name: soyoung_dw.dim_user_qy_crm_customer_info_all_d
+  field_name: profile_tags
+  field_type: profile
+  business_name: 动态标签
+  description: 客户动态标签列表（array）
+  used_by_metrics: []
+  caliber: "用于用户分层、精准营销圈人"
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes:
+    - "array 类型字段在 JOIN 后可能爆炸，先聚合再关联"
+
+- table_name: dim_user_qy_crm_customer_info_all_d
+  full_table_name: soyoung_dw.dim_user_qy_crm_customer_info_all_d
+  field_name: masked_mobile
+  field_type: profile
+  business_name: 脱敏手机号
+  description: 客户手机号脱敏后的字符串
+  used_by_metrics: []
+  caliber: "脱敏手机号用于跨源用户去重或设备匹配，不能反向还原"
+  sample_values: []
+  enum_values: []
+  is_join_key: true
+  is_metric_field: false
+  is_dimension_field: false
+  filters: []
+  risk_notes:
+    - "脱敏手机号的安全性允许用于大部分分析场景"
+    - "原始手机号 mobile 字段需严格权限控制，非脱敏场景不可输出"
+
+# --- 状态过滤 ---
+- table_name: dim_user_qy_crm_customer_info_all_d
+  full_table_name: soyoung_dw.dim_user_qy_crm_customer_info_all_d
+  field_name: is_new
+  field_type: filter
+  business_name: 是否新客
+  description: "1=新客，2=老客。CRM 视角的新客定义"
+  used_by_metrics: []
+  caliber: "CRM 维表的 is_new 含义可能与核销/支付事实表的 is_new 不同"
+  sample_values: ["1", "2"]
+  enum_values: ["1-新客", "2-老客"]
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes:
+    - "CRM 维表的 is_new=1/2 与核销表 is_new=0/1 的取值含义不同（1=新 vs 0=老）"
+    - "维表的 is_new 是客户级别属性，事实表的 is_new 是事件级别属性"
+
+- table_name: dim_user_qy_crm_customer_info_all_d
+  full_table_name: soyoung_dw.dim_user_qy_crm_customer_info_all_d
+  field_name: is_qy
+  field_type: filter
+  business_name: 是否连锁用户
+  description: "1=连锁，0=非连锁"
+  used_by_metrics: []
+  caliber: "用户域限定 is_qy=1"
+  sample_values: ["0", "1"]
+  enum_values: ["0-非连锁", "1-连锁"]
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: false
+  filters:
+    - "is_qy = 1"
+  risk_notes: []
+
+- table_name: dim_user_qy_crm_customer_info_all_d
+  full_table_name: soyoung_dw.dim_user_qy_crm_customer_info_all_d
+  field_name: is_focuson
+  field_type: filter
+  business_name: 是否重点关注
+  description: "1=重点关注客户，0=否"
+  used_by_metrics: []
+  caliber: ""
+  sample_values: ["0", "1"]
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: true
+  filters: []
+  risk_notes: []
+
+- table_name: dim_user_qy_crm_customer_info_all_d
+  full_table_name: soyoung_dw.dim_user_qy_crm_customer_info_all_d
+  field_name: deleted_at
+  field_type: filter
+  business_name: 删除时间
+  description: 客户记录被软删除的时间，非 NULL 表示已删除
+  used_by_metrics: []
+  caliber: "分析时过滤 deleted_at IS NULL"
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: false
+  filters:
+    - "deleted_at IS NULL"
+  risk_notes:
+    - "不加此过滤会包含已删除的客户记录"
+
+# --- dp 分区 ---
+- table_name: dim_user_qy_crm_customer_info_all_d
+  full_table_name: soyoung_dw.dim_user_qy_crm_customer_info_all_d
+  field_name: dp
+  field_type: partition
+  business_name: 分区字段
+  description: 快照分区
+  used_by_metrics: []
+  caliber: "dp = DATE_SUB(CURRENT_DATE(), 1) 取最新客户快照"
+  sample_values: []
+  enum_values: []
+  is_join_key: false
+  is_metric_field: false
+  is_dimension_field: false
+  filters:
+    - "dp = DATE_SUB(CURRENT_DATE(), 1)"
+  risk_notes:
+    - "客户维表为全量快照，dp 只取最新版本"
+
+
+# =============================================================================
+# 统计
+# =============================================================================
+# 覆盖表: 5 张 (dm_opt_qy_user_summary / dws_opt_qy_core_summary /
+#          dws_opt_qy_gross_margin_stats / dws_opt_qy_tenant_topic /
+#          dim_user_qy_crm_customer_info)
+# 总字段数: ~70 个关键字段
+# 按字段类型分布:
+#   join_key:     7   (user_id, crm_customer_id, tenant_id, customer_id, uid, union_id, product_id)
+#   date:         5   (first_order_date, last_order_date, st_day, stat_date, create_date)
+#   partition:    5   (dp × 5表)
+#   store:        4   (tenant_name, organization_name, tenant_alias_name, sy_hospital_name)
+#   area/city:    4   (area_name, city_name)
+#   user_profile: 6   (membership_level, gender, tag_name_list, profile_tags, masked_mobile)
+#   item:         3   (standard_name, revenue_category, product_standard_name)
+#   channel:      4   (cx_first_channel, channel_name, channel_name_l1)
+#   amount:       10  (exe_income, exe_amount, gross_margin_amt, ware_cost, manual_fee, income 等)
+#   count/measure:7   (exe_cnt, exe_num, exe_user_cnt, total_order_cnt, total_order_use_cnt 等)
+#   filter:       11  (is_new, is_qy, is_open, is_ceshi, customer_is_new, activate_180d_tag 等)

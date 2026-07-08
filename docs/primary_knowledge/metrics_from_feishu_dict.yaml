@@ -1,0 +1,415 @@
+# 指标字典 — 从飞书指标总表提取
+# 来源：https://soyoung.feishu.cn/sheets/AxgVsItPmhqjwatTKjLctxeAnsp
+#   - 原子指标字典 (sheet: 2GzqSC)
+#   - 衍生指标字典 (sheet: 3ZQiZu)
+# 生成时间：2026-07-08
+# 审核状态：待审核 (放在 docs/primary_knowledge/ 供人工复核后合入 knowledge/)
+#
+# 统计摘要：
+#   - 原子指标: 19 个 (A001-A019)
+#   - 衍生指标: 132 个 (D001-D132)
+#   - 业务域覆盖: 核销 / 支付 / 库存
+#   - 维度切片: 新客/老客 / 大师团 / 大单品/常规品 / 获客渠道 / 品项
+#   - 指标类型: 衍生指标(基础) / 复合指标(多指标计算) / 比率类
+#   - 所有指标均附带 SQL 代码和数据源表
+
+# =============================================================================
+# Part 1: 原子指标 (19个)
+# =============================================================================
+atomic_metrics:
+  - id: A001
+    name: 核销gmv
+    english: verify_gmv
+    domain: 核销
+    definition: 统计周期内，连锁业务总核销gmv
+    formula: SUM(exe_amount)
+    data_type: DECIMAL
+    unit: 元
+    source_table: soyoung_dw.dm_opt_qy_user_execution_record_all_d
+    derived_count: 9
+    sql: |
+      SELECT  SUM(exe_amount) 核销gmv
+      FROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d
+      WHERE   dp = DATE_SUB(CURRENT_DATE(),1)
+      AND     is_valid = 1
+
+  - id: A002
+    name: 核销收入
+    english: verify_income
+    domain: 核销
+    definition: 统计周期内，连锁业务总核销收入
+    formula: SUM(exe_income)
+    data_type: DECIMAL
+    unit: 元
+    source_table: soyoung_dw.dm_opt_qy_user_execution_record_all_d
+    derived_count: 9
+    sql: |
+      SELECT  SUM(exe_income) 核销收入
+      FROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d
+      WHERE   dp = DATE_SUB(CURRENT_DATE(),1)
+      AND     is_valid = 1
+
+  - id: A003
+    name: 核销客单价
+    english: verify_avg_price
+    domain: 核销
+    definition: 统计周期内，总核销收入/总核销人次
+    formula: SUM(exe_income) / COUNT(DISTINCT verify_date_id)
+    data_type: DECIMAL
+    unit: 元/人次
+    source_table: soyoung_dw.dm_opt_qy_user_execution_record_all_d
+    derived_count: 10
+    note: ⚠ 原SQL使用verify_date_id统计人次，请确认是否等同于核销人次
+    sql: |
+      SELECT SUM(exe_income)/COUNT(DISTINCT verify_date_id) 核销客单价
+      FROM  soyoung_dw.dm_opt_qy_user_execution_record_all_d
+      WHERE dp = DATE_SUB(CURRENT_DATE(),1)
+      AND is_valid = 1
+
+  - id: A004
+    name: 核销服务点数
+    english: verify_service_points
+    domain: 核销
+    definition: 统计周期内，总核销服务点数
+    formula: SUM(exe_cnt)
+    data_type: INT
+    unit: 个
+    source_table: soyoung_dw.dm_opt_qy_user_execution_record_all_d
+    derived_count: 9
+    sql: |
+      SELECT  SUM(exe_cnt) 核销服务点数
+      FROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d
+      WHERE   dp = DATE_SUB(CURRENT_DATE(),1)
+      AND     is_valid = 1
+
+  - id: A005
+    name: 核销人数
+    english: verify_user_cnt
+    domain: 核销
+    definition: 统计周期内，总核销用户数
+    formula: COUNT(DISTINCT customer_id)
+    data_type: INT
+    unit: 人
+    source_table: soyoung_dw.dm_opt_qy_user_execution_record_all_d
+    derived_count: 0
+    sql: |
+      SELECT COUNT(DISTINCT customer_id) 核销人数
+      FROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d
+      WHERE   dp = DATE_SUB(CURRENT_DATE(),1)
+      AND     is_valid = 1
+
+  - id: A006
+    name: 核销人次
+    english: verify_visit_cnt
+    domain: 核销
+    definition: 统计周期内，总核销人次
+    formula: COUNT(DISTINCT verify_date_id)
+    data_type: INT
+    unit: 人次
+    source_table: soyoung_dw.dm_opt_qy_user_execution_record_all_d
+    derived_count: 12
+    sql: |
+      SELECT  count(DISTINCT verify_date_id) 核销人次
+      FROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d
+      WHERE   dp = DATE_SUB(CURRENT_DATE(),1)
+      AND     is_valid = 1
+
+  - id: A007
+    name: 核销订单数
+    english: verify_order_cnt
+    domain: 核销
+    definition: 统计周期内，总核销订单数
+    formula: COUNT(DISTINCT main_order_id)
+    data_type: INT
+    unit: 单
+    source_table: soyoung_dw.dm_opt_qy_user_execution_record_all_d
+    derived_count: 19
+    sql: |
+      SELECT  count(DISTINCT main_order_id) 核销订单数
+      FROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d
+      WHERE   dp = DATE_SUB(CURRENT_DATE(),1)
+      AND     is_valid = 1
+
+  - id: A008
+    name: 支付gmv
+    english: pay_gmv
+    domain: 支付
+    definition: 统计周期内，总支付gmv(剔除当日退款)
+    formula: SUM(pay_gmv)
+    data_type: DECIMAL
+    unit: 元
+    source_table: soyoung_dw.dm_opt_qy_order_info_all_d
+    derived_count: 4
+    sql: |
+      select sum(pay_gmv) as 支付gmv
+      from soyoung_dw.dm_opt_qy_order_info_all_d
+      WHERE dp = DATE_SUB(CURRENT_DATE(),1)
+      AND is_paydate_cash = 0
+
+  - id: A009
+    name: 支付订单数
+    english: pay_order_cnt
+    domain: 支付
+    definition: 统计周期内，总支付订单数(剔除当日退款)
+    formula: COUNT(DISTINCT main_order_id)
+    data_type: INT
+    unit: 单
+    source_table: soyoung_dw.dm_opt_qy_order_info_all_d
+    derived_count: 6
+    sql: |
+      select count(distinct main_order_id) as 支付订单数
+      from soyoung_dw.dm_opt_qy_order_info_all_d
+      WHERE dp = DATE_SUB(CURRENT_DATE(),1)
+      AND is_paydate_cash = 0
+
+  - id: A010
+    name: 支付人数
+    english: pay_user_cnt
+    domain: 支付
+    definition: 统计周期内，总支付人数(剔除当日退款)
+    formula: COUNT(DISTINCT uid)
+    data_type: INT
+    unit: 人
+    source_table: soyoung_dw.dm_opt_qy_order_info_all_d
+    derived_count: 4
+    sql: |
+      SELECT  COUNT(DISTINCT uid) as 支付人数
+      from soyoung_dw.dm_opt_qy_order_info_all_d
+      WHERE dp = DATE_SUB(CURRENT_DATE(),1)
+      AND is_paydate_cash = 0
+
+  - id: A011
+    name: 支付客单价
+    english: pay_avg_price
+    domain: 支付
+    definition: 统计周期内，总支付GMV/总支付人次(剔除当日退款)
+    formula: SUM(pay_gmv) / COUNT(DISTINCT CONCAT(uid, pay_date))
+    data_type: DECIMAL
+    unit: 元/人次
+    source_table: soyoung_dw.dm_opt_qy_order_info_all_d
+    derived_count: 4
+    sql: |
+      SELECT sum(pay_gmv)/count(distinct concat(uid,pay_date)) as 支付客单价
+      from soyoung_dw.dm_opt_qy_order_info_all_d
+      WHERE dp = DATE_SUB(CURRENT_DATE(),1)
+      AND is_paydate_cash = 0
+
+  - id: A012
+    name: 待核销gmv
+    english: pending_verify_gmv
+    domain: 支付
+    definition: 统计周期内，总待核销gmv
+    formula: SUM(left_gmv)
+    data_type: DECIMAL
+    unit: 元
+    source_table: soyoung_dw.dm_opt_qy_order_info_all_d
+    derived_count: 4
+    sql: |
+      SELECT sum(left_gmv) as 待核销gmv
+      FROM  soyoung_dw.dm_opt_qy_order_info_all_d
+      WHERE dp = DATE_SUB(CURRENT_DATE(),1)
+      AND left_num > 0
+
+  - id: A013
+    name: 待核销服务点
+    english: pending_verify_sp
+    domain: 支付
+    definition: 统计周期内，总待核销服务点
+    formula: SUM(left_num)
+    data_type: INT
+    unit: 个
+    source_table: soyoung_dw.dm_opt_qy_order_info_all_d
+    derived_count: 4
+    sql: |
+      SELECT sum(left_num) as 待核销服务点
+      FROM  soyoung_dw.dm_opt_qy_order_info_all_d
+      WHERE dp = DATE_SUB(CURRENT_DATE(),1)
+      AND left_num > 0
+
+  - id: A014
+    name: 待核销订单数
+    english: pending_verify_order_cnt
+    domain: 支付
+    definition: 统计周期内，总待核销订单数
+    formula: COUNT(DISTINCT main_order_id)
+    data_type: INT
+    unit: 单
+    source_table: soyoung_dw.dm_opt_qy_order_info_all_d
+    derived_count: 0
+    sql: |
+      SELECT COUNT(DISTINCT main_order_id) as 待核销订单数
+      FROM  soyoung_dw.dm_opt_qy_order_info_all_d
+      WHERE dp = DATE_SUB(CURRENT_DATE(),1)
+      AND left_num > 0
+
+  - id: A015
+    name: 升单订单数
+    english: upsell_order_cnt
+    domain: 核销
+    definition: 统计周期内，升单的总订单数
+    formula: COUNT(DISTINCT main_order_id)
+    data_type: INT
+    unit: 单
+    source_table: soyoung_dw.dm_opt_qy_user_execution_record_all_d
+    derived_count: 9
+    sql: |
+      SELECT COUNT(DISTINCT main_order_id) as 升单订单数
+      FROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d
+      WHERE   dp = DATE_SUB(current_date(),1)
+      AND     is_up = 1
+      AND     is_valid = 1
+
+  - id: A016
+    name: 升单人数
+    english: upsell_user_cnt
+    domain: 核销
+    definition: 统计周期内，升单的总用户数
+    formula: COUNT(DISTINCT customer_id)
+    data_type: INT
+    unit: 人
+    source_table: soyoung_dw.dm_opt_qy_user_execution_record_all_d
+    derived_count: 9
+    sql: |
+      SELECT COUNT(DISTINCT customer_id) AS 升单人数
+      FROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d
+      WHERE   dp = DATE_SUB(current_date(),1)
+      AND     is_up = 1
+      AND     is_valid = 1
+
+  - id: A017
+    name: 升单人次
+    english: upsell_visit_cnt
+    domain: 核销
+    definition: 统计周期内，升单的总人次
+    formula: COUNT(DISTINCT verify_date_id)
+    data_type: INT
+    unit: 人次
+    source_table: soyoung_dw.dm_opt_qy_user_execution_record_all_d
+    derived_count: 9
+    sql: |
+      SELECT  COUNT(DISTINCT verify_date_id) AS 升单人次
+      FROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d
+      WHERE   dp = DATE_SUB(current_date(),1)
+      AND     is_up = 1
+      AND     is_valid = 1
+
+  - id: A018
+    name: 库存数
+    english: inventory_cnt
+    domain: 库存
+    definition: 截止至今，总库存数量
+    formula: SUM(warehouse_stock_num_td)
+    data_type: INT
+    unit: 件
+    source_table: soyoung_dw.dws_qy_sc_ware_stock_stats_all_d
+    derived_count: 0
+    sql: |
+      SELECT ware_name,
+             ROUND(SUM(warehouse_stock_num_td), 0) AS 库存数
+      FROM soyoung_dw.dws_qy_sc_ware_stock_stats_all_d
+      WHERE pt = DATE_SUB(CURRENT_DATE(), 1)
+      GROUP BY ware_name
+
+  - id: A019
+    name: 相控微针升单率
+    english: micro_needle_upsell_rate
+    domain: 核销
+    definition: 统计周期内，原单为相控微针且当日发生升单的核销人次/相控微针原单核销人次
+    formula: 升单人次 / 原单核销人次
+    data_type: DECIMAL
+    unit: "%"
+    source_table: soyoung_dw.dm_opt_qy_user_execution_record_all_d
+    derived_count: 0
+    sql: |
+      SELECT a.standard_name,
+             COUNT(DISTINCT IF(b.verify_date_id IS NOT NULL,a.verify_date_id,NULL))
+             / COUNT(DISTINCT a.verify_date_id) 升单率
+      FROM (
+          SELECT standard_name, verify_date_id
+          FROM soyoung_dw.dm_opt_qy_user_execution_record_all_d
+          WHERE dp = DATE_SUB(current_date(),1)
+          AND is_valid = 1
+          AND standard_name REGEXP '相控微针'
+          AND ord_up_type_name = '原单'
+      ) a
+      LEFT JOIN (
+          SELECT standard_name, verify_date_id
+          FROM soyoung_dw.dm_opt_qy_user_execution_record_all_d
+          WHERE dp = DATE_SUB(current_date(),1)
+          AND ord_up_type_name = '升单'
+          AND is_valid = 1
+      ) b ON a.verify_date_id = b.verify_date_id
+      GROUP BY a.standard_name
+
+# =============================================================================
+# Part 2: 衍生指标汇总 (132个)
+# =============================================================================
+derived_metrics_summary:
+  description: >
+    衍生指标 = 原子指标 × 维度切片。对于核销域的每个原子指标（gmv/收入/服务点/人数/人次/订单数/客单价），
+    按以下维度展开形成衍生指标矩阵：
+      1. 新客/老客 — is_new = 1 / is_new = 0
+      2. 大师团 — revenue_category = '大师团'
+      3. 大单品/常规品 — revenue_category = '大单品' / '常规品'
+      4. 获客渠道 — cx_first_channel = '私域' / '公域' / '老带新'
+      5. 品项 — standard_name REGEXP 'BBL HERO' / '奇迹童颜' / '新一代热玛吉' 等
+
+    支付域同理，对应维度为 is_pay_new / revenue_category / standard_name。
+    升单域在此基础上叠加 is_up = 1 过滤。
+
+  dimension_slicing:
+    - dimension: 新客/老客
+      filter_nuclear: is_new = 1 (新客) / is_new = 0 (老客)
+      filter_pay: is_pay_new = 1 (新客) / is_pay_new = 0 (老客)
+      coverage: 覆盖核销gmv/收入/服务点/人数/人次/订单数/客单价/升单各指标
+
+    - dimension: 大师团/大单品/常规品
+      filter: revenue_category = '大师团' / '大单品' / '常规品'
+      coverage: 覆盖核销gmv/收入/服务点/人数/人次/订单数/客单价/升单各指标
+
+    - dimension: 获客渠道
+      filter: cx_first_channel = '私域' / '公域' / '老带新'
+      coverage: 覆盖核销gmv/收入/服务点/人数/人次/订单数/客单价/升单各指标
+
+    - dimension: 品项
+      filter: standard_name REGEXP 'BBL HERO' / '奇迹童颜' / '新一代热玛吉' / '爱拉丝提' / '相控微针'
+      coverage: 覆盖核销gmv/收入/服务点/人数/人次/订单数/客单价/升单/支付gmv/支付人数等
+
+  special_composite_metrics:
+    - id: D130
+      name: 相控微针升单率
+      type: 复合指标
+      formula: 原单为相控微针且当日升单核销人次 / 相控微针原单核销人次
+
+    - id: D131
+      name: BBL HERO加购率
+      type: 复合指标
+      formula: BBL HERO升单核销人次 / BBL HERO总核销人次
+
+    - id: D132
+      name: BBL HERO渗透率
+      type: 复合指标
+      formula: 90日内核销过BBL HERO的用户数 / 总核销用户数
+      note: 使用 product_name 字段（非 standard_name）
+
+  dashboard_mapping:
+    - dashboard: 用户KPI看板
+      metrics: [D010新客核销收入, D011老客核销收入, D039老客核销人次]
+    - dashboard: 用户整体看板
+      metrics: [D010, D038]
+    - dashboard: 连锁品项总览
+      metrics: [D012, D014]
+    - dashboard: 连锁品项分析
+      metrics: [D013, D041, D054, D070, D089, D093, D101]
+    - dashboard: 信息流网咨看板
+      metrics: [D028]
+
+  full_list_range:
+    atomic: "A001-A019 (共19个，含SQL)"
+    derived: "D001-D132 (共132个，含维度切片+SQL+数据源表+看板映射)"
+    total: "151 个指标条目，全部可在飞书来源表中检索"
+
+  source_table_coverage:
+    - soyoung_dw.dm_opt_qy_user_execution_record_all_d  # 核销主表
+    - soyoung_dw.dm_opt_qy_order_info_all_d              # 支付主表
+    - soyoung_dw.dws_qy_sc_ware_stock_stats_all_d        # 库存表

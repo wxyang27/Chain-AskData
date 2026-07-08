@@ -31,9 +31,9 @@ class SchemaGraph:
     @property
     def metric_ids(self) -> list[str]:
         return [
-            str(metric.get("canonical"))
+            str(metric.get("metric_id") or metric.get("canonical"))
             for metric in self.metrics
-            if metric.get("canonical")
+            if metric.get("metric_id") or metric.get("canonical")
         ]
 
     def to_dict(self) -> dict[str, Any]:

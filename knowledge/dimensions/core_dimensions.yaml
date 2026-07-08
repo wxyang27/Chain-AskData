@@ -1,0 +1,487 @@
+# 维度字典（扩展版） — 基于飞书维度字典 + ODPS DDL 真实字段名对齐
+# 来源：
+#   - 飞书维度字典: https://soyoung.feishu.cn/sheets/AxgVsItPmhqjwatTKjLctxeAnsp?sheet=5TVJkK
+#   - DDL 验证: pyodps 读取 soyoung_dw 项目 5 张优先表 DDL
+#   - chain-nl-query: references/04-dimensions.md 字段名差异表
+# 生成时间：2026-07-08
+# 维护说明：
+#   - DIM001-DIM010 = 飞书原始维度，已核对 DDL 字段名
+#   - DIM011+ = 飞书维度字典缺失但 DDL 中存在的高频维度
+#   - real_field = DDL 中真实存在的字段名（写 SQL 时用这个）
+#   - dict_field = 飞书字典登记的字段名（语义名，部分与 DDL 不一致）
+#   - 新增维度建议合入飞书维度字典（标记 [待同步飞书]）
+
+dimensions:
+
+  # ============================================================
+  # DIM001-DIM010: 飞书原始维度（已核对 DDL 字段名）
+  # ============================================================
+
+  - dimension_id: DIM001
+    name: 新客/老客
+    english_name: is_new
+    description: 用户是否为首次核销
+    value_range:
+      - "1 = 新客"
+      - "0 = 老客"
+    real_field: is_new
+    dict_field: is_new
+    field_name_ok: true
+    source_tables:
+      - soyoung_dw.dm_opt_qy_user_execution_record_all_d
+    affected_metrics:
+      - 核销GMV
+      - 核销收入
+      - 核销服务点
+      - 核销人数
+      - 核销人次
+      - 核销订单数
+      - 核销客单价
+      - 升单
+    risk_notes:
+      - "核销域新客用 is_new，支付域新客用 is_pay_new，二者不可混用"
+      - "CRM 维表 is_new = 1/2（1=新 2=老），不是 0/1"
+
+  - dimension_id: DIM002
+    name: 大师团
+    english_name: revenue_category_master
+    description: 是否为大师团品类的订单/核销
+    value_range:
+      - "大师团"
+      - "大单品"
+      - "常规品"
+    real_field: revenue_category
+    dict_field: is_master
+    field_name_ok: false
+    discrepancy_detail: 飞书登记为 is_master 但 DDL 真实字段为 revenue_category = '大师团'。is_master 仅在某些汇总表中存在
+    source_tables:
+      - soyoung_dw.dm_opt_qy_user_execution_record_all_d
+      - soyoung_dw.dws_opt_qy_core_summary_all_d
+      - soyoung_dw.dws_opt_qy_gross_margin_stats_all_d
+    affected_metrics:
+      - 大师团核销GMV/收入/服务点/人数/人次/订单数/客单价
+    risk_notes:
+      - "不要在 ORDER BY 时直接用 is_master 而忽略 revenue_category"
+      - "大师团/非大师团口径需显式声明：含/不含大师团"
+
+  - dimension_id: DIM003
+    name: 收入分类
+    english_name: revenue_category
+    description: 品项的收入分类
+    value_range:
+      - 大单品
+      - 常规品
+      - 大师团
+    real_field: revenue_category
+    dict_field: income_type
+    field_name_ok: false
+    discrepancy_detail: 飞书登记为 income_type 但 DDL 不存在此字段，所有表的真实字段名为 revenue_category
+    source_tables:
+      - soyoung_dw.dm_opt_qy_user_execution_record_all_d
+      - soyoung_dw.dws_opt_qy_core_summary_all_d
+      - soyoung_dw.dws_opt_qy_gross_margin_stats_all_d
+      - soyoung_dw.dim_product_info
+    affected_metrics:
+      - 核销GMV/收入/服务点/人数/人次/订单数/客单价/升单（按收入分类拆分）
+    risk_notes:
+      - "DDL 真实字段是 revenue_category，不是 income_type"
+      - "与 DIM002 使用同一个真实字段 revenue_category"
+
+  - dimension_id: DIM004
+    name: 获客渠道
+    english_name: cx_first_channel
+    description: 用户的一级来源渠道
+    value_range:
+      - 私域
+      - 公域
+      - 老带新
+    real_field: cx_first_channel
+    dict_field: channel_type
+    field_name_ok: false
+    discrepancy_detail: 飞书登记为 channel_type 但 DDL 不存在此字段，真实字段为 cx_first_channel
+    source_tables:
+      - soyoung_dw.dm_opt_qy_user_execution_record_all_d
+      - soyoung_dw.dm_opt_qy_user_summary_info_all_d
+      - soyoung_dw.dws_opt_qy_gross_margin_stats_all_d
+    affected_metrics:
+      - 核销GMV/收入/服务点/人数/人次/订单数/客单价/升单（按渠道拆分）
+    risk_notes:
+      - "cx_first_channel 是真实字段，channel_type 不存在于任何表中"
+      - "用户维表的 cx_first_channel 反映注册时渠道，核销表的反映核销时渠道"
+
+  - dimension_id: DIM005
+    name: 品项名称
+    english_name: standard_item_name
+    description: 品项的标准名称（如 BBL HERO）
+    value_range:
+      - 自由文本
+      - 支持 REGEXP 模糊匹配
+    real_field: standard_name
+    dict_field: product_name
+    field_name_ok: false
+    discrepancy_detail: 飞书登记为 product_name，但一般品项查询使用 standard_name。product_name 仅在渗透率口径中使用（D132 BBL HERO 渗透率 SQL）
+    source_tables:
+      - soyoung_dw.dm_opt_qy_user_execution_record_all_d (standard_name)
+      - soyoung_dw.dws_opt_qy_core_summary_all_d (product_standard_name)
+      - soyoung_dw.dws_opt_qy_gross_margin_stats_all_d (standard_name)
+      - soyoung_dw.dim_product_info (standard_name)
+    affected_metrics:
+      - 品项核销收入/服务点/人数/人次/订单数/客单价
+      - 品项渗透率（product_name）
+      - 品项加购率（standard_name）
+      - 品项升单率（standard_name）
+    risk_notes:
+      - "一般查询用 standard_name REGEXP，渗透率用 product_name REGEXP"
+      - "dim_product_info.standard_name 用于统一品项名称，多表 standard_name 应对齐"
+
+  - dimension_id: DIM006
+    name: 订单金额(0元单)
+    english_name: order_amount_zero
+    description: 区分 0 元单与非 0 元单
+    value_range:
+      - 0元
+      - 非0元
+    real_field: "核销: exe_income = 0 / 支付: pay_gmv = 0"
+    dict_field: exe_amount / pay_amount
+    field_name_ok: false
+    discrepancy_detail: 飞书登记为 exe_amount/pay_amount，但 0 元单判定应使用 exe_income=0(核销)或 pay_gmv=0(支付)，而非金额绝对值
+    source_tables:
+      - soyoung_dw.dm_opt_qy_user_execution_record_all_d
+      - soyoung_dw.dm_opt_qy_order_info_all_d
+    affected_metrics:
+      - 0元核销订单数
+      - 0元支付订单数
+      - 0元单占比
+    risk_notes:
+      - "0元单判定使用 exe_income = 0（核销）或 pay_gmv = 0（支付）"
+      - "不要用 exe_amount 判定 0 元单"
+
+  - dimension_id: DIM007
+    name: 支付渠道
+    english_name: pay_channel
+    description: 线上支付 vs 线下支付
+    value_range:
+      - 线上
+      - 线下
+    real_field: channel
+    dict_field: channel
+    field_name_ok: true
+    source_tables:
+      - soyoung_dw.dwd_ord_order_qzy_fact_all_d
+    affected_metrics:
+      - 线上支付GMV
+      - 线下支付GMV
+    risk_notes:
+      - "channel 字段的具体枚举值需与数据源确认"
+
+  - dimension_id: DIM008
+    name: 业务领域
+    english_name: biz_domain
+    description: 连锁 / 医美 / 好物
+    value_range:
+      - 连锁
+      - 医美
+      - 好物
+    real_field: business_type
+    dict_field: business_type
+    field_name_ok: true
+    source_tables:
+      - soyoung_dw.dwd_ord_order_qzy_fact_all_d
+    affected_metrics:
+      - 用户画像支付字段
+    risk_notes:
+      - "业务领域分类可能随业务调整"
+
+  - dimension_id: DIM009
+    name: 时间粒度
+    english_name: time_grain
+    description: 统计周期的时间粒度
+    value_range:
+      - 日
+      - 周
+      - 月
+      - 季
+      - 90天滚动
+    real_field: "dp(分区) / executed_date(核销日) / pay_date(支付日)"
+    dict_field: dp / verify_date
+    field_name_ok: false
+    discrepancy_detail: 飞书登记为 verify_date，但 DDL 真实字段是 executed_date
+    source_tables:
+      - 多表
+    affected_metrics:
+      - 所有指标
+    risk_notes:
+      - "dp 只锁最新快照版本，不用于业务日期区间过滤"
+      - "核销域用 executed_date，支付域用 pay_date"
+      - "不要在 _all_d 全量快照表上只过滤 dp 而不加业务日期过滤"
+
+  - dimension_id: DIM010
+    name: 门店
+    english_name: store
+    description: 连锁门店维度
+    value_range:
+      - 门店ID/名称
+    real_field: tenant_id
+    dict_field: store_id / store_name
+    field_name_ok: false
+    discrepancy_detail: 飞书登记为 store_id/store_name，但 DDL 真实主键为 tenant_id，标准名称为 sy_hospital_name 或 tenant_name
+    source_tables:
+      - soyoung_dw.dim_qy_tenant_info_all_d
+      - soyoung_dw.dm_opt_qy_user_execution_record_all_d
+      - soyoung_dw.dm_opt_qy_order_info_all_d
+      - soyoung_dw.dws_opt_qy_core_summary_all_d
+      - soyoung_dw.dws_opt_qy_tenant_topic_d
+      - soyoung_dw.dws_opt_qy_gross_margin_stats_all_d
+    affected_metrics:
+      - 门店收入排行
+      - 门店待核销排行
+      - 门店经营画像
+      - 门店毛利
+    risk_notes:
+      - "门店主键统一使用 tenant_id，不要用 hospital_id 或 sy_hospital_id"
+      - "门店名称推荐使用 sy_hospital_name (dim_qy_tenant_info_all_d)，备选 tenant_name"
+      - "tenant_name 可能与别名 tenant_alias_name 不同"
+
+
+  # ============================================================
+  # DIM011+: 飞书维度字典缺失的高频维度（基于 DDL 提取）
+  # ============================================================
+
+  - dimension_id: DIM011
+    name: 城市
+    english_name: city
+    description: 门店所在城市
+    value_range:
+      - 城市名称列表
+    real_field: city_name
+    dict_field: ~
+    field_name_ok: true
+    source_tables:
+      - soyoung_dw.dim_qy_tenant_info_all_d
+      - soyoung_dw.dws_opt_qy_core_summary_all_d
+      - soyoung_dw.dws_opt_qy_gross_margin_stats_all_d
+      - soyoung_dw.dws_opt_qy_tenant_topic_d
+      - soyoung_dw.dm_opt_qy_user_summary_info_all_d
+      - soyoung_dw.dim_user_qy_crm_customer_info_all_d
+    affected_metrics:
+      - 城市排行
+      - 城市核销收入/GMV
+      - 城市场均对比
+    risk_notes:
+      - "汇总表的 city_name 为核销发生城市，CRM 维表的 city_name 为注册城市，不可混用"
+      - "城市名可能重复（如北京有多个区），建议结合 area_name 使用"
+    sync_status: 待同步飞书
+
+  - dimension_id: DIM012
+    name: 大区
+    english_name: area
+    description: 门店所属大区（华北/华南/华中/华东）
+    value_range:
+      - 华北
+      - 华南
+      - 华中
+      - 华东
+    real_field: area_name
+    dict_field: ~
+    field_name_ok: true
+    source_tables:
+      - soyoung_dw.dim_qy_tenant_info_all_d
+      - soyoung_dw.dws_opt_qy_core_summary_all_d
+      - soyoung_dw.dws_opt_qy_gross_margin_stats_all_d
+      - soyoung_dw.dm_opt_qy_user_summary_info_all_d
+    affected_metrics:
+      - 大区排行
+      - 大区核销收入/GMV
+      - 大区毛利率
+    risk_notes:
+      - "大区枚举可能微调（新增/合并），跨期分析需对齐"
+      - "部分表 area_name 使用简称，部分使用全称，需核对"
+    sync_status: 待同步飞书
+
+  - dimension_id: DIM013
+    name: 会员等级
+    english_name: membership_level
+    description: 用户会员等级（L1-L8）
+    value_range:
+      - "L1-L3 入门"
+      - "L4-L5 成长"
+      - "L6-L7 核心"
+      - "L8 顶级"
+    real_field: membership_level
+    dict_field: ~
+    field_name_ok: true
+    source_tables:
+      - soyoung_dw.dm_opt_qy_user_summary_info_all_d
+      - soyoung_dw.dim_user_qy_crm_customer_info_all_d
+    affected_metrics:
+      - 会员分层支付GMV
+      - 会员分层核销收入
+      - L3+高价值用户筛选
+    risk_notes:
+      - "CRM 维表的 membership_level 可能是 string ('L1') 或 bigint (1)，需检查实际数据类型"
+      - "membership_level 为当前时点快照，历史等级不可追溯"
+    sync_status: 待同步飞书
+
+  - dimension_id: DIM014
+    name: 支付新客/老客
+    english_name: is_pay_new
+    description: 支付域的新客判定
+    value_range:
+      - "1 = 新客"
+      - "0 = 老客"
+    real_field: is_pay_new
+    dict_field: ~
+    field_name_ok: true
+    source_tables:
+      - soyoung_dw.dm_opt_qy_order_info_all_d
+      - soyoung_dw.dm_opt_qy_user_summary_info_all_d
+    affected_metrics:
+      - 新客支付GMV
+      - 新客支付人数
+      - 新客支付客单价
+      - 新客待核销
+    risk_notes:
+      - "is_pay_new（支付域新客）≠ is_new（核销域新客），不可混用"
+      - "支付客单价需同时过滤 is_paydate_cash = 0 和 is_pay_new = 1"
+    sync_status: 待同步飞书
+
+  - dimension_id: DIM015
+    name: 升单
+    english_name: is_up
+    description: 核销记录是否为升单
+    value_range:
+      - "1 = 升单"
+      - "0 = 非升单"
+    real_field: is_up
+    dict_field: ~
+    field_name_ok: true
+    source_tables:
+      - soyoung_dw.dm_opt_qy_user_execution_record_all_d
+    affected_metrics:
+      - 升单收入
+      - 升单人数
+      - 升单人次
+      - 升单订单数
+      - 升单率
+    risk_notes:
+      - "is_up = 1 锁定升单记录，同时需要 is_valid = 1"
+      - "升单率 = 升单核销人次 / 原单核销人次，需要原单和升单两条记录关联"
+    sync_status: 待同步飞书
+
+  - dimension_id: DIM016
+    name: 流失/活跃状态
+    english_name: activate_180d_tag
+    description: 用户近180天是否活跃
+    value_range:
+      - "1 = 活跃（末次核销在180天内）"
+      - "0 = 流失（末次核销超过180天）"
+    real_field: activate_180d_tag
+    dict_field: ~
+    field_name_ok: true
+    source_tables:
+      - soyoung_dw.dm_opt_qy_user_summary_info_all_d
+      - soyoung_dw.dws_opt_qy_core_summary_all_d
+    affected_metrics:
+      - 活跃用户数
+      - 流失用户数
+      - 用户召回分析
+    risk_notes:
+      - "180天阈值可能随业务调整"
+    sync_status: 待同步飞书
+
+  - dimension_id: DIM017
+    name: 医生
+    english_name: doctor
+    description: 执行医生维度
+    value_range:
+      - 医生ID/名称
+    real_field: doctor_id / doctor_name
+    dict_field: ~
+    field_name_ok: true
+    source_tables:
+      - soyoung_dw.dws_opt_qy_core_summary_all_d
+    affected_metrics:
+      - 医生产能
+      - 医生人效
+    risk_notes:
+      - "医生关联需确认 doctor_id 是否在所有核销记录上完整"
+    sync_status: 待同步飞书
+
+  - dimension_id: DIM018
+    name: 咨询师
+    english_name: consultant
+    description: 咨询师维度
+    value_range:
+      - 咨询师ID/名称
+    real_field: consultant_id / consultant_name
+    dict_field: ~
+    field_name_ok: true
+    source_tables:
+      - soyoung_dw.dws_opt_qy_core_summary_all_d
+      - soyoung_dw.dm_opt_qy_user_summary_info_all_d
+      - soyoung_dw.dim_user_qy_crm_customer_info_all_d
+    affected_metrics:
+      - 咨询师产能
+      - 咨询转化率
+    risk_notes:
+      - "咨询师关联需确认 consultant_id 是否在所有核销记录上完整"
+    sync_status: 待同步飞书
+
+
+# =============================================================================
+# 字段名对照速查表（飞书字典名 → 真实 DDL 字段名）
+# =============================================================================
+field_name_mapping:
+  - dict_name: is_master
+    real_name: revenue_category
+    usage: "WHERE revenue_category = '大师团'"
+    notes: 飞书 DIM002 登记为 is_master
+
+  - dict_name: income_type
+    real_name: revenue_category
+    usage: "WHERE revenue_category IN ('大单品', '常规品', '大师团')"
+    notes: 飞书 DIM003 登记为 income_type，但 DDL 中不存在此字段
+
+  - dict_name: channel_type
+    real_name: cx_first_channel
+    usage: "WHERE cx_first_channel IN ('私域', '公域', '老带新')"
+    notes: 飞书 DIM004 登记为 channel_type，但 DDL 中不存在此字段
+
+  - dict_name: product_name
+    real_name: standard_name
+    usage: "WHERE standard_name REGEXP '<品项关键词>'"
+    notes: 飞书 DIM005 登记为 product_name，一般查询用 standard_name；product_name 仅在渗透率场景使用
+
+  - dict_name: verify_date
+    real_name: executed_date
+    usage: "WHERE executed_date BETWEEN ... AND ..."
+    notes: 飞书 DIM009 登记为 verify_date，DDL 真实字段为 executed_date
+
+  - dict_name: store_id
+    real_name: tenant_id
+    usage: "JOIN dim_qy_tenant_info_all_d ON tenant_id"
+    notes: 飞书 DIM010 登记为 store_id，DDL 真实主键为 tenant_id
+
+  - dict_name: store_name
+    real_name: sy_hospital_name
+    usage: "选取门店名称用 sy_hospital_name，备选 tenant_name"
+    notes: 飞书 DIM010 登记为 store_name，DDL 真实字段为 sy_hospital_name 或 tenant_name
+
+
+# =============================================================================
+# 统计摘要
+# =============================================================================
+summary:
+  total_dimensions: 18
+  from_feishu_dict: 10
+  from_ddl_extension: 8
+  field_name_discrepancies: 7
+  sync_to_feishu_pending: 8
+  coverage:
+    user_dimensions: [新客/老客, 会员等级, 支付新客/老客, 流失/活跃]
+    store_dimensions: [门店, 城市, 大区]
+    product_dimensions: [品项, 收入分类, 大师团]
+    channel_dimensions: [获客渠道, 支付渠道]
+    order_dimensions: [0元单, 升单, 业务领域]
+    time_dimensions: [时间粒度]
+    staff_dimensions: [医生, 咨询师]

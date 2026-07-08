@@ -1,0 +1,1352 @@
+[
+  {
+    "field_id": "dim_buried_point_info_all_d.page_id",
+    "database_name": "soyoung_dw",
+    "table_name": "dim_buried_point_info_all_d",
+    "field_name": "page_id",
+    "field_description": "埋点页面标识，与日志表中的 curr_page_id 对应",
+    "table_description": "",
+    "vector_text": "字段 page_id 业务含义 页面ID 字段说明 埋点页面标识，与日志表中的 curr_page_id 对应 口径 与 dwd_md_app_log_nocheat.curr_page_id 或 dws_md_app_page_summary.curr_page_id 关联获取页面中文名 过滤 []",
+    "source_kind": "feishu_prd_yaml"
+  },
+  {
+    "field_id": "dim_buried_point_info_all_d.page_name",
+    "database_name": "soyoung_dw",
+    "table_name": "dim_buried_point_info_all_d",
+    "field_name": "page_name",
+    "field_description": "页面的中文名称，如\"首页\"\"项目页面\"\"商详页面\"等",
+    "table_description": "",
+    "vector_text": "字段 page_name 业务含义 页面名称 字段说明 页面的中文名称，如\"首页\"\"项目页面\"\"商详页面\"等 口径 用于将 page_id 翻译为可读的页面名称 过滤 []",
+    "source_kind": "feishu_prd_yaml"
+  },
+  {
+    "field_id": "dim_date_info.date",
+    "database_name": "soyoung_dw",
+    "table_name": "dim_date_info",
+    "field_name": "date",
+    "field_description": "标准日期字段，用于日期补全与时间维度关联",
+    "table_description": "",
+    "vector_text": "字段 date 业务含义 日期 字段说明 标准日期字段，用于日期补全与时间维度关联 口径 用于 LEFT JOIN 补全缺失日期，生成连续日期的数据序列 过滤 []",
+    "source_kind": "feishu_prd_yaml"
+  },
+  {
+    "field_id": "dim_date_info.year_week",
+    "database_name": "soyoung_dw",
+    "table_name": "dim_date_info",
+    "field_name": "year_week",
+    "field_description": "年份+周数格式，如\"2026年第27周\"",
+    "table_description": "",
+    "vector_text": "字段 year_week 业务含义 年周 字段说明 年份+周数格式，如\"2026年第27周\" 口径 用于周维度聚合，格式为'YYYY年第WW周'，可通过 REPLACE 转换为 ISO 周格式 过滤 []",
+    "source_kind": "feishu_prd_yaml"
+  },
+  {
+    "field_id": "dim_device_market_chnl_info.app_id",
+    "database_name": "soyoung_dw",
+    "table_name": "dim_device_market_chnl_info",
+    "field_name": "app_id",
+    "field_description": "APP 范围过滤",
+    "table_description": "",
+    "vector_text": "字段 app_id 业务含义 应用ID 字段说明 APP 范围过滤 口径 过滤 app_id IN (131, 132) 过滤 ['app_id IN (131, 132)']",
+    "source_kind": "feishu_prd_yaml"
+  },
+  {
+    "field_id": "dim_device_market_chnl_info.device_id",
+    "database_name": "soyoung_dw",
+    "table_name": "dim_device_market_chnl_info",
+    "field_name": "device_id",
+    "field_description": "设备唯一标识，用于关联设备级激活渠道信息",
+    "table_description": "",
+    "vector_text": "字段 device_id 业务含义 设备ID 字段说明 设备唯一标识，用于关联设备级激活渠道信息 口径 与 dwd_md_app_log_nocheat 等表通过 device_id 关联 过滤 ['app_id IN (131, 132)']",
+    "source_kind": "feishu_prd_yaml"
+  },
+  {
+    "field_id": "dim_product_info.item_product_id",
+    "database_name": "soyoung_dw",
+    "table_name": "dim_product_info",
+    "field_name": "item_product_id",
+    "field_description": "品项口径键",
+    "table_description": "",
+    "vector_text": "字段 item_product_id 业务含义 品项口径键 字段说明 品项口径键 口径 品项口径统计优先使用 item_product_id 作为品项口径键。 过滤 []",
+    "source_kind": "core_fields_yaml"
+  },
+  {
+    "field_id": "dim_product_info.revenue_category",
+    "database_name": "soyoung_dw",
+    "table_name": "dim_product_info",
+    "field_name": "revenue_category",
+    "field_description": "品项收入分类",
+    "table_description": "",
+    "vector_text": "字段 revenue_category 业务含义 品项收入分类 字段说明 品项收入分类 口径 品项维表中的收入分类 revenue_category 可作为分类补充来源。 过滤 [\"revenue_category IN ('大单品','常规品','大师团')\"]",
+    "source_kind": "core_fields_yaml"
+  },
+  {
+    "field_id": "dim_product_info.standard_name",
+    "database_name": "soyoung_dw",
+    "table_name": "dim_product_info",
+    "field_name": "standard_name",
+    "field_description": "品项标准名称",
+    "table_description": "",
+    "vector_text": "字段 standard_name 业务含义 品项标准名称 字段说明 品项标准名称 口径 品项维表中的 standard_name 可用于统一品项名称。 过滤 [\"standard_name REGEXP '<品项关键词>'\"]",
+    "source_kind": "core_fields_yaml"
+  },
+  {
+    "field_id": "dim_qy_tenant_info_all_d.area_name",
+    "database_name": "soyoung_dw",
+    "table_name": "dim_qy_tenant_info_all_d",
+    "field_name": "area_name",
+    "field_description": "大区名称",
+    "table_description": "",
+    "vector_text": "字段 area_name 业务含义 大区名称 字段说明 大区名称 口径 大区名称使用 area_name，典型值为华北/华南/华中/华东大区。 过滤 ['dp = DATE_SUB(CURRENT_DATE(),1)']",
+    "source_kind": "core_fields_yaml"
+  },
+  {
+    "field_id": "dim_qy_tenant_info_all_d.city_name",
+    "database_name": "soyoung_dw",
+    "table_name": "dim_qy_tenant_info_all_d",
+    "field_name": "city_name",
+    "field_description": "城市名称",
+    "table_description": "",
+    "vector_text": "字段 city_name 业务含义 城市名称 字段说明 城市名称 口径 城市名称使用 city_name，典型值为北京市、武汉市、杭州市。 过滤 ['dp = DATE_SUB(CURRENT_DATE(),1)']",
+    "source_kind": "core_fields_yaml"
+  },
+  {
+    "field_id": "dim_qy_tenant_info_all_d.sy_hospital_name",
+    "database_name": "soyoung_dw",
+    "table_name": "dim_qy_tenant_info_all_d",
+    "field_name": "sy_hospital_name",
+    "field_description": "门店名称",
+    "table_description": "",
+    "vector_text": "字段 sy_hospital_name 业务含义 门店名称 字段说明 门店名称 口径 门店名称通常使用 sy_hospital_name，tenant_name 作为备选。 过滤 ['dp = DATE_SUB(CURRENT_DATE(),1)']",
+    "source_kind": "core_fields_yaml"
+  },
+  {
+    "field_id": "dim_qy_tenant_info_all_d.tenant_id",
+    "database_name": "soyoung_dw",
+    "table_name": "dim_qy_tenant_info_all_d",
+    "field_name": "tenant_id",
+    "field_description": "门店序号",
+    "table_description": "",
+    "vector_text": "字段 tenant_id 业务含义 门店序号 字段说明 门店序号 口径 门店序号使用 tenant_id，门店维表与事实表按 tenant_id 关联。 过滤 ['dp = DATE_SUB(CURRENT_DATE(),1)']",
+    "source_kind": "core_fields_yaml"
+  },
+  {
+    "field_id": "dim_user_qy_crm_customer_info_all_d.channel_name",
+    "database_name": "soyoung_dw",
+    "table_name": "dim_user_qy_crm_customer_info_all_d",
+    "field_name": "channel_name",
+    "field_description": "CRM 系统中的客户来源渠道名称",
+    "table_description": "",
+    "vector_text": "字段 channel_name 业务含义 CRM一级渠道 字段说明 CRM 系统中的客户来源渠道名称 口径  过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dim_user_qy_crm_customer_info_all_d.city_name",
+    "database_name": "soyoung_dw",
+    "table_name": "dim_user_qy_crm_customer_info_all_d",
+    "field_name": "city_name",
+    "field_description": "CRM 登记的客户所在城市",
+    "table_description": "",
+    "vector_text": "字段 city_name 业务含义 客户城市 字段说明 CRM 登记的客户所在城市 口径 此城市来自 CRM 档案，非核销发生城市 过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dim_user_qy_crm_customer_info_all_d.crm_customer_id",
+    "database_name": "soyoung_dw",
+    "table_name": "dim_user_qy_crm_customer_info_all_d",
+    "field_name": "crm_customer_id",
+    "field_description": "CRM 系统中的客户唯一标识",
+    "table_description": "",
+    "vector_text": "字段 crm_customer_id 业务含义 CRM客户ID 字段说明 CRM 系统中的客户唯一标识 口径 与 dm_opt_qy_user_summary_info_all_d.crm_customer_id 关联获取用户画像 过滤 ['dp = DATE_SUB(CURRENT_DATE()', '1)']",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dim_user_qy_crm_customer_info_all_d.cx_first_channel",
+    "database_name": "soyoung_dw",
+    "table_name": "dim_user_qy_crm_customer_info_all_d",
+    "field_name": "cx_first_channel",
+    "field_description": "用户获客的一级渠道",
+    "table_description": "",
+    "vector_text": "字段 cx_first_channel 业务含义 获客一级渠道 字段说明 用户获客的一级渠道 口径  过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dim_user_qy_crm_customer_info_all_d.deleted_at",
+    "database_name": "soyoung_dw",
+    "table_name": "dim_user_qy_crm_customer_info_all_d",
+    "field_name": "deleted_at",
+    "field_description": "客户记录被软删除的时间，非 NULL 表示已删除",
+    "table_description": "",
+    "vector_text": "字段 deleted_at 业务含义 删除时间 字段说明 客户记录被软删除的时间，非 NULL 表示已删除 口径 分析时过滤 deleted_at IS NULL 过滤 ['deleted_at IS NULL']",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dim_user_qy_crm_customer_info_all_d.dp",
+    "database_name": "soyoung_dw",
+    "table_name": "dim_user_qy_crm_customer_info_all_d",
+    "field_name": "dp",
+    "field_description": "快照分区",
+    "table_description": "",
+    "vector_text": "字段 dp 业务含义 分区字段 字段说明 快照分区 口径 dp = DATE_SUB(CURRENT_DATE(), 1) 取最新客户快照 过滤 ['dp = DATE_SUB(CURRENT_DATE(), 1)']",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dim_user_qy_crm_customer_info_all_d.gender",
+    "database_name": "soyoung_dw",
+    "table_name": "dim_user_qy_crm_customer_info_all_d",
+    "field_name": "gender",
+    "field_description": "客户性别",
+    "table_description": "",
+    "vector_text": "字段 gender 业务含义 性别 字段说明 客户性别 口径  过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dim_user_qy_crm_customer_info_all_d.is_focuson",
+    "database_name": "soyoung_dw",
+    "table_name": "dim_user_qy_crm_customer_info_all_d",
+    "field_name": "is_focuson",
+    "field_description": "1=重点关注客户，0=否",
+    "table_description": "",
+    "vector_text": "字段 is_focuson 业务含义 是否重点关注 字段说明 1=重点关注客户，0=否 口径  过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dim_user_qy_crm_customer_info_all_d.is_new",
+    "database_name": "soyoung_dw",
+    "table_name": "dim_user_qy_crm_customer_info_all_d",
+    "field_name": "is_new",
+    "field_description": "1=新客，2=老客。CRM 视角的新客定义",
+    "table_description": "",
+    "vector_text": "字段 is_new 业务含义 是否新客 字段说明 1=新客，2=老客。CRM 视角的新客定义 口径 CRM 维表的 is_new 含义可能与核销/支付事实表的 is_new 不同 过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dim_user_qy_crm_customer_info_all_d.is_qy",
+    "database_name": "soyoung_dw",
+    "table_name": "dim_user_qy_crm_customer_info_all_d",
+    "field_name": "is_qy",
+    "field_description": "1=连锁，0=非连锁",
+    "table_description": "",
+    "vector_text": "字段 is_qy 业务含义 是否连锁用户 字段说明 1=连锁，0=非连锁 口径 用户域限定 is_qy=1 过滤 ['is_qy = 1']",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dim_user_qy_crm_customer_info_all_d.masked_mobile",
+    "database_name": "soyoung_dw",
+    "table_name": "dim_user_qy_crm_customer_info_all_d",
+    "field_name": "masked_mobile",
+    "field_description": "客户手机号脱敏后的字符串",
+    "table_description": "",
+    "vector_text": "字段 masked_mobile 业务含义 脱敏手机号 字段说明 客户手机号脱敏后的字符串 口径 脱敏手机号用于跨源用户去重或设备匹配，不能反向还原 过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dim_user_qy_crm_customer_info_all_d.membership_level",
+    "database_name": "soyoung_dw",
+    "table_name": "dim_user_qy_crm_customer_info_all_d",
+    "field_name": "membership_level",
+    "field_description": "客户当前会员等级",
+    "table_description": "",
+    "vector_text": "字段 membership_level 业务含义 会员等级 字段说明 客户当前会员等级 口径 用于会员等级分析、高价值用户筛选 过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dim_user_qy_crm_customer_info_all_d.profile_tags",
+    "database_name": "soyoung_dw",
+    "table_name": "dim_user_qy_crm_customer_info_all_d",
+    "field_name": "profile_tags",
+    "field_description": "客户动态标签列表（array）",
+    "table_description": "",
+    "vector_text": "字段 profile_tags 业务含义 动态标签 字段说明 客户动态标签列表（array） 口径 用于用户分层、精准营销圈人 过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dim_user_qy_crm_customer_info_all_d.uid",
+    "database_name": "soyoung_dw",
+    "table_name": "dim_user_qy_crm_customer_info_all_d",
+    "field_name": "uid",
+    "field_description": "数仓标准用户ID，与订单表/支付表的 uid 一致",
+    "table_description": "",
+    "vector_text": "字段 uid 业务含义 用户ID (uid) 字段说明 数仓标准用户ID，与订单表/支付表的 uid 一致 口径 与 dm_opt_qy_order_info_all_d.uid 关联 过滤 ['dp = DATE_SUB(CURRENT_DATE()', '1)']",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dim_user_qy_crm_customer_info_all_d.union_id",
+    "database_name": "soyoung_dw",
+    "table_name": "dim_user_qy_crm_customer_info_all_d",
+    "field_name": "union_id",
+    "field_description": "微信小程序用户的 UnionID，私域链路专用",
+    "table_description": "",
+    "vector_text": "字段 union_id 业务含义 小程序UnionID 字段说明 微信小程序用户的 UnionID，私域链路专用 口径 通过 union_id 关联小程序行为数据与 CRM 用户画像 过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_order_info_all_d.app_id",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_order_info_all_d",
+    "field_name": "app_id",
+    "field_description": "订单来源 APP 标识，区分连锁业务与社区业务",
+    "table_description": "",
+    "vector_text": "字段 app_id 业务含义 应用ID 字段说明 订单来源 APP 标识，区分连锁业务与社区业务 口径 APP 线上交易需过滤 app_id IN (131, 132)，剔除社区业务订单 过滤 ['app_id IN (131, 132)']",
+    "source_kind": "feishu_prd_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_order_info_all_d.cash_back_date",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_order_info_all_d",
+    "field_name": "cash_back_date",
+    "field_description": "订单退款的发生日期，退款判定条件之一",
+    "table_description": "",
+    "vector_text": "字段 cash_back_date 业务含义 退款日期 字段说明 订单退款的发生日期，退款判定条件之一 口径 退款判定：used_num = 0 AND cash_back_date IS NOT NULL；退款 Gmv 按 cash_back_date 归因 过滤 ['cash_back_date IS NOT NULL（用于退款判定）']",
+    "source_kind": "feishu_prd_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_order_info_all_d.is_pay_new",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_order_info_all_d",
+    "field_name": "is_pay_new",
+    "field_description": "支付新客标记",
+    "table_description": "",
+    "vector_text": "字段 is_pay_new 业务含义 支付新客标记 字段说明 支付新客标记 口径 支付域新客使用 is_pay_new = 1。 过滤 ['is_pay_new = 1']",
+    "source_kind": "core_fields_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_order_info_all_d.is_paydate_cash",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_order_info_all_d",
+    "field_name": "is_paydate_cash",
+    "field_description": "支付日退款剔除标记",
+    "table_description": "",
+    "vector_text": "字段 is_paydate_cash 业务含义 支付日退款剔除标记 字段说明 支付日退款剔除标记 口径 支付域标准过滤使用 is_paydate_cash = 0，表示剔除当日退款。 过滤 ['is_paydate_cash = 0']",
+    "source_kind": "core_fields_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_order_info_all_d.left_gmv",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_order_info_all_d",
+    "field_name": "left_gmv",
+    "field_description": "待核销金额",
+    "table_description": "",
+    "vector_text": "字段 left_gmv 业务含义 待核销金额 字段说明 待核销金额 口径 待核销金额使用 SUM(left_gmv)，属于截至最新快照的存量口径。 过滤 ['dp = DATE_SUB(CURRENT_DATE(),1)', 'left_num > 0']",
+    "source_kind": "core_fields_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_order_info_all_d.left_num",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_order_info_all_d",
+    "field_name": "left_num",
+    "field_description": "待核销服务点",
+    "table_description": "",
+    "vector_text": "字段 left_num 业务含义 待核销服务点 字段说明 待核销服务点 口径 待核销标准过滤使用 left_num > 0；待核销服务点使用 SUM(left_num)。 过滤 ['left_num > 0']",
+    "source_kind": "core_fields_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_order_info_all_d.pay_date",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_order_info_all_d",
+    "field_name": "pay_date",
+    "field_description": "支付业务日期",
+    "table_description": "",
+    "vector_text": "字段 pay_date 业务含义 支付业务日期 字段说明 支付业务日期 口径 支付发生量必须用 pay_date 框定业务日期，dp 只锁最新快照。 过滤 ['dp = DATE_SUB(CURRENT_DATE(),1)']",
+    "source_kind": "core_fields_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_order_info_all_d.pay_flag",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_order_info_all_d",
+    "field_name": "pay_flag",
+    "field_description": "支付成功标记",
+    "table_description": "",
+    "vector_text": "字段 pay_flag 业务含义 支付成功标记 字段说明 支付成功标记 口径 支付客单价分母仅统计 pay_flag = 1 的支付用户日。 过滤 ['pay_flag = 1']",
+    "source_kind": "core_fields_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_order_info_all_d.pay_gmv",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_order_info_all_d",
+    "field_name": "pay_gmv",
+    "field_description": "支付GMV",
+    "table_description": "",
+    "vector_text": "字段 pay_gmv 业务含义 支付GMV 字段说明 支付GMV 口径 支付 GMV 使用 SUM(pay_gmv)，默认剔除当日退款。 过滤 ['dp = DATE_SUB(CURRENT_DATE(),1)', 'is_paydate_cash = 0']",
+    "source_kind": "core_fields_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_order_info_all_d.stat_date",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_order_info_all_d",
+    "field_name": "stat_date",
+    "field_description": "支付统计日期",
+    "table_description": "",
+    "vector_text": "字段 stat_date 业务含义 支付统计日期 字段说明 支付统计日期 口径 支付客单价人次版可按 CONCAT(CAST(stat_date AS STRING), '_', CAST(uid AS STRING)) 去重。 过滤 ['dp = DATE_SUB(CURRENT_DATE(),1)', 'pay_flag = 1']",
+    "source_kind": "core_fields_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_order_info_all_d.uid",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_order_info_all_d",
+    "field_name": "uid",
+    "field_description": "支付用户ID",
+    "table_description": "",
+    "vector_text": "字段 uid 业务含义 支付用户ID 字段说明 支付用户ID 口径 支付人数使用 COUNT(DISTINCT uid)；支付客单价的人次代理键使用 CONCAT(stat_date/pay_date, '_', uid)。 过滤 ['dp = DATE_SUB(CURRENT_DATE(),1)', 'is_paydate_cash = 0']",
+    "source_kind": "core_fields_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_order_info_all_d.used_num",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_order_info_all_d",
+    "field_name": "used_num",
+    "field_description": "订单已核销/已使用的次数，退款判定条件之一",
+    "table_description": "",
+    "vector_text": "字段 used_num 业务含义 已使用次数 字段说明 订单已核销/已使用的次数，退款判定条件之一 口径 退款订单判定：used_num = 0 AND cash_back_date IS NOT NULL 过滤 ['used_num = 0（用于退款判定）']",
+    "source_kind": "feishu_prd_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_user_execution_record_all_d.customer_id",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_user_execution_record_all_d",
+    "field_name": "customer_id",
+    "field_description": "核销人数",
+    "table_description": "",
+    "vector_text": "字段 customer_id 业务含义 核销人数 字段说明 核销人数 口径 核销人数按 COUNT(DISTINCT customer_id) 统计。 过滤 ['dp = DATE_SUB(CURRENT_DATE(),1)', 'is_valid = 1']",
+    "source_kind": "core_fields_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_user_execution_record_all_d.cx_first_channel",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_user_execution_record_all_d",
+    "field_name": "cx_first_channel",
+    "field_description": "获客一级渠道",
+    "table_description": "",
+    "vector_text": "字段 cx_first_channel 业务含义 获客一级渠道 字段说明 获客一级渠道 口径 渠道拆分使用 cx_first_channel，典型值为公域、私域、老带新。 过滤 [\"cx_first_channel IN ('公域','私域','老带新')\"]",
+    "source_kind": "core_fields_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_user_execution_record_all_d.exe_amount",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_user_execution_record_all_d",
+    "field_name": "exe_amount",
+    "field_description": "核销GMV",
+    "table_description": "",
+    "vector_text": "字段 exe_amount 业务含义 核销GMV 字段说明 核销GMV 口径 核销 GMV 使用 SUM(exe_amount)，常含赠送或未实收口径。 过滤 ['dp = DATE_SUB(CURRENT_DATE(),1)', 'is_valid = 1']",
+    "source_kind": "core_fields_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_user_execution_record_all_d.exe_cnt",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_user_execution_record_all_d",
+    "field_name": "exe_cnt",
+    "field_description": "核销服务点",
+    "table_description": "",
+    "vector_text": "字段 exe_cnt 业务含义 核销服务点 字段说明 核销服务点 口径 核销服务点使用 SUM(exe_cnt)。 过滤 ['dp = DATE_SUB(CURRENT_DATE(),1)', 'is_valid = 1']",
+    "source_kind": "core_fields_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_user_execution_record_all_d.exe_income",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_user_execution_record_all_d",
+    "field_name": "exe_income",
+    "field_description": "核销收入",
+    "table_description": "",
+    "vector_text": "字段 exe_income 业务含义 核销收入 字段说明 核销收入 口径 核销收入使用 SUM(exe_income)，不是核销 GMV。 过滤 ['dp = DATE_SUB(CURRENT_DATE(),1)', 'is_valid = 1']",
+    "source_kind": "core_fields_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_user_execution_record_all_d.executed_date",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_user_execution_record_all_d",
+    "field_name": "executed_date",
+    "field_description": "核销业务日期",
+    "table_description": "",
+    "vector_text": "字段 executed_date 业务含义 核销业务日期 字段说明 核销业务日期 口径 核销发生量必须用 executed_date 框定业务日期，dp 只锁最新快照。 过滤 ['dp = DATE_SUB(CURRENT_DATE(),1)']",
+    "source_kind": "core_fields_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_user_execution_record_all_d.is_new",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_user_execution_record_all_d",
+    "field_name": "is_new",
+    "field_description": "标识该条核销记录是否属于该用户的首次核销，用于新客/老客口径拆分",
+    "table_description": "",
+    "vector_text": "字段 is_new 业务含义 核销新客标记 字段说明 标识该条核销记录是否属于该用户的首次核销，用于新客/老客口径拆分 口径 核销域新客使用 is_new = 1，支付域新客使用 is_pay_new = 1，两者口径不同不可混用 过滤 ['is_new = 1（新客）']",
+    "source_kind": "feishu_prd_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_user_execution_record_all_d.is_up",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_user_execution_record_all_d",
+    "field_name": "is_up",
+    "field_description": "升单标记",
+    "table_description": "",
+    "vector_text": "字段 is_up 业务含义 升单标记 字段说明 升单标记 口径 升单相关问题使用 is_up = 1 过滤。 过滤 ['is_up = 1']",
+    "source_kind": "core_fields_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_user_execution_record_all_d.is_valid",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_user_execution_record_all_d",
+    "field_name": "is_valid",
+    "field_description": "有效核销标记",
+    "table_description": "",
+    "vector_text": "字段 is_valid 业务含义 有效核销标记 字段说明 有效核销标记 口径 核销域标准过滤必须加 is_valid = 1。 过滤 ['is_valid = 1']",
+    "source_kind": "core_fields_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_user_execution_record_all_d.main_order_id",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_user_execution_record_all_d",
+    "field_name": "main_order_id",
+    "field_description": "主订单ID",
+    "table_description": "",
+    "vector_text": "字段 main_order_id 业务含义 主订单ID 字段说明 主订单ID 口径 订单数按 COUNT(DISTINCT main_order_id)；跨支付与核销也优先用 main_order_id 关联。 过滤 ['dp = DATE_SUB(CURRENT_DATE(),1)', 'is_valid = 1']",
+    "source_kind": "core_fields_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_user_execution_record_all_d.revenue_category",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_user_execution_record_all_d",
+    "field_name": "revenue_category",
+    "field_description": "收入分类",
+    "table_description": "",
+    "vector_text": "字段 revenue_category 业务含义 收入分类 字段说明 收入分类 口径 收入分类使用 revenue_category，典型值为大单品、常规品、大师团。 过滤 [\"revenue_category IN ('大单品','常规品','大师团')\"]",
+    "source_kind": "core_fields_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_user_execution_record_all_d.standard_name",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_user_execution_record_all_d",
+    "field_name": "standard_name",
+    "field_description": "标准品项名称",
+    "table_description": "",
+    "vector_text": "字段 standard_name 业务含义 标准品项名称 字段说明 标准品项名称 口径 品项筛选与分组优先使用 standard_name，如奇迹胶原、BBL HERO、奇迹童颜、新一代热玛吉。 过滤 [\"standard_name REGEXP '<品项关键词>'\"]",
+    "source_kind": "core_fields_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_user_execution_record_all_d.verify_date_id",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_user_execution_record_all_d",
+    "field_name": "verify_date_id",
+    "field_description": "核销人次",
+    "table_description": "",
+    "vector_text": "字段 verify_date_id 业务含义 核销人次 字段说明 核销人次 口径 核销人次按 COUNT(DISTINCT verify_date_id) 统计；核销客单价默认分母也是 verify_date_id。 过滤 ['dp = DATE_SUB(CURRENT_DATE(),1)', 'is_valid = 1']",
+    "source_kind": "core_fields_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_user_summary_info_all_d.activate_180d_tag",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_user_summary_info_all_d",
+    "field_name": "activate_180d_tag",
+    "field_description": "0=近180天未活跃(流失)，1=近180天有核销(活跃)",
+    "table_description": "",
+    "vector_text": "字段 activate_180d_tag 业务含义 近180天活跃标记 字段说明 0=近180天未活跃(流失)，1=近180天有核销(活跃) 口径 末次核销日期在180天内为活跃(1)，否则为流失(0) 过滤 ['activate_180d_tag = 1']",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_user_summary_info_all_d.area_name",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_user_summary_info_all_d",
+    "field_name": "area_name",
+    "field_description": "用户归属门店所在大区",
+    "table_description": "",
+    "vector_text": "字段 area_name 业务含义 归属大区 字段说明 用户归属门店所在大区 口径 大区名称用于区域维度分析 过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_user_summary_info_all_d.channel_name_l1",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_user_summary_info_all_d",
+    "field_name": "channel_name_l1",
+    "field_description": "CRM 系统中的客户来源一级渠道",
+    "table_description": "",
+    "vector_text": "字段 channel_name_l1 业务含义 CRM渠道一级名称 字段说明 CRM 系统中的客户来源一级渠道 口径  过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_user_summary_info_all_d.city_name",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_user_summary_info_all_d",
+    "field_name": "city_name",
+    "field_description": "用户归属门店所在城市",
+    "table_description": "",
+    "vector_text": "字段 city_name 业务含义 归属城市 字段说明 用户归属门店所在城市 口径 城市名称用于用户归属地的城市维度分析 过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_user_summary_info_all_d.create_date",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_user_summary_info_all_d",
+    "field_name": "create_date",
+    "field_description": "CRM 系统建档日期",
+    "table_description": "",
+    "vector_text": "字段 create_date 业务含义 客户建档日期 字段说明 CRM 系统建档日期 口径 建档日期用做客户生命周期起点参考，但不等于首消日期 过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_user_summary_info_all_d.crm_customer_id",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_user_summary_info_all_d",
+    "field_name": "crm_customer_id",
+    "field_description": "CRM 系统中的客户唯一标识，用于与 CRM 维表关联",
+    "table_description": "",
+    "vector_text": "字段 crm_customer_id 业务含义 CRM客户ID 字段说明 CRM 系统中的客户唯一标识，用于与 CRM 维表关联 口径 与 dim_user_qy_crm_customer_info_all_d.crm_customer_id 关联 过滤 ['dp = DATE_SUB(CURRENT_DATE()', '1)']",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_user_summary_info_all_d.cx_first_channel",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_user_summary_info_all_d",
+    "field_name": "cx_first_channel",
+    "field_description": "用户获客的一级渠道分类",
+    "table_description": "",
+    "vector_text": "字段 cx_first_channel 业务含义 获客一级渠道 字段说明 用户获客的一级渠道分类 口径 典型值：私域、公域、老带新。与 dm_opt_qy_user_execution_record 的 cx_first_channel 含义可能不同 过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_user_summary_info_all_d.dp",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_user_summary_info_all_d",
+    "field_name": "dp",
+    "field_description": "全量快照分区，格式 yyyy-MM-dd",
+    "table_description": "",
+    "vector_text": "字段 dp 业务含义 分区字段 字段说明 全量快照分区，格式 yyyy-MM-dd 口径 全量快照表必须指定 dp = DATE_SUB(CURRENT_DATE(), 1)，取最新版本数据 过滤 ['dp = DATE_SUB(CURRENT_DATE(), 1)']",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_user_summary_info_all_d.first_addc_date",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_user_summary_info_all_d",
+    "field_name": "first_addc_date",
+    "field_description": "用户首次添加企业微信好友的日期",
+    "table_description": "",
+    "vector_text": "字段 first_addc_date 业务含义 首次加C日期 字段说明 用户首次添加企业微信好友的日期 口径 首次加C日期用于评估私域转化时效 过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_user_summary_info_all_d.first_order_date_qy",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_user_summary_info_all_d",
+    "field_name": "first_order_date_qy",
+    "field_description": "用户在连锁业务（含线上+线下）的首次支付日期",
+    "table_description": "",
+    "vector_text": "字段 first_order_date_qy 业务含义 连锁首单日期 字段说明 用户在连锁业务（含线上+线下）的首次支付日期 口径 首单日期用于判断支付新客/老客，含线上+线下全渠道 过滤 ['dp = DATE_SUB(CURRENT_DATE()', '1)']",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_user_summary_info_all_d.first_use_date",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_user_summary_info_all_d",
+    "field_name": "first_use_date",
+    "field_description": "用户首次核销的日期，用于判断核销新客/老客、计算核销渗透率",
+    "table_description": "",
+    "vector_text": "字段 first_use_date 业务含义 首次核销日期 字段说明 用户首次核销的日期，用于判断核销新客/老客、计算核销渗透率 口径 核销新客判定：first_use_date = 当前统计日；核销老客：first_use_date < 当前统计日 过滤 ['dp = CURRENT_DATE() - 1']",
+    "source_kind": "feishu_prd_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_user_summary_info_all_d.gender",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_user_summary_info_all_d",
+    "field_name": "gender",
+    "field_description": "0=未知, 1=男, 2=女",
+    "table_description": "",
+    "vector_text": "字段 gender 业务含义 性别 字段说明 0=未知, 1=男, 2=女 口径  过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_user_summary_info_all_d.is_addc",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_user_summary_info_all_d",
+    "field_name": "is_addc",
+    "field_description": "用户是否添加过企业微信好友",
+    "table_description": "",
+    "vector_text": "字段 is_addc 业务含义 是否私域加C 字段说明 用户是否添加过企业微信好友 口径  过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_user_summary_info_all_d.is_ds",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_user_summary_info_all_d",
+    "field_name": "is_ds",
+    "field_description": "1=大师团用户，0=非大师团",
+    "table_description": "",
+    "vector_text": "字段 is_ds 业务含义 是否大师团 字段说明 1=大师团用户，0=非大师团 口径 用户是否在历史上消费过大师团品类 过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_user_summary_info_all_d.last_order_date_qy",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_user_summary_info_all_d",
+    "field_name": "last_order_date_qy",
+    "field_description": "用户在连锁业务最近一次支付日期",
+    "table_description": "",
+    "vector_text": "字段 last_order_date_qy 业务含义 连锁末单日期 字段说明 用户在连锁业务最近一次支付日期 口径 末单日期用于计算最近一次消费时间、流失判断 过滤 ['dp = DATE_SUB(CURRENT_DATE()', '1)']",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_user_summary_info_all_d.membership_level",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_user_summary_info_all_d",
+    "field_name": "membership_level",
+    "field_description": "用户当前会员等级（L1-L8）",
+    "table_description": "",
+    "vector_text": "字段 membership_level 业务含义 会员等级 字段说明 用户当前会员等级（L1-L8） 口径 会员等级用于用户分群、画像分析，高价值用户筛选 过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_user_summary_info_all_d.organization_id",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_user_summary_info_all_d",
+    "field_name": "organization_id",
+    "field_description": "用户归属的连锁门店ID",
+    "table_description": "",
+    "vector_text": "字段 organization_id 业务含义 归属门店ID 字段说明 用户归属的连锁门店ID 口径 organization_id 是 CRM 体系的门店主键，不一定与数仓 tenant_id 一一对应 过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_user_summary_info_all_d.organization_name",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_user_summary_info_all_d",
+    "field_name": "organization_name",
+    "field_description": "用户归属门店的中文名称",
+    "table_description": "",
+    "vector_text": "字段 organization_name 业务含义 归属门店名称 字段说明 用户归属门店的中文名称 口径  过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_user_summary_info_all_d.tag_name_list",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_user_summary_info_all_d",
+    "field_name": "tag_name_list",
+    "field_description": "CRM系统用户动态标签，逗号分隔",
+    "table_description": "",
+    "vector_text": "字段 tag_name_list 业务含义 用户标签 字段说明 CRM系统用户动态标签，逗号分隔 口径  过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_user_summary_info_all_d.total_actual_no_use_gmv",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_user_summary_info_all_d",
+    "field_name": "total_actual_no_use_gmv",
+    "field_description": "用户购买但尚未完成核销的累计金额",
+    "table_description": "",
+    "vector_text": "字段 total_actual_no_use_gmv 业务含义 累计未核销GMV 字段说明 用户购买但尚未完成核销的累计金额 口径  过滤 ['dp = DATE_SUB(CURRENT_DATE()', '1)']",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_user_summary_info_all_d.total_order_cnt_qy",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_user_summary_info_all_d",
+    "field_name": "total_order_cnt_qy",
+    "field_description": "用户在连锁业务的累计支付订单数",
+    "table_description": "",
+    "vector_text": "字段 total_order_cnt_qy 业务含义 累计订单数(连锁) 字段说明 用户在连锁业务的累计支付订单数 口径  过滤 ['dp = DATE_SUB(CURRENT_DATE()', '1)']",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_user_summary_info_all_d.total_order_gmv_qy",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_user_summary_info_all_d",
+    "field_name": "total_order_gmv_qy",
+    "field_description": "用户在连锁业务（线上+线下）的累计支付 GMV",
+    "table_description": "",
+    "vector_text": "字段 total_order_gmv_qy 业务含义 累计支付GMV(连锁) 字段说明 用户在连锁业务（线上+线下）的累计支付 GMV 口径 SUM(total_order_gmv_qy) 可用于分群维度下的累计 GMV 统计；个人维度可直接使用 过滤 ['dp = DATE_SUB(CURRENT_DATE()', '1)']",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_user_summary_info_all_d.total_order_use_cnt",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_user_summary_info_all_d",
+    "field_name": "total_order_use_cnt",
+    "field_description": "用户累计核销的次数（按订单去重）",
+    "table_description": "",
+    "vector_text": "字段 total_order_use_cnt 业务含义 累计核销次数(去重) 字段说明 用户累计核销的次数（按订单去重） 口径  过滤 ['dp = DATE_SUB(CURRENT_DATE()', '1)']",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dm_opt_qy_user_summary_info_all_d.user_id",
+    "database_name": "soyoung_dw",
+    "table_name": "dm_opt_qy_user_summary_info_all_d",
+    "field_name": "user_id",
+    "field_description": "用户唯一标识，跨表关联的主键。支付域用 uid，核销域用 customer_id 关联",
+    "table_description": "",
+    "vector_text": "字段 user_id 业务含义 用户ID (uid) 字段说明 用户唯一标识，跨表关联的主键。支付域用 uid，核销域用 customer_id 关联 口径 与 dwd_md_app_log.uid 和订单表的 uid 对应，与核销表关联时需通过 crm_customer_id 或 customer_id 映射 过滤 ['dp = DATE_SUB(CURRENT_DATE()', '1)']",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dwd_md_app_log_nocheat.app_id",
+    "database_name": "soyoung_dw",
+    "table_name": "dwd_md_app_log_nocheat",
+    "field_name": "app_id",
+    "field_description": "APP 标识，131/132 为连锁业务核心应用",
+    "table_description": "",
+    "vector_text": "字段 app_id 业务含义 应用ID 字段说明 APP 标识，131/132 为连锁业务核心应用 口径 APP 范围过滤使用 app_id IN (131, 132) 过滤 ['app_id IN (131, 132)']",
+    "source_kind": "feishu_prd_yaml"
+  },
+  {
+    "field_id": "dwd_md_app_log_nocheat.curr_page_id",
+    "database_name": "soyoung_dw",
+    "table_name": "dwd_md_app_log_nocheat",
+    "field_name": "curr_page_id",
+    "field_description": "用户当前浏览页面的标识",
+    "table_description": "",
+    "vector_text": "字段 curr_page_id 业务含义 页面ID 字段说明 用户当前浏览页面的标识 口径 页面活跃 UV 按 curr_page_id 区分，典型值见 dim_buried_point_info_all_d 过滤 []",
+    "source_kind": "feishu_prd_yaml"
+  },
+  {
+    "field_id": "dwd_md_app_log_nocheat.device_id",
+    "database_name": "soyoung_dw",
+    "table_name": "dwd_md_app_log_nocheat",
+    "field_name": "device_id",
+    "field_description": "APP 设备唯一标识，DAU/MAU/页面UV 的去重键",
+    "table_description": "",
+    "vector_text": "字段 device_id 业务含义 设备ID 字段说明 APP 设备唯一标识，DAU/MAU/页面UV 的去重键 口径 用户活跃统计使用 COUNT(DISTINCT device_id) 作为去重依据 过滤 ['app_id IN (131, 132)', 'type = 2']",
+    "source_kind": "feishu_prd_yaml"
+  },
+  {
+    "field_id": "dwd_md_app_log_nocheat.type",
+    "database_name": "soyoung_dw",
+    "table_name": "dwd_md_app_log_nocheat",
+    "field_name": "type",
+    "field_description": "日志类型标记，type=2 表示有效活跃行为",
+    "table_description": "",
+    "vector_text": "字段 type 业务含义 日志类型 字段说明 日志类型标记，type=2 表示有效活跃行为 口径 统计活跃用户（DAU/MAU/页面UV）时过滤 type = 2 过滤 ['type = 2']",
+    "source_kind": "feishu_prd_yaml"
+  },
+  {
+    "field_id": "dwd_md_app_log_nocheat.uid",
+    "database_name": "soyoung_dw",
+    "table_name": "dwd_md_app_log_nocheat",
+    "field_name": "uid",
+    "field_description": "APP 埋点中的用户标识，用于关联支付/核销表做跨域分析（如核销用户 APP 活跃渗透）",
+    "table_description": "",
+    "vector_text": "字段 uid 业务含义 用户ID 字段说明 APP 埋点中的用户标识，用于关联支付/核销表做跨域分析（如核销用户 APP 活跃渗透） 口径 通过 uid 关联支付表、核销表进行用户口径分析；跨体系关联需关注 uid 映射覆盖率 过滤 []",
+    "source_kind": "feishu_prd_yaml"
+  },
+  {
+    "field_id": "dwd_opt_qy_visit_log_all_d.visit_status_code",
+    "database_name": "soyoung_dw",
+    "table_name": "dwd_opt_qy_visit_log_all_d",
+    "field_name": "visit_status_code",
+    "field_description": "签到记录的有效状态，用于过滤无效签到",
+    "table_description": "",
+    "vector_text": "字段 visit_status_code 业务含义 签到状态码 字段说明 签到记录的有效状态，用于过滤无效签到 口径 有效签到过滤 visit_status_code NOT IN (1, 8) 过滤 ['visit_status_code NOT IN (1, 8)']",
+    "source_kind": "feishu_prd_yaml"
+  },
+  {
+    "field_id": "dws_md_app_page_summary.app_id",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_md_app_page_summary",
+    "field_name": "app_id",
+    "field_description": "APP 范围过滤，131/132 为连锁业务",
+    "table_description": "",
+    "vector_text": "字段 app_id 业务含义 应用ID 字段说明 APP 范围过滤，131/132 为连锁业务 口径 过滤 app_id IN (131, 132) 过滤 ['app_id IN (131, 132)']",
+    "source_kind": "feishu_prd_yaml"
+  },
+  {
+    "field_id": "dws_md_app_page_summary.curr_page_id",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_md_app_page_summary",
+    "field_name": "curr_page_id",
+    "field_description": "用户浏览页面标识，与 dwd_md_app_log_nocheat 中的 curr_page_id 同义",
+    "table_description": "",
+    "vector_text": "字段 curr_page_id 业务含义 页面ID 字段说明 用户浏览页面标识，与 dwd_md_app_log_nocheat 中的 curr_page_id 同义 口径 页面维度拆分使用 curr_page_id 过滤 ['curr_page_id > 0']",
+    "source_kind": "feishu_prd_yaml"
+  },
+  {
+    "field_id": "dws_md_app_page_summary.device_id",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_md_app_page_summary",
+    "field_name": "device_id",
+    "field_description": "APP 页面设备唯一标识",
+    "table_description": "",
+    "vector_text": "字段 device_id 业务含义 设备ID 字段说明 APP 页面设备唯一标识 口径 COUNT(DISTINCT device_id) 用于页面UV统计 过滤 ['app_id IN (131, 132)']",
+    "source_kind": "feishu_prd_yaml"
+  },
+  {
+    "field_id": "dws_md_app_page_summary.not_back_visit_cnt",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_md_app_page_summary",
+    "field_name": "not_back_visit_cnt",
+    "field_description": "过滤后台回访的虚高访问",
+    "table_description": "",
+    "vector_text": "字段 not_back_visit_cnt 业务含义 非回访访问次数 字段说明 过滤后台回访的虚高访问 口径 用户行为数据统计过滤 not_back_visit_cnt > 0 过滤 ['not_back_visit_cnt > 0']",
+    "source_kind": "feishu_prd_yaml"
+  },
+  {
+    "field_id": "dws_md_app_page_summary.stay_time",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_md_app_page_summary",
+    "field_name": "stay_time",
+    "field_description": "用户在页面上的停留时间（秒），用于计算人均停留时长",
+    "table_description": "",
+    "vector_text": "字段 stay_time 业务含义 停留时长 字段说明 用户在页面上的停留时间（秒），用于计算人均停留时长 口径 人均停留时长 = SUM(stay_time) / COUNT(DISTINCT device_id) 过滤 []",
+    "source_kind": "feishu_prd_yaml"
+  },
+  {
+    "field_id": "dws_md_qy_app_device_startup_type_d.app_id",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_md_qy_app_device_startup_type_d",
+    "field_name": "app_id",
+    "field_description": "APP 范围过滤",
+    "table_description": "",
+    "vector_text": "字段 app_id 业务含义 应用ID 字段说明 APP 范围过滤 口径 过滤 app_id IN (131, 132) 过滤 ['app_id IN (131, 132)']",
+    "source_kind": "feishu_prd_yaml"
+  },
+  {
+    "field_id": "dws_md_qy_app_device_startup_type_d.device_id",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_md_qy_app_device_startup_type_d",
+    "field_name": "device_id",
+    "field_description": "APP 设备唯一标识",
+    "table_description": "",
+    "vector_text": "字段 device_id 业务含义 设备ID 字段说明 APP 设备唯一标识 口径 用于统计不同启动类型的设备数 过滤 ['app_id IN (131, 132)']",
+    "source_kind": "feishu_prd_yaml"
+  },
+  {
+    "field_id": "dws_md_qy_app_device_startup_type_d.startup_type",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_md_qy_app_device_startup_type_d",
+    "field_name": "startup_type",
+    "field_description": "APP 启动来源分类，用于分析用户触达渠道效果",
+    "table_description": "",
+    "vector_text": "字段 startup_type 业务含义 启动类型 字段说明 APP 启动来源分类，用于分析用户触达渠道效果 口径 按 startup_type 拆分设备数，了解不同触达方式（PUSH、微信h5、灵动岛等）的拉活效果 过滤 []",
+    "source_kind": "feishu_prd_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_core_summary_all_d.area_name",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_core_summary_all_d",
+    "field_name": "area_name",
+    "field_description": "门店所属大区",
+    "table_description": "",
+    "vector_text": "字段 area_name 业务含义 大区名称 字段说明 门店所属大区 口径 大区维度使用 area_name，典型值为华中/华北/华南/华东 过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_core_summary_all_d.channel_name",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_core_summary_all_d",
+    "field_name": "channel_name",
+    "field_description": "用户获客的一级渠道名称",
+    "table_description": "",
+    "vector_text": "字段 channel_name 业务含义 获客一级渠道 字段说明 用户获客的一级渠道名称 口径 渠道拆分使用 channel_name 过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_core_summary_all_d.city_name",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_core_summary_all_d",
+    "field_name": "city_name",
+    "field_description": "门店所在城市",
+    "table_description": "",
+    "vector_text": "字段 city_name 业务含义 城市名称 字段说明 门店所在城市 口径 城市维度拆分使用 city_name 或 city_id 过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_core_summary_all_d.customer_id",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_core_summary_all_d",
+    "field_name": "customer_id",
+    "field_description": "客户唯一标识，用于核销域用户关联",
+    "table_description": "",
+    "vector_text": "字段 customer_id 业务含义 客户ID 字段说明 客户唯一标识，用于核销域用户关联 口径 核销人数统计使用 COUNT(DISTINCT customer_id) 过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_core_summary_all_d.customer_is_new",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_core_summary_all_d",
+    "field_name": "customer_is_new",
+    "field_description": "1=新客，0=老客。按门店维度定义新客",
+    "table_description": "",
+    "vector_text": "字段 customer_is_new 业务含义 是否门店新客 字段说明 1=新客，0=老客。按门店维度定义新客 口径 新老客拆分使用 customer_is_new = 1/0 过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_core_summary_all_d.dp",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_core_summary_all_d",
+    "field_name": "dp",
+    "field_description": "日期分区，格式 yyyy-MM-dd",
+    "table_description": "",
+    "vector_text": "字段 dp 业务含义 分区字段 字段说明 日期分区，格式 yyyy-MM-dd 口径 dp = DATE_SUB(CURRENT_DATE(), 1) 取最新分区 过滤 ['dp = DATE_SUB(CURRENT_DATE(), 1)']",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_core_summary_all_d.exe_amount",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_core_summary_all_d",
+    "field_name": "exe_amount",
+    "field_description": "核销业务额（含赠送/未实收）",
+    "table_description": "",
+    "vector_text": "字段 exe_amount 业务含义 核销GMV 字段说明 核销业务额（含赠送/未实收） 口径 核销GMV使用 SUM(exe_amount)，不等于核销收入 过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_core_summary_all_d.exe_cnt",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_core_summary_all_d",
+    "field_name": "exe_cnt",
+    "field_description": "核销服务点数",
+    "table_description": "",
+    "vector_text": "字段 exe_cnt 业务含义 核销服务点 字段说明 核销服务点数 口径 使用 SUM(exe_cnt) 过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_core_summary_all_d.exe_income",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_core_summary_all_d",
+    "field_name": "exe_income",
+    "field_description": "核销实收收入（未除以税率）",
+    "table_description": "",
+    "vector_text": "字段 exe_income 业务含义 核销收入 字段说明 核销实收收入（未除以税率） 口径 核销收入使用 SUM(exe_income)，不是核销GMV 过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_core_summary_all_d.exe_num",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_core_summary_all_d",
+    "field_name": "exe_num",
+    "field_description": "核销人次",
+    "table_description": "",
+    "vector_text": "字段 exe_num 业务含义 核销人次 字段说明 核销人次 口径 核销人次使用 SUM(exe_num) 或 COUNT(DISTINCT verify_date_id) 过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_core_summary_all_d.exe_total_cost",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_core_summary_all_d",
+    "field_name": "exe_total_cost",
+    "field_description": "品项对应的耗材成本",
+    "table_description": "",
+    "vector_text": "字段 exe_total_cost 业务含义 耗材成本 字段说明 品项对应的耗材成本 口径  过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_core_summary_all_d.exe_total_income",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_core_summary_all_d",
+    "field_name": "exe_total_income",
+    "field_description": "含升单在内的核销实收总收入",
+    "table_description": "",
+    "vector_text": "字段 exe_total_income 业务含义 核销总收入(含升单) 字段说明 含升单在内的核销实收总收入 口径  过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_core_summary_all_d.is_qy",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_core_summary_all_d",
+    "field_name": "is_qy",
+    "field_description": "1=连锁，0=非连锁",
+    "table_description": "",
+    "vector_text": "字段 is_qy 业务含义 是否连锁用户 字段说明 1=连锁，0=非连锁 口径  过滤 ['is_qy = 1']",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_core_summary_all_d.product_id",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_core_summary_all_d",
+    "field_name": "product_id",
+    "field_description": "商品/SPU 维度标识",
+    "table_description": "",
+    "vector_text": "字段 product_id 业务含义 商品ID 字段说明 商品/SPU 维度标识 口径 商品级关联使用 product_id，品项级关联使用 product_standard_name 过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_core_summary_all_d.product_standard_name",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_core_summary_all_d",
+    "field_name": "product_standard_name",
+    "field_description": "品项的标准统一名称",
+    "table_description": "",
+    "vector_text": "字段 product_standard_name 业务含义 品项标准名称 字段说明 品项的标准统一名称 口径 品项筛选使用 standard_name REGEXP 或 product_standard_name 精确匹配 过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_core_summary_all_d.revenue_category",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_core_summary_all_d",
+    "field_name": "revenue_category",
+    "field_description": "品项的收入分类（大单品/常规品/大师团）",
+    "table_description": "",
+    "vector_text": "字段 revenue_category 业务含义 收入分类 字段说明 品项的收入分类（大单品/常规品/大师团） 口径 品类拆分使用 revenue_category IN ('大单品','常规品','大师团') 过滤 [\"revenue_category IN ('大单品', '常规品', '大师团')\"]",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_core_summary_all_d.st_day",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_core_summary_all_d",
+    "field_name": "st_day",
+    "field_description": "数据统计日期，格式 yyyy-MM-dd",
+    "table_description": "",
+    "vector_text": "字段 st_day 业务含义 统计日期 字段说明 数据统计日期，格式 yyyy-MM-dd 口径 按 st_day 确定业务发生日期，与 dp 分区字段含义不同 过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_core_summary_all_d.tenant_id",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_core_summary_all_d",
+    "field_name": "tenant_id",
+    "field_description": "连锁门店唯一标识，跨表门店关联主键",
+    "table_description": "",
+    "vector_text": "字段 tenant_id 业务含义 门店ID 字段说明 连锁门店唯一标识，跨表门店关联主键 口径 门店维表、核销表、支付表均以 tenant_id 作为门店主键 过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_core_summary_all_d.tenant_name",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_core_summary_all_d",
+    "field_name": "tenant_name",
+    "field_description": "连锁门店的中文名称",
+    "table_description": "",
+    "vector_text": "字段 tenant_name 业务含义 门店名称 字段说明 连锁门店的中文名称 口径 门店展示使用 tenant_name，但排序/关联使用 tenant_id 过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_gross_margin_stats_all_d.area_name",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_gross_margin_stats_all_d",
+    "field_name": "area_name",
+    "field_description": "门店所属大区",
+    "table_description": "",
+    "vector_text": "字段 area_name 业务含义 大区名称 字段说明 门店所属大区 口径  过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_gross_margin_stats_all_d.city_name",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_gross_margin_stats_all_d",
+    "field_name": "city_name",
+    "field_description": "门店所在城市",
+    "table_description": "",
+    "vector_text": "字段 city_name 业务含义 城市名称 字段说明 门店所在城市 口径  过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_gross_margin_stats_all_d.cx_first_channel",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_gross_margin_stats_all_d",
+    "field_name": "cx_first_channel",
+    "field_description": "用户获客渠道",
+    "table_description": "",
+    "vector_text": "字段 cx_first_channel 业务含义 获客一级渠道 字段说明 用户获客渠道 口径  过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_gross_margin_stats_all_d.dp",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_gross_margin_stats_all_d",
+    "field_name": "dp",
+    "field_description": "日期分区，格式 yyyy-mm-dd",
+    "table_description": "",
+    "vector_text": "字段 dp 业务含义 分区字段 字段说明 日期分区，格式 yyyy-mm-dd 口径 dp = DATE_SUB(CURRENT_DATE(), 1) 过滤 ['dp = DATE_SUB(CURRENT_DATE(), 1)']",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_gross_margin_stats_all_d.exe_income",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_gross_margin_stats_all_d",
+    "field_name": "exe_income",
+    "field_description": "核销实收收入",
+    "table_description": "",
+    "vector_text": "字段 exe_income 业务含义 核销收入 字段说明 核销实收收入 口径 毛利率分析的核心收入指标 过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_gross_margin_stats_all_d.gross_margin_amt",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_gross_margin_stats_all_d",
+    "field_name": "gross_margin_amt",
+    "field_description": "毛利额 = 收入 - 耗材成本 - 手工费",
+    "table_description": "",
+    "vector_text": "字段 gross_margin_amt 业务含义 毛利额 字段说明 毛利额 = 收入 - 耗材成本 - 手工费 口径 毛利润 = exe_income - ware_cost - manual_fee 过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_gross_margin_stats_all_d.manual_fee",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_gross_margin_stats_all_d",
+    "field_name": "manual_fee",
+    "field_description": "医生手工费/提成",
+    "table_description": "",
+    "vector_text": "字段 manual_fee 业务含义 医生手工费 字段说明 医生手工费/提成 口径 SUM(manual_fee) / SUM(exe_income) 为手工费率 过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_gross_margin_stats_all_d.revenue_category",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_gross_margin_stats_all_d",
+    "field_name": "revenue_category",
+    "field_description": "品项的营收分类",
+    "table_description": "",
+    "vector_text": "字段 revenue_category 业务含义 营收分类 字段说明 品项的营收分类 口径 品类拆分使用 revenue_category 过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_gross_margin_stats_all_d.standard_name",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_gross_margin_stats_all_d",
+    "field_name": "standard_name",
+    "field_description": "品项标准统一名称",
+    "table_description": "",
+    "vector_text": "字段 standard_name 业务含义 品项标准名称 字段说明 品项标准统一名称 口径 品项维度拆分使用 standard_name 过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_gross_margin_stats_all_d.stat_date",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_gross_margin_stats_all_d",
+    "field_name": "stat_date",
+    "field_description": "业务统计日期",
+    "table_description": "",
+    "vector_text": "字段 stat_date 业务含义 统计日期 字段说明 业务统计日期 口径 按 stat_date 确定数据所属日期 过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_gross_margin_stats_all_d.tenant_id",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_gross_margin_stats_all_d",
+    "field_name": "tenant_id",
+    "field_description": "连锁门店唯一标识",
+    "table_description": "",
+    "vector_text": "字段 tenant_id 业务含义 门店ID 字段说明 连锁门店唯一标识 口径 门店分析使用 tenant_id 过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_gross_margin_stats_all_d.ware_cost",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_gross_margin_stats_all_d",
+    "field_name": "ware_cost",
+    "field_description": "品项对应的耗材成本",
+    "table_description": "",
+    "vector_text": "字段 ware_cost 业务含义 耗材成本 字段说明 品项对应的耗材成本 口径 SUM(ware_cost) / SUM(exe_income) 为耗材率 过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_gross_margin_stats_all_d.ware_manual_cost",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_gross_margin_stats_all_d",
+    "field_name": "ware_manual_cost",
+    "field_description": "耗材成本 + 医生手工费",
+    "table_description": "",
+    "vector_text": "字段 ware_manual_cost 业务含义 成本合计 字段说明 耗材成本 + 医生手工费 口径 ware_manual_cost = ware_cost + manual_fee 过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_tenant_topic_d.city_name",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_tenant_topic_d",
+    "field_name": "city_name",
+    "field_description": "门店所在城市",
+    "table_description": "",
+    "vector_text": "字段 city_name 业务含义 城市名称 字段说明 门店所在城市 口径  过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_tenant_topic_d.dp",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_tenant_topic_d",
+    "field_name": "dp",
+    "field_description": "日期分区，格式 yyyy-MM-dd",
+    "table_description": "",
+    "vector_text": "字段 dp 业务含义 分区字段 字段说明 日期分区，格式 yyyy-MM-dd 口径 dp = DATE_SUB(CURRENT_DATE(), 1) 过滤 ['dp = DATE_SUB(CURRENT_DATE(), 1)']",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_tenant_topic_d.exe_cnt",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_tenant_topic_d",
+    "field_name": "exe_cnt",
+    "field_description": "门店核销服务点数",
+    "table_description": "",
+    "vector_text": "字段 exe_cnt 业务含义 核销服务点 字段说明 门店核销服务点数 口径  过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_tenant_topic_d.exe_user_cnt",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_tenant_topic_d",
+    "field_name": "exe_user_cnt",
+    "field_description": "门店核销人次",
+    "table_description": "",
+    "vector_text": "字段 exe_user_cnt 业务含义 核销人次 字段说明 门店核销人次 口径  过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_tenant_topic_d.income",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_tenant_topic_d",
+    "field_name": "income",
+    "field_description": "门店收入 = 核销业务额 / 1.06（已扣除税）",
+    "table_description": "",
+    "vector_text": "字段 income 业务含义 门店收入 字段说明 门店收入 = 核销业务额 / 1.06（已扣除税） 口径 门店收入口径 = exe_amount / 1.06，不等同于 exe_income 过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_tenant_topic_d.is_ceshi",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_tenant_topic_d",
+    "field_name": "is_ceshi",
+    "field_description": "1=测试门店，需排除",
+    "table_description": "",
+    "vector_text": "字段 is_ceshi 业务含义 是否测试门店 字段说明 1=测试门店，需排除 口径 分析时过滤 is_ceshi <> 1 过滤 ['is_ceshi <> 1']",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_tenant_topic_d.is_open",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_tenant_topic_d",
+    "field_name": "is_open",
+    "field_description": "1=营业中，0=非营业",
+    "table_description": "",
+    "vector_text": "字段 is_open 业务含义 营业状态 字段说明 1=营业中，0=非营业 口径 门店经营分析过滤 is_open = 1 过滤 ['is_open = 1']",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_tenant_topic_d.new_income",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_tenant_topic_d",
+    "field_name": "new_income",
+    "field_description": "门店新客贡献的收入",
+    "table_description": "",
+    "vector_text": "字段 new_income 业务含义 新客收入 字段说明 门店新客贡献的收入 口径  过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_tenant_topic_d.tenant_id",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_tenant_topic_d",
+    "field_name": "tenant_id",
+    "field_description": "连锁门店唯一标识，与维表/事实表统一",
+    "table_description": "",
+    "vector_text": "字段 tenant_id 业务含义 门店ID 字段说明 连锁门店唯一标识，与维表/事实表统一 口径 门店关联使用 tenant_id 过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_tenant_topic_d.tenant_name",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_tenant_topic_d",
+    "field_name": "tenant_name",
+    "field_description": "门店的标准名称",
+    "table_description": "",
+    "vector_text": "字段 tenant_name 业务含义 门店名称 字段说明 门店的标准名称 口径  过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_tenant_topic_d.up_amount",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_tenant_topic_d",
+    "field_name": "up_amount",
+    "field_description": "门店升单贡献的收入金额",
+    "table_description": "",
+    "vector_text": "字段 up_amount 业务含义 升单金额 字段说明 门店升单贡献的收入金额 口径  过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  },
+  {
+    "field_id": "dws_opt_qy_tenant_topic_d.up_user_cnt",
+    "database_name": "soyoung_dw",
+    "table_name": "dws_opt_qy_tenant_topic_d",
+    "field_name": "up_user_cnt",
+    "field_description": "门店升单的核销人数",
+    "table_description": "",
+    "vector_text": "字段 up_user_cnt 业务含义 升单人数 字段说明 门店升单的核销人数 口径  过滤 []",
+    "source_kind": "ddl_priority5_yaml"
+  }
+]

@@ -4,6 +4,7 @@ from app.knowledge_indexer.chroma_store import ChromaKnowledgeStore
 from app.knowledge_indexer.hybrid_retriever import HybridRetriever
 from app.knowledge_indexer.loader import load_knowledge_chunks
 from app.knowledge_indexer.retrieval_context import RetrievalContext, RetrievalContextBuilder
+from app.schema_index.loader import SchemaIndexLoader
 
 
 class KnowledgeSearchService:
@@ -14,6 +15,7 @@ class KnowledgeSearchService:
         store: ChromaKnowledgeStore | None = None,
         include_generated: bool = True,
         generated_dir: str = "knowledge/generated",
+        indexes_dir: str = "knowledge/generated/indexes",
     ):
         self.store = store or ChromaKnowledgeStore()
         self.context_builder = RetrievalContextBuilder()
@@ -21,7 +23,11 @@ class KnowledgeSearchService:
             include_generated=include_generated,
             generated_dir=generated_dir,
         )
-        self.hybrid_retriever = HybridRetriever(self.chunks)
+        self.schema_indexes = SchemaIndexLoader().load(indexes_dir)
+        self.hybrid_retriever = HybridRetriever(
+            self.chunks,
+            schema_indexes=self.schema_indexes,
+        )
 
     def search(self, query_text: str, top_k: int = 5) -> list[dict[str, Any]]:
         self._ensure_initialized()
