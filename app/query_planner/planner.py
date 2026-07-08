@@ -209,25 +209,183 @@ class QueryPlanner:
         if not schema_graph and not retrieval_context:
             return []
 
-        objects = schema_graph.table_names if schema_graph else []
-        fields = schema_graph.field_names if schema_graph else []
-        if not objects and retrieval_context:
-            objects = retrieval_context.top_table_names(limit=8)
-        if not fields and retrieval_context:
-            fields = retrieval_context.top_field_names(limit=12)
+        database = self._infer_cot_database(demo_case)
+        processing_objects = self._build_processing_objects(schema_graph, retrieval_context)
+        operation_instructions = self._build_operation_instructions(
+            demo_case, schema_graph, retrieval_context,
+        )
+        output_target = self._infer_cot_output_target(demo_case, schema_graph)
 
-        template_id = demo_case["template_id"]
         return [
             QueryPlanCoT(
                 step=1,
-                objects=objects,
-                fields=fields,
-                filters=self._infer_filters(template_id),
-                calculation=self._infer_cot_calculation(template_id, fields),
-                output=self._infer_cot_output(demo_case, fields),
+                database=database,
+                processing_objects=processing_objects,
+                operation_instructions=operation_instructions,
+                output_target=output_target,
                 evidence=self._cot_evidence(schema_graph, retrieval_context),
             )
         ]
+
+    # ------------------------------------------------------------------
+    # CoT four-tuple helpers
+    # ------------------------------------------------------------------
+
+    def _infer_cot_database(self, demo_case: dict) -> str:
+        """Extract database name from source_tables.
+
+        All current tables use soyoung_dw. When multi-database support
+        arrives this will parse each table's database prefix.
+        """
+        source_tables = demo_case.get("source_tables", [])
+        if source_tables:
+            first_table = source_tables[0]
+            if "." in first_table:
+                return first_table.split(".", 1)[0]
+        return "soyoung_dw"
+
+    def _build_processing_objects(
+        self,
+        schema_graph: SchemaGraph | None,
+        retrieval_context: RetrievalContext | None,
+    ) -> list[str]:
+        """Build processing_objects list: table.field entries + join relations.
+
+        Format aligns with AskData reference:
+        - "table_name.field_name" for each involved field
+        - "source_table.source_field <-> target_table.target_field" for joins
+        """
+        objects: list[str] = []
+
+        if schema_graph:
+            # Add table.field entries
+            for field in schema_graph.fields[:20]:
+                table_name = field.get("table_name", "")
+                field_name = field.get("field_name", "")
+                if table_name and field_name:
+                    objects.append(f"{table_name}.{field_name}")
+
+            # Add join relations
+            for relation in schema_graph.relations[:10]:
+                src_table = relation.get("source_table", "")
+                src_field = relation.get("source_field", "")
+                tgt_table = relation.get("target_table", "")
+                tgt_field = relation.get("target_field", "")
+                if src_table and src_field and tgt_table and tgt_field:
+                    objects.append(
+                        f"{src_table}.{src_field} <-> {tgt_table}.{tgt_field}"
+                    )
+
+        if not objects and retrieval_context:
+            for field_name in retrieval_context.top_field_names(limit=12):
+                objects.append(field_name)
+
+        return objects
+
+    def _build_operation_instructions(
+        self,
+        demo_case: dict,
+        schema_graph: SchemaGraph | None,
+        retrieval_context: RetrievalContext | None,
+    ) -> list[str]:
+        """Generate chain-of-thought operation instructions.
+
+        Returns a list of ordered steps describing the execution plan:
+        ["先筛选...", "再关联...", "然后聚合/分组...", "最后排序/截断..."]
+        """
+        template_id = demo_case["template_id"]
+        filters = self._infer_filters(template_id)
+        instructions: list[str] = []
+
+        # Step 1: filtering (WHERE)
+        filter_parts = []
+        if filters:
+            filter_parts.extend(filters)
+        if filter_parts:
+            instructions.append(
+                "先筛选："
+                + "；".join(f"{part}" for part in filter_parts)
+            )
+        else:
+            instructions.append("先筛选：按业务日期范围过滤有效记录")
+
+        # Step 2: joining (JOIN)
+        if schema_graph and schema_graph.relations:
+            join_desc_parts = []
+            for relation in schema_graph.relations[:5]:
+                src = f"{relation.get('source_table', '')}.{relation.get('source_field', '')}"
+                tgt = f"{relation.get('target_table', '')}.{relation.get('target_field', '')}"
+                desc = relation.get("relation_description", "")
+                if src and tgt:
+                    join_desc_parts.append(
+                        f"{src} = {tgt}"
+                        + (f"（{desc}）" if desc else "")
+                    )
+            if join_desc_parts:
+                instructions.append("再关联：" + "；".join(join_desc_parts))
+        else:
+            instructions.append("再关联：单表查询，无需表关联")
+
+        # Step 3: aggregation / grouping
+        calc = self._infer_cot_calculation(template_id, [])
+        dimensions = [
+            d.get("field", "")
+            for d in demo_case.get("dimensions", [])
+            if d.get("field")
+        ]
+        if dimensions and calc:
+            instructions.append(
+                f"然后聚合：按{', '.join(dimensions)}分组，计算{calc}"
+            )
+        elif dimensions:
+            instructions.append(
+                f"然后聚合：按{', '.join(dimensions)}分组统计"
+            )
+        elif calc:
+            instructions.append(f"然后聚合：计算{calc}")
+        else:
+            instructions.append("然后聚合：汇总统计")
+
+        # Step 4: ordering / limiting
+        source_tables = demo_case.get("source_tables", [])
+        if "top" in template_id.lower() or "排行" in demo_case.get("question", ""):
+            instructions.append("最后排序：按结果值降序排列并截取TOP-N")
+        elif "ORDER BY" in str(filters):
+            instructions.append("最后排序：按指定字段排序并限制返回行数")
+        else:
+            instructions.append("最后输出：返回查询结果")
+
+        return instructions
+
+    def _infer_cot_output_target(
+        self,
+        demo_case: dict,
+        schema_graph: SchemaGraph | None,
+    ) -> str:
+        """Determine the output target (corresponds to SQL SELECT clause)."""
+        metrics = demo_case.get("metrics", [])
+        dimensions = [
+            d.get("alias", d.get("field", ""))
+            for d in demo_case.get("dimensions", [])
+        ]
+
+        parts = []
+        # Resolve metric display names
+        for metric_id in metrics:
+            metric = self.metric_registry.get(metric_id)
+            if metric:
+                parts.append(metric.display_name)
+            else:
+                parts.append(metric_id)
+
+        if dimensions:
+            parts[:0] = dimensions
+
+        return "、".join(parts) if parts else demo_case.get("question", "")
+
+    # ------------------------------------------------------------------
+    # Legacy helpers (kept for _build_operation_instructions compatibility)
+    # ------------------------------------------------------------------
 
     def _infer_cot_calculation(self, template_id: str, fields: list[str]) -> str:
         if template_id == "unverified_amount_store_top10":
@@ -236,15 +394,7 @@ class QueryPlanner:
             return "SUM(pay_gmv)"
         if "execution" in template_id or "income" in template_id:
             return "SUM(exe_income)"
-        return ", ".join(fields[:3])
-
-    def _infer_cot_output(self, demo_case: dict, fields: list[str]) -> str:
-        dimensions = [
-            dimension.get("field", "")
-            for dimension in demo_case.get("dimensions", [])
-            if dimension.get("field")
-        ]
-        return ", ".join(dict.fromkeys(dimensions + fields[:3]))
+        return ", ".join(fields[:3]) if fields else "SUM(exe_income)"
 
     def _cot_evidence(
         self,

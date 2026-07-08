@@ -12,8 +12,10 @@ class MetricRegistry:
             for metric in metric_asset["metrics"]
         }
 
-    def get(self, canonical: str) -> MetricPlan:
-        metric = self.metrics[canonical]
+    def get(self, canonical: str) -> MetricPlan | None:
+        metric = self.metrics.get(canonical)
+        if metric is None:
+            return None
         return MetricPlan(
             canonical=metric["canonical"],
             display_name=metric["display_name"],
@@ -21,4 +23,8 @@ class MetricRegistry:
         )
 
     def get_many(self, canonical_names: list[str]) -> list[MetricPlan]:
-        return [self.get(canonical) for canonical in canonical_names]
+        return [
+            plan
+            for canonical in canonical_names
+            if (plan := self.get(canonical)) is not None
+        ]

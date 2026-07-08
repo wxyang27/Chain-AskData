@@ -208,6 +208,25 @@ pre {
   color: #8a4b00;
 }
 
+.schema-graph {
+  display: grid;
+  gap: 10px;
+  max-height: 420px;
+  overflow: auto;
+  margin-bottom: 18px;
+}
+
+.schema-summary {
+  min-height: auto;
+  background: #f1f7f4;
+  border-color: #cce4d8;
+  color: var(--accent-dark);
+}
+
+.schema-text {
+  min-height: 180px;
+}
+
 @media (max-width: 980px) {
   .workspace {
     grid-template-columns: 1fr;

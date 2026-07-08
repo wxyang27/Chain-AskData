@@ -3,8 +3,8 @@ from app.intent_router.router import IntentRouter, IntentRouteResult
 from app.knowledge_indexer.retrieval_context import RetrievalContext
 from app.models.query import QueryPlan, QueryResponse, ValidationResult
 from app.query_planner.planner import QueryPlanner
-from app.schema_graph.builder import SchemaGraphBuilder
 from app.schema_graph.graph import SchemaGraph
+from app.schema_retrieval.askdata_style_retriever import AskDataStyleSchemaRetriever
 from app.sql_generator.generator import SqlGenerator
 from app.sql_validator.validator import SqlValidator
 
@@ -18,16 +18,23 @@ class AnswerComposer:
         self.validator = SqlValidator()
         self.knowledge_search = KnowledgeSearchService()
         self.intent_router = IntentRouter()
-        self.schema_graph_builder = SchemaGraphBuilder(
+        self.schema_retriever = AskDataStyleSchemaRetriever(
             schema_indexes=self.knowledge_search.schema_indexes,
         )
 
     def compose(self, question: str) -> QueryResponse:
         retrieval_context = self.knowledge_search.search_structured(question, top_k=10)
-        schema_graph = self.schema_graph_builder.build(retrieval_context)
+        schema_result = self.schema_retriever.retrieve(retrieval_context)
+        schema_graph = schema_result["schema_graph"]
         route_result = self.intent_router.route(question, retrieval_context)
         if route_result.intent != "nl2sql":
-            return self._compose_explain_response(question, retrieval_context, schema_graph, route_result)
+            return self._compose_explain_response(
+                question,
+                retrieval_context,
+                schema_graph,
+                route_result,
+                schema_result,
+            )
 
         query_plan = self.planner.plan(
             question,
@@ -52,7 +59,7 @@ class AnswerComposer:
             ],
             retrieval_trace=retrieval_context.raw_matches,
             retrieval_context=retrieval_context.to_dict(),
-            schema_graph=schema_graph.to_dict(),
+            schema_graph=self._schema_graph_payload(schema_result),
         )
 
     def _compose_explain_response(
@@ -61,6 +68,7 @@ class AnswerComposer:
         retrieval_context: RetrievalContext,
         schema_graph: SchemaGraph,
         route_result: IntentRouteResult,
+        schema_result: dict,
     ) -> QueryResponse:
         notes = self._build_explain_notes(question, retrieval_context, route_result)
         validation = ValidationResult(
@@ -92,8 +100,22 @@ class AnswerComposer:
             caliber_notes=notes,
             retrieval_trace=retrieval_context.raw_matches,
             retrieval_context=retrieval_context.to_dict(),
-            schema_graph=schema_graph.to_dict(),
+            schema_graph=self._schema_graph_payload(schema_result),
         )
+
+    def _schema_graph_payload(self, schema_result: dict) -> dict:
+        schema_graph = schema_result["schema_graph"]
+        payload = schema_graph.to_dict()
+        payload.update(
+            {
+                "retriever": schema_result["retriever"],
+                "field_count": schema_result["field_count"],
+                "table_count": schema_result["table_count"],
+                "metric_count": schema_result["metric_count"],
+                "relation_count": schema_result["relation_count"],
+            }
+        )
+        return payload
 
     def _build_explain_notes(
         self,
@@ -102,18 +124,21 @@ class AnswerComposer:
         route_result: IntentRouteResult,
     ) -> list[str]:
         if route_result.intent == "unknown":
-            return [
-                "\u5f53\u524d\u77e5\u8bc6\u5e93\u672a\u767b\u8bb0\u8be5\u95ee\u9898\u9700\u8981\u7684\u8868\u3001\u5b57\u6bb5\u6216\u6307\u6807\uff0c\u4e0d\u80fd\u53ef\u9760\u751f\u6210 SQL\u3002",
-                "\u5df2\u77e5\u652f\u6301\u8303\u56f4\u4ee5\u8fde\u9501\u7ecf\u7ba1\u7684\u6838\u9500\u3001\u652f\u4ed8\u3001\u5f85\u6838\u9500\u3001\u95e8\u5e97\u3001\u54c1\u9879\u3001\u6e20\u9053\u7b49\u53e3\u5f84\u4e3a\u4e3b\u3002",
-            ]
+            return self._unknown_notes()
 
-        notes = []
+        notes: list[str] = []
         field_notes = self._field_notes(retrieval_context)
+
         if route_result.intent == "schema_explain":
             notes.extend(field_notes)
             if not notes:
                 notes.append("\u672a\u547d\u4e2d\u53ef\u4fe1\u5b57\u6bb5\u8bc1\u636e\uff0c\u4e0d\u5efa\u8bae\u5f3a\u884c\u751f\u6210 SQL\u3002")
             return notes
+
+        # caliber_explain: add metric caliber details
+        if route_result.intent == "caliber_explain":
+            metric_notes = self._metric_caliber_notes(retrieval_context)
+            notes.extend(metric_notes)
 
         question_lower = question.lower()
         if "\u6838\u9500" in question_lower and ("\u652f\u4ed8" in question_lower or "gmv" in question_lower):
@@ -123,7 +148,50 @@ class AnswerComposer:
                 "\u4e8c\u8005\u4e0d\u662f\u540c\u4e00\u53e3\u5f84\uff1a\u6838\u9500\u6536\u5165\u504f\u670d\u52a1\u5c65\u7ea6/\u6d88\u8017\uff0c\u652f\u4ed8GMV\u504f\u6536\u6b3e/\u4ea4\u6613\u3002",
             ])
         notes.extend(field_notes)
-        return notes or ["\u5df2\u547d\u4e2d\u53e3\u5f84\u89e3\u91ca\u610f\u56fe\uff0c\u4f46\u5f53\u524d\u5b57\u6bb5\u8bc1\u636e\u4e0d\u8db3\uff0c\u4e0d\u5efa\u8bae\u5f3a\u884c\u751f\u6210 SQL\u3002"]
+        return notes or [
+            "\u5df2\u547d\u4e2d\u53e3\u5f84\u89e3\u91ca\u610f\u56fe\uff0c\u4f46\u5f53\u524d\u5b57\u6bb5\u8bc1\u636e\u4e0d\u8db3\uff0c\u4e0d\u5efa\u8bae\u5f3a\u884c\u751f\u6210 SQL\u3002"
+        ]
+
+    def _unknown_notes(self) -> list[str]:
+        """Return helpful notes for unknown/unsupported questions."""
+        return [
+            "\u5f53\u524d\u77e5\u8bc6\u5e93\u672a\u767b\u8bb0\u8be5\u95ee\u9898\u9700\u8981\u7684\u8868\u3001\u5b57\u6bb5\u6216\u6307\u6807\uff0c\u4e0d\u80fd\u53ef\u9760\u751f\u6210 SQL\u3002",
+            (
+                "\u5df2\u77e5\u652f\u6301\u8303\u56f4\u4ee5\u8fde\u9501\u7ecf\u7ba1\u7684\u6838\u9500\u3001\u652f\u4ed8\u3001\u5f85\u6838\u9500\u3001\u95e8\u5e97\u3001\u54c1\u9879\u3001"
+                "\u6e20\u9053\u7b49\u53e3\u5f84\u4e3a\u4e3b\u3002\u53ef\u5c1d\u8bd5\u7684\u95ee\u9898\u5982\uff1a\u6838\u9500\u6536\u5165\u67e5\u8be2\u3001\u95e8\u5e97\u6392\u884c\u3001"
+                "\u6e20\u9053\u5bf9\u6bd4\u3001\u54c1\u9879\u6e17\u900f\u7387\u3001\u652f\u4ed8GMV\u7edf\u8ba1\u7b49\u3002"
+            ),
+        ]
+
+    def _metric_caliber_notes(self, retrieval_context: RetrievalContext) -> list[str]:
+        """Generate caliber notes from hit metrics in the retrieval context."""
+        notes: list[str] = []
+        seen = set()
+        for hit in retrieval_context.metrics[:5]:
+            canonical = hit.metadata.get("canonical", "")
+            display_name = hit.metadata.get("display_name", "")
+            if not canonical or canonical in seen:
+                continue
+            seen.add(canonical)
+
+            # Try to get more detail from the metric registry
+            metric = (
+                self.planner.metric_registry.get(canonical)
+                if hasattr(self.planner, "metric_registry")
+                else None
+            )
+            if metric:
+                parts = [f"{metric.display_name}\uff08{canonical}\uff09"]
+                if metric.formula:
+                    parts.append(f"\u516c\u5f0f\uff1a{metric.formula}")
+                notes.append("\uff1b".join(parts))
+            elif display_name:
+                notes.append(
+                    f"{display_name}\uff08{canonical}\uff09\uff1a\u53e3\u5f84\u8be6\u60c5\u8bf7\u53c2\u89c1\u6307\u6807\u5b9a\u4e49\u3002"
+                )
+            else:
+                notes.append(f"\u6307\u6807 {canonical}\uff1a\u53e3\u5f84\u8be6\u60c5\u8bf7\u53c2\u89c1\u6307\u6807\u5b9a\u4e49\u3002")
+        return notes
 
     def _field_notes(self, retrieval_context: RetrievalContext) -> list[str]:
         notes = []

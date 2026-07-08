@@ -63,11 +63,23 @@ class QueryPlanCoTTestCase(unittest.TestCase):
         self.assertGreaterEqual(len(plan.query_plan_cot), 1)
         first_step = plan.query_plan_cot[0]
         self.assertEqual(first_step.step, 1)
+
+        # new four-tuple fields
+        self.assertEqual(first_step.database, "soyoung_dw")
+        self.assertGreaterEqual(len(first_step.processing_objects), 2)
+        self.assertIn(
+            "dm_opt_qy_order_info_all_d.left_gmv",
+            first_step.processing_objects,
+        )
+        self.assertGreaterEqual(len(first_step.operation_instructions), 2)
+        self.assertIn("待核销金额", first_step.output_target)
+        self.assertIn("字段证据", first_step.evidence[0])
+
+        # backward-compat properties still work
         self.assertIn("dm_opt_qy_order_info_all_d", first_step.objects)
         self.assertIn("left_gmv", first_step.fields)
-        self.assertIn("left_num > 0", first_step.filters)
+        self.assertIn("left_num > 0", first_step.filters[0])
         self.assertIn("SUM(left_gmv)", first_step.calculation)
-        self.assertIn("字段证据", first_step.evidence[0])
 
 
 if __name__ == "__main__":

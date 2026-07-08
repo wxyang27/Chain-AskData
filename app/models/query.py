@@ -26,15 +26,73 @@ class DimensionPlan(BaseModel):
 
 
 class QueryPlanCoT(BaseModel):
-    """Structured QueryPlan CoT step for downstream SQL generation."""
+    """Structured QueryPlan CoT step - AskData four-tuple format.
+
+    Aligned with AskData reference design:
+    (database, processing_objects, operation_instructions, output_target)
+
+    processing_objects lists all involved table.field entries and join relations
+    (e.g. "trade_summary.total_trade_count",
+          "trade_summary.user_id <-> interest_info.user_id").
+
+    operation_instructions describes the chain of execution in order:
+    ["先筛选...", "再关联...", "然后聚合...", "最后输出..."].
+    """
 
     step: int
-    objects: list[str] = Field(default_factory=list)
-    fields: list[str] = Field(default_factory=list)
-    filters: list[str] = Field(default_factory=list)
-    calculation: str = ""
-    output: str = ""
+    database: str = ""
+    processing_objects: list[str] = Field(default_factory=list)
+    operation_instructions: list[str] = Field(default_factory=list)
+    output_target: str = ""
     evidence: list[str] = Field(default_factory=list)
+
+    # --- backward-compatibility aliases (deprecated, prefer new names) ---
+
+    @property
+    def objects(self) -> list[str]:
+        """Deprecated alias: extract table names from processing_objects."""
+        table_names: list[str] = []
+        for obj in self.processing_objects:
+            if "<->" in obj:
+                continue
+            if "." in obj:
+                table_names.append(obj.rsplit(".", 1)[0])
+            else:
+                table_names.append(obj)
+        return list(dict.fromkeys(table_names))
+
+    @property
+    def fields(self) -> list[str]:
+        """Deprecated: extract field names from processing_objects."""
+        result = []
+        for obj in self.processing_objects:
+            if "<->" in obj:
+                continue
+            if "." in obj:
+                result.append(obj.rsplit(".", 1)[-1])
+            else:
+                result.append(obj)
+        return list(dict.fromkeys(result))
+
+    @property
+    def filters(self) -> list[str]:
+        """Deprecated: first operation_instruction typically holds filters."""
+        if self.operation_instructions:
+            return [self.operation_instructions[0]]
+        return []
+
+    @property
+    def calculation(self) -> str:
+        """Deprecated: aggregation part from operation_instructions."""
+        for instr in self.operation_instructions:
+            if "聚合" in instr or "SUM" in instr or "COUNT" in instr:
+                return instr
+        return ""
+
+    @property
+    def output(self) -> str:
+        """Deprecated alias for output_target."""
+        return self.output_target
 
 
 class QueryPlan(BaseModel):

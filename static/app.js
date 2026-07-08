@@ -4,6 +4,7 @@ const planBlock = document.querySelector("#plan");
 const sqlBlock = document.querySelector("#sql");
 const validationBlock = document.querySelector("#validation");
 const traceBlock = document.querySelector("#retrieval-trace");
+const schemaGraphBlock = document.querySelector("#schema-graph");
 const notesList = document.querySelector("#notes");
 const copyButton = document.querySelector("#copy");
 const demoList = document.querySelector("#demo-list");
@@ -21,6 +22,7 @@ const text = {
   generatingSql: "\u6b63\u5728\u751f\u6210 SQL...",
   validating: "\u6b63\u5728\u6821\u9a8c...",
   retrieving: "\u6b63\u5728\u68c0\u7d22\u77e5\u8bc6\u5e93...",
+  buildingSchemaGraph: "\u6b63\u5728\u6784\u5efa SchemaGraph...",
   copied: "\u5df2\u590d\u5236",
   copy: "\u590d\u5236",
 };
@@ -120,6 +122,34 @@ function renderTraceItem(item, index) {
   return card;
 }
 
+function renderSchemaGraph(schemaGraph) {
+  if (!schemaGraph) {
+    schemaGraphBlock.textContent = "\u6682\u65e0 SchemaGraph";
+    return;
+  }
+
+  const summary = [
+    `retriever: ${schemaGraph.retriever || "unknown"}`,
+    `fields: ${schemaGraph.field_count ?? (schemaGraph.fields || []).length}`,
+    `tables: ${schemaGraph.table_count ?? (schemaGraph.tables || []).length}`,
+    `metrics: ${schemaGraph.metric_count ?? (schemaGraph.metrics || []).length}`,
+    `relations: ${schemaGraph.relation_count ?? (schemaGraph.relations || []).length}`,
+  ].join("\n");
+
+  schemaGraphBlock.innerHTML = "";
+
+  const summaryBlock = document.createElement("pre");
+  summaryBlock.className = "schema-summary";
+  summaryBlock.textContent = summary;
+
+  const graphText = document.createElement("pre");
+  graphText.className = "schema-text";
+  graphText.textContent = schemaGraph.schema_graph_text || "\u672a\u751f\u6210 SchemaGraph Text";
+
+  schemaGraphBlock.appendChild(summaryBlock);
+  schemaGraphBlock.appendChild(graphText);
+}
+
 generateButton.addEventListener("click", async () => {
   const question = questionInput.value.trim();
   if (!question) {
@@ -130,6 +160,7 @@ generateButton.addEventListener("click", async () => {
   sqlBlock.textContent = text.generatingSql;
   validationBlock.textContent = text.validating;
   traceBlock.textContent = text.retrieving;
+  schemaGraphBlock.textContent = text.buildingSchemaGraph;
   notesList.innerHTML = "";
 
   const response = await fetch("/api/query", {
@@ -144,6 +175,7 @@ generateButton.addEventListener("click", async () => {
   sqlBlock.textContent = data.sql;
   validationBlock.textContent = JSON.stringify(data.validation, null, 2);
   renderRetrievalContext(data.retrieval_context);
+  renderSchemaGraph(data.schema_graph);
 
   data.caliber_notes.forEach((note) => {
     const item = document.createElement("li");
