@@ -11,6 +11,7 @@ class SchemaGraph:
     relations: list[dict[str, Any]] = field(default_factory=list)
     missing_evidence: list[str] = field(default_factory=list)
     schema_graph_text: str = ""
+    supplemented_fields: list[str] = field(default_factory=list)
 
     @property
     def table_names(self) -> list[str]:
@@ -45,4 +46,5 @@ class SchemaGraph:
             "relations": self.relations,
             "missing_evidence": self.missing_evidence,
             "schema_graph_text": self.schema_graph_text,
+            "supplemented_fields": self.supplemented_fields,
         }

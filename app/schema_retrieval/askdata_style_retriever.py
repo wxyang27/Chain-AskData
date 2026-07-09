@@ -17,8 +17,12 @@ class AskDataStyleSchemaRetriever:
         self.schema_indexes = schema_indexes or SchemaIndexLoader().load(indexes_dir)
         self.schema_graph_builder = SchemaGraphBuilder(schema_indexes=self.schema_indexes)
 
-    def retrieve(self, retrieval_context: RetrievalContext) -> dict[str, Any]:
-        schema_graph = self.schema_graph_builder.build(retrieval_context)
+    def retrieve(
+        self,
+        retrieval_context: RetrievalContext,
+        template_id: str = "",
+    ) -> dict[str, Any]:
+        schema_graph = self.schema_graph_builder.build(retrieval_context, template_id=template_id)
         return {
             "retriever": "askdata_style_schema_retriever",
             "schema_graph": schema_graph,
@@ -27,4 +31,5 @@ class AskDataStyleSchemaRetriever:
             "table_count": len(schema_graph.tables),
             "metric_count": len(schema_graph.metrics),
             "relation_count": len(schema_graph.relations),
+            "supplemented_fields": schema_graph.supplemented_fields,
         }

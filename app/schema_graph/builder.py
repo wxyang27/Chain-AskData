@@ -1,6 +1,7 @@
 from typing import Any
 
 from app.knowledge_indexer.retrieval_context import RetrievalContext
+from app.schema_graph.enricher import SchemaGraphEnricher
 from app.schema_graph.graph import SchemaGraph
 from app.schema_index.loader import SchemaIndexBundle
 
@@ -10,8 +11,13 @@ class SchemaGraphBuilder:
 
     def __init__(self, schema_indexes: SchemaIndexBundle | None = None):
         self.schema_indexes = schema_indexes
+        self._enricher = SchemaGraphEnricher(schema_indexes) if schema_indexes else None
 
-    def build(self, retrieval_context: RetrievalContext) -> SchemaGraph:
+    def build(
+        self,
+        retrieval_context: RetrievalContext,
+        template_id: str = "",
+    ) -> SchemaGraph:
         fields = self._enrich_fields(self._metadata_list(retrieval_context.fields))
         metrics = self._enrich_metrics(self._metadata_list(retrieval_context.metrics))
         tables = self._metadata_list(retrieval_context.tables)
@@ -40,6 +46,10 @@ class SchemaGraphBuilder:
             missing_evidence=missing_evidence,
         )
 
+        # Inject required fields from dependency matrix when template_id is known
+        if template_id and self._enricher:
+            graph = self._enricher.enrich(graph, template_id)
+
         return SchemaGraph(
             query=graph.query,
             tables=graph.tables,
@@ -48,6 +58,7 @@ class SchemaGraphBuilder:
             relations=graph.relations,
             missing_evidence=graph.missing_evidence,
             schema_graph_text=format_schema_graph(graph),
+            supplemented_fields=graph.supplemented_fields,
         )
 
     def _metadata_list(self, hits) -> list[dict[str, Any]]:

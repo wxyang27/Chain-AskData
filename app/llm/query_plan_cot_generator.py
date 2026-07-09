@@ -1,3 +1,4 @@
+import json
 from dataclasses import dataclass, field
 from time import perf_counter
 from typing import Any
@@ -7,6 +8,8 @@ from app.llm.prompts import build_query_plan_cot_messages
 from app.llm.query_plan_cot_validator import QueryPlanCoTValidator
 from app.models.query import QueryPlanCoT
 from app.schema_graph.graph import SchemaGraph
+
+MAX_REPAIR_ATTEMPTS = 1
 
 
 @dataclass(frozen=True)
@@ -24,7 +27,11 @@ class LLMQueryPlanCoTResult:
 
 
 class LLMQueryPlanCoTGenerator:
-    """Generate QueryPlanCoT through local Qwen/OpenAI-compatible chat API."""
+    """Generate QueryPlanCoT through local Qwen/OpenAI-compatible chat API.
+
+    On validation failure the generator sends one repair request with
+    specific error feedback before falling back to the rule-based CoT.
+    """
 
     def __init__(
         self,
@@ -34,12 +41,14 @@ class LLMQueryPlanCoTGenerator:
         timeout_seconds: int = 30,
         client: LocalLLMClient | None = None,
         validator: QueryPlanCoTValidator | None = None,
+        max_repairs: int = MAX_REPAIR_ATTEMPTS,
     ):
         self.enabled = enabled
         self.model = model
         self.timeout_seconds = timeout_seconds
         self.client = client or LocalLLMClient()
         self.validator = validator or QueryPlanCoTValidator()
+        self.max_repairs = max_repairs
 
     def generate(
         self,
@@ -66,13 +75,16 @@ class LLMQueryPlanCoTGenerator:
             )
 
         started_at = perf_counter()
+        base_messages = build_query_plan_cot_messages(
+            question=question,
+            schema_graph_text=schema_graph.schema_graph_text,
+        )
+
+        # --- first attempt ---
         try:
             payload = self.client.chat_json(
                 model=self.model,
-                messages=build_query_plan_cot_messages(
-                    question=question,
-                    schema_graph_text=schema_graph.schema_graph_text,
-                ),
+                messages=base_messages,
                 temperature=0,
                 timeout_seconds=self.timeout_seconds,
             )
@@ -88,6 +100,31 @@ class LLMQueryPlanCoTGenerator:
             )
 
         validation = self.validator.validate(steps, schema_graph)
+        repair_count = 0
+
+        # --- repair loop ---
+        while not validation.passed and repair_count < self.max_repairs:
+            repair_messages = self._build_repair_messages(
+                base_messages=base_messages,
+                failed_payload=payload,
+                errors=validation.errors,
+            )
+            repair_count += 1
+
+            try:
+                payload = self.client.chat_json(
+                    model=self.model,
+                    messages=repair_messages,
+                    temperature=0,
+                    timeout_seconds=self.timeout_seconds,
+                )
+                steps = self._parse_steps(payload)
+            except Exception:
+                break  # repair call failed, fall through to fallback
+
+            validation = self.validator.validate(steps, schema_graph)
+
+        # --- result ---
         if not validation.passed:
             return LLMQueryPlanCoTResult(
                 enabled=True,
@@ -99,6 +136,7 @@ class LLMQueryPlanCoTGenerator:
                 validation_passed=False,
                 validation_errors=validation.errors,
                 latency_ms=self._elapsed_ms(started_at),
+                repair_count=repair_count,
             )
 
         return LLMQueryPlanCoTResult(
@@ -109,7 +147,35 @@ class LLMQueryPlanCoTGenerator:
             raw_response=payload,
             validation_passed=True,
             latency_ms=self._elapsed_ms(started_at),
+            repair_count=repair_count,
         )
+
+    # ------------------------------------------------------------------
+    # internal helpers
+    # ------------------------------------------------------------------
+
+    def _build_repair_messages(
+        self,
+        *,
+        base_messages: list[dict[str, str]],
+        failed_payload: dict[str, Any],
+        errors: list[str],
+    ) -> list[dict[str, str]]:
+        error_list = "\n".join(f"- {e}" for e in errors)
+        repair_prompt = (
+            "你的上一次输出有以下校验错误，请根据 SchemaGraph 修正后重新输出正确的 JSON：\n\n"
+            f"{error_list}\n\n"
+            "要求：\n"
+            "1. 只使用 SchemaGraph 中存在的表、字段和关联关系\n"
+            "2. operation_instructions 按链式步骤描述（先筛选、再关联、然后聚合、最后输出）\n"
+            "3. 仅输出符合指定结构的 JSON object"
+        )
+
+        return [
+            *base_messages,
+            {"role": "assistant", "content": json.dumps(failed_payload, ensure_ascii=False)},
+            {"role": "user", "content": repair_prompt},
+        ]
 
     def _parse_steps(self, payload: dict[str, Any]) -> list[QueryPlanCoT]:
         raw_steps = payload.get("steps")

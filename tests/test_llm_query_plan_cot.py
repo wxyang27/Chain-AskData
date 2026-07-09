@@ -229,3 +229,216 @@ def test_query_planner_adopts_llm_cot_when_valid():
             evidence=["LLM generated from SchemaGraph"],
         )
     ]
+
+
+# ---------------------------------------------------------------------------
+# Repair loop tests
+# ---------------------------------------------------------------------------
+
+
+class RepairFakeLLMClient:
+    """Fake LLM client that simulates repair scenarios.
+
+    Attributes:
+        responses: list of payloads (or exceptions) to return in sequence.
+        calls: recorded call args.
+    """
+
+    def __init__(self, responses: list):
+        self.responses = responses
+        self.calls: list[dict] = []
+        self._call_index = 0
+
+    def chat_json(self, *, model, messages, temperature=0, timeout_seconds=30):
+        self.calls.append(
+            {
+                "model": model,
+                "messages": messages,
+                "temperature": temperature,
+            }
+        )
+        if self._call_index >= len(self.responses):
+            raise RuntimeError("no more fake responses")
+        response = self.responses[self._call_index]
+        self._call_index += 1
+        if isinstance(response, Exception):
+            raise response
+        return response
+
+
+def _make_schema_graph():
+    return SchemaGraph(
+        query="最近30天各门店核销收入 TOP10",
+        fields=[
+            {
+                "table_name": "dm_opt_qy_user_execution_record_all_d",
+                "field_name": "exe_income",
+            },
+            {
+                "table_name": "dim_qy_tenant_info_all_d",
+                "field_name": "sy_hospital_name",
+            },
+        ],
+        schema_graph_text="Table: execution_record\nField: exe_income\nField: sy_hospital_name",
+    )
+
+
+def test_repair_succeeds_on_second_attempt():
+    """LLM first output fails validation, repair output passes."""
+    first_response = {
+        "steps": [
+            {
+                "step": 1,
+                "database": "soyoung_dw",
+                "processing_objects": ["invented.field"],
+                "operation_instructions": ["先瞎编"],
+                "output_target": "虚构结果",
+            }
+        ]
+    }
+    second_response = {
+        "steps": [
+            {
+                "step": 1,
+                "database": "soyoung_dw",
+                "processing_objects": [
+                    "dm_opt_qy_user_execution_record_all_d.exe_income",
+                    "dim_qy_tenant_info_all_d.sy_hospital_name",
+                ],
+                "operation_instructions": [
+                    "先筛选 dp = DATE_SUB(CURRENT_DATE(),1)",
+                    "再关联 tenant_id",
+                    "然后聚合 SUM(exe_income) GROUP BY sy_hospital_name",
+                    "最后排序 ORDER BY SUM(exe_income) DESC LIMIT 10",
+                ],
+                "output_target": "门店, 核销收入",
+            }
+        ]
+    }
+
+    client = RepairFakeLLMClient([first_response, second_response])
+    generator = LLMQueryPlanCoTGenerator(enabled=True, client=client)
+
+    result = generator.generate(
+        question="最近30天各门店核销收入 TOP10",
+        schema_graph=_make_schema_graph(),
+        fallback_steps=[],
+    )
+
+    assert result.enabled is True
+    assert result.adopted is True
+    assert result.repair_count == 1
+    assert result.validation_passed is True
+    assert result.validation_errors == []
+    assert len(client.calls) == 2
+
+    # Verify repair message contains error context
+    repair_user_msg = client.calls[1]["messages"][-1]["content"]
+    assert "unknown_field" in repair_user_msg
+    assert "invented.field" in repair_user_msg
+
+
+def test_repair_fails_gracefully():
+    """Both attempts fail validation → fallback to rule CoT."""
+    bad_response = {
+        "steps": [
+            {
+                "step": 1,
+                "database": "soyoung_dw",
+                "processing_objects": ["invented.field"],
+                "operation_instructions": ["先瞎编"],
+                "output_target": "虚构结果",
+            }
+        ]
+    }
+
+    fallback = [
+        QueryPlanCoT(
+            step=1,
+            database="soyoung_dw",
+            processing_objects=["execution_record.exe_income"],
+            operation_instructions=["先筛选，再聚合，最后输出"],
+            output_target="核销收入",
+        )
+    ]
+
+    client = RepairFakeLLMClient([bad_response, bad_response])
+    generator = LLMQueryPlanCoTGenerator(enabled=True, client=client)
+
+    result = generator.generate(
+        question="最近30天各门店核销收入 TOP10",
+        schema_graph=_make_schema_graph(),
+        fallback_steps=fallback,
+    )
+
+    assert result.adopted is False
+    assert result.steps == fallback
+    assert result.repair_count == 1
+    assert result.validation_passed is False
+    assert "unknown_field" in result.validation_errors[0]
+    assert len(client.calls) == 2
+
+
+def test_repair_not_attempted_when_first_call_exception():
+    """If the first LLM call errors out, no repair is attempted."""
+    client = RepairFakeLLMClient([RuntimeError("qwen offline")])
+    generator = LLMQueryPlanCoTGenerator(enabled=True, client=client)
+
+    fallback = [
+        QueryPlanCoT(
+            step=1,
+            database="soyoung_dw",
+            processing_objects=["execution_record.exe_income"],
+            operation_instructions=["先筛选"],
+            output_target="核销收入",
+        )
+    ]
+
+    result = generator.generate(
+        question="最近30天各门店核销收入 TOP10",
+        schema_graph=_make_schema_graph(),
+        fallback_steps=fallback,
+    )
+
+    assert result.adopted is False
+    assert result.repair_count == 0
+    assert "qwen offline" in result.fallback_reason
+    assert len(client.calls) == 1
+
+
+def test_repair_exception_during_repair_call_falls_back():
+    """First call passes parse but fails validation; repair call errors out."""
+    bad_response = {
+        "steps": [
+            {
+                "step": 1,
+                "database": "soyoung_dw",
+                "processing_objects": ["invented.field"],
+                "operation_instructions": ["先瞎编"],
+                "output_target": "虚构结果",
+            }
+        ]
+    }
+    fallback = [
+        QueryPlanCoT(
+            step=1,
+            database="soyoung_dw",
+            processing_objects=["execution_record.exe_income"],
+            operation_instructions=["先筛选"],
+            output_target="核销收入",
+        )
+    ]
+
+    client = RepairFakeLLMClient([bad_response, RuntimeError("repair timeout")])
+    generator = LLMQueryPlanCoTGenerator(enabled=True, client=client)
+
+    result = generator.generate(
+        question="最近30天各门店核销收入 TOP10",
+        schema_graph=_make_schema_graph(),
+        fallback_steps=fallback,
+    )
+
+    assert result.adopted is False
+    assert result.repair_count == 1
+    assert result.steps == fallback
+    assert len(client.calls) == 2

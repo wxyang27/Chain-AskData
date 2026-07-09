@@ -24,7 +24,8 @@ class AnswerComposer:
 
     def compose(self, question: str) -> QueryResponse:
         retrieval_context = self.knowledge_search.search_structured(question, top_k=20)
-        schema_result = self.schema_retriever.retrieve(retrieval_context)
+        template_id = retrieval_context.top_template_id() or ""
+        schema_result = self.schema_retriever.retrieve(retrieval_context, template_id=template_id)
         schema_graph = schema_result["schema_graph"]
         route_result = self.intent_router.route(question, retrieval_context)
         if route_result.intent != "nl2sql":
