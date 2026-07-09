@@ -70,6 +70,88 @@ REQUIRED_FIELDS_BY_TEMPLATE: dict[str, list[tuple[str, str]]] = {
         ("dm_opt_qy_user_execution_record_all_d", "exe_income"),
         ("dm_opt_qy_user_execution_record_all_d", "revenue_category"),
     ],
+    # --- remaining execution_record templates ---
+    "standard_item_income_top20_30d": [
+        ("dm_opt_qy_user_execution_record_all_d", "dp"),
+        ("dm_opt_qy_user_execution_record_all_d", "is_valid"),
+        ("dm_opt_qy_user_execution_record_all_d", "executed_date"),
+        ("dm_opt_qy_user_execution_record_all_d", "exe_income"),
+        ("dm_opt_qy_user_execution_record_all_d", "standard_name"),
+    ],
+    "standard_item_penetration_90d": [
+        ("dm_opt_qy_user_execution_record_all_d", "dp"),
+        ("dm_opt_qy_user_execution_record_all_d", "is_valid"),
+        ("dm_opt_qy_user_execution_record_all_d", "executed_date"),
+        ("dm_opt_qy_user_execution_record_all_d", "exe_income"),
+        ("dm_opt_qy_user_execution_record_all_d", "standard_name"),
+        ("dm_opt_qy_user_execution_record_all_d", "customer_id"),
+    ],
+    "zero_income_orders_30d": [
+        ("dm_opt_qy_user_execution_record_all_d", "dp"),
+        ("dm_opt_qy_user_execution_record_all_d", "is_valid"),
+        ("dm_opt_qy_user_execution_record_all_d", "executed_date"),
+        ("dm_opt_qy_user_execution_record_all_d", "exe_income"),
+        ("dm_opt_qy_user_execution_record_all_d", "customer_id"),
+        ("dm_opt_qy_user_execution_record_all_d", "main_order_id"),
+    ],
+    "upgrade_execution_30d": [
+        ("dm_opt_qy_user_execution_record_all_d", "dp"),
+        ("dm_opt_qy_user_execution_record_all_d", "is_valid"),
+        ("dm_opt_qy_user_execution_record_all_d", "executed_date"),
+        ("dm_opt_qy_user_execution_record_all_d", "exe_income"),
+        ("dm_opt_qy_user_execution_record_all_d", "customer_id"),
+        ("dm_opt_qy_user_execution_record_all_d", "verify_date_id"),
+        ("dm_opt_qy_user_execution_record_all_d", "is_up"),
+    ],
+    # --- order_info templates ---
+    "unverified_amount_store_top10": [
+        ("dm_opt_qy_order_info_all_d", "dp"),
+        ("dm_opt_qy_order_info_all_d", "tenant_id"),
+        ("dm_opt_qy_order_info_all_d", "left_gmv"),
+        ("dm_opt_qy_order_info_all_d", "left_num"),
+        ("dim_qy_tenant_info_all_d", "dp"),
+        ("dim_qy_tenant_info_all_d", "tenant_id"),
+        ("dim_qy_tenant_info_all_d", "sy_hospital_name"),
+    ],
+    "new_customer_payment_30d": [
+        ("dm_opt_qy_order_info_all_d", "dp"),
+        ("dm_opt_qy_order_info_all_d", "pay_date"),
+        ("dm_opt_qy_order_info_all_d", "pay_gmv"),
+        ("dm_opt_qy_order_info_all_d", "uid"),
+        ("dm_opt_qy_order_info_all_d", "is_pay_new"),
+        ("dm_opt_qy_order_info_all_d", "is_paydate_cash"),
+    ],
+    "pay_to_verify_rate_30d": [
+        ("dm_opt_qy_order_info_all_d", "dp"),
+        ("dm_opt_qy_order_info_all_d", "pay_date"),
+        ("dm_opt_qy_order_info_all_d", "pay_gmv"),
+        ("dm_opt_qy_order_info_all_d", "uid"),
+        ("dm_opt_qy_user_execution_record_all_d", "dp"),
+        ("dm_opt_qy_user_execution_record_all_d", "is_valid"),
+        ("dm_opt_qy_user_execution_record_all_d", "executed_date"),
+        ("dm_opt_qy_user_execution_record_all_d", "exe_income"),
+        ("dm_opt_qy_user_execution_record_all_d", "main_order_id"),
+    ],
+}
+
+# ---------------------------------------------------------------------------
+# Template-level relation requirements
+#   (source_table, source_field, target_table, target_field)
+# ---------------------------------------------------------------------------
+
+REQUIRED_RELATIONS_BY_TEMPLATE: dict[str, list[tuple[str, str, str, str]]] = {
+    "store_income_top10_30d": [
+        ("dm_opt_qy_user_execution_record_all_d", "tenant_id",
+         "dim_qy_tenant_info_all_d", "tenant_id"),
+    ],
+    "unverified_amount_store_top10": [
+        ("dm_opt_qy_order_info_all_d", "tenant_id",
+         "dim_qy_tenant_info_all_d", "tenant_id"),
+    ],
+    "pay_to_verify_rate_30d": [
+        ("dm_opt_qy_order_info_all_d", "main_order_id",
+         "dm_opt_qy_user_execution_record_all_d", "main_order_id"),
+    ],
 }
 
 
@@ -143,6 +225,23 @@ _SYNTHETIC_FIELDS: dict[str, dict[str, Any]] = {
         "is_metric_field": False,
         "is_dimension_field": False,
     },
+    "dm_opt_qy_order_info_all_d.tenant_id": {
+        "field_id": "dm_opt_qy_order_info_all_d.tenant_id",
+        "database_name": "soyoung_dw",
+        "table_name": "dm_opt_qy_order_info_all_d",
+        "field_name": "tenant_id",
+        "field_type": "bigint",
+        "field_description": "门店唯一标识，用于关联门店维度表 dim_qy_tenant_info_all_d",
+        "business_name": "门店ID",
+        "caliber": "关联键，通过 tenant_id 关联 dim_qy_tenant_info_all_d 获取门店名称",
+        "sample_values": [],
+        "value_range": [],
+        "filters": [],
+        "risk_notes": [],
+        "is_join_key": True,
+        "is_metric_field": False,
+        "is_dimension_field": False,
+    },
 }
 
 
@@ -200,9 +299,6 @@ class SchemaGraphEnricher:
             if table_name not in existing_table_names:
                 existing_table_names.add(table_name)
 
-        if not new_fields:
-            return schema_graph
-
         merged_fields = list(schema_graph.fields) + new_fields
 
         # Ensure new tables have entries
@@ -214,12 +310,18 @@ class SchemaGraphEnricher:
                     merged_tables.append({**table_entry, "asset_type": "table",
                                           "derived_from": "enricher"})
 
+        # Supplement relations: template-required + index lookup for new table pairs
+        merged_relations = list(schema_graph.relations)
+        merged_relations = self._supplement_relations(
+            merged_relations, merged_tables, template_id,
+        )
+
         return SchemaGraph(
             query=schema_graph.query,
             tables=merged_tables,
             fields=merged_fields,
             metrics=list(schema_graph.metrics),
-            relations=list(schema_graph.relations),
+            relations=merged_relations,
             missing_evidence=list(schema_graph.missing_evidence),
             schema_graph_text=schema_graph.schema_graph_text,
             supplemented_fields=supplemented,
@@ -228,6 +330,52 @@ class SchemaGraphEnricher:
     # ------------------------------------------------------------------
     # internal helpers
     # ------------------------------------------------------------------
+
+    def _supplement_relations(
+        self,
+        relations: list[dict[str, Any]],
+        tables: list[dict[str, Any]],
+        template_id: str,
+    ) -> list[dict[str, Any]]:
+        table_names = {
+            t.get("table_name") or ""
+            for t in tables
+        }
+
+        # Existing relation keys for dedup
+        existing_keys = {
+            (r.get("source_table"), r.get("source_field"),
+             r.get("target_table"), r.get("target_field"))
+            for r in relations
+        }
+
+        # 1. Index lookup: find relations where both tables are present
+        for rel in self._indexes.schema_relation_index:
+            src = rel.get("source_table", "")
+            tgt = rel.get("target_table", "")
+            if src in table_names and tgt in table_names:
+                key = (src, rel.get("source_field"), tgt, rel.get("target_field"))
+                if key not in existing_keys:
+                    relations.append(dict(rel))
+                    existing_keys.add(key)
+
+        # 2. Template-required relations
+        required_rels = REQUIRED_RELATIONS_BY_TEMPLATE.get(template_id, [])
+        for src_t, src_f, tgt_t, tgt_f in required_rels:
+            if src_t in table_names and tgt_t in table_names:
+                key = (src_t, src_f, tgt_t, tgt_f)
+                if key not in existing_keys:
+                    relations.append({
+                        "source_table": src_t,
+                        "source_field": src_f,
+                        "target_table": tgt_t,
+                        "target_field": tgt_f,
+                        "relation_type": "LEFT JOIN",
+                        "relation_description": f"模板级补全：{src_t}.{src_f} ↔ {tgt_t}.{tgt_f}",
+                    })
+                    existing_keys.add(key)
+
+        return relations
 
     def _lookup_field(
         self,

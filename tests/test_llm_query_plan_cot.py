@@ -275,9 +275,25 @@ def _make_schema_graph():
                 "field_name": "exe_income",
             },
             {
+                "table_name": "dm_opt_qy_user_execution_record_all_d",
+                "field_name": "tenant_id",
+            },
+            {
                 "table_name": "dim_qy_tenant_info_all_d",
                 "field_name": "sy_hospital_name",
             },
+            {
+                "table_name": "dim_qy_tenant_info_all_d",
+                "field_name": "tenant_id",
+            },
+        ],
+        relations=[
+            {
+                "source_table": "dm_opt_qy_user_execution_record_all_d",
+                "source_field": "tenant_id",
+                "target_table": "dim_qy_tenant_info_all_d",
+                "target_field": "tenant_id",
+            }
         ],
         schema_graph_text="Table: execution_record\nField: exe_income\nField: sy_hospital_name",
     )
@@ -304,6 +320,7 @@ def test_repair_succeeds_on_second_attempt():
                 "processing_objects": [
                     "dm_opt_qy_user_execution_record_all_d.exe_income",
                     "dim_qy_tenant_info_all_d.sy_hospital_name",
+                    "dm_opt_qy_user_execution_record_all_d.tenant_id <-> dim_qy_tenant_info_all_d.tenant_id",
                 ],
                 "operation_instructions": [
                     "先筛选 dp = DATE_SUB(CURRENT_DATE(),1)",

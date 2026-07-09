@@ -45,6 +45,7 @@ def _step(**overrides) -> QueryPlanCoT:
         "database": "soyoung_dw",
         "processing_objects": [
             "execution_record.exe_income",
+            "tenant_info.sy_hospital_name",
             "execution_record.tenant_id <-> tenant_info.tenant_id",
         ],
         "operation_instructions": [

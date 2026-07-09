@@ -11,7 +11,15 @@ class QueryPlanCoTValidationResult:
 
 
 class QueryPlanCoTValidator:
-    """Validate LLM planning objects against the retrieved SchemaGraph."""
+    """Validate LLM planning objects against the retrieved SchemaGraph.
+
+    Checks (in order):
+    1. Structural: non-empty steps, allowed database, non-empty output/instructions
+    2. Field existence: every table.field in processing_objects must be in SchemaGraph
+    3. Relation existence: every <-> relation must be in SchemaGraph
+    4. Cross-table integrity: when instructions mention joining, relations must exist
+    5. Output grounding: output_target fields/aggregates must reference processing_objects
+    """
 
     def __init__(self, allowed_databases: set[str] | None = None):
         self.allowed_databases = allowed_databases or {"soyoung_dw"}
@@ -29,28 +37,77 @@ class QueryPlanCoTValidator:
             errors.append("empty_steps")
 
         for step in steps:
+            # --- structural checks ---
             if step.database not in self.allowed_databases:
                 errors.append(f"unsupported_database:{step.database}")
             if not step.output_target.strip():
                 errors.append(f"empty_output_target:step_{step.step}")
             if not step.operation_instructions:
                 errors.append(f"empty_operation_instructions:step_{step.step}")
+            if not step.processing_objects:
+                errors.append(f"empty_processing_objects:step_{step.step}")
+
+            # --- field & relation existence ---
+            step_fields: set[str] = set()
+            step_relations: list[tuple[str, str]] = []
 
             for processing_object in step.processing_objects:
                 if "<->" in processing_object:
                     relation = self._parse_relation(processing_object)
                     if relation is None or relation not in allowed_relations:
                         errors.append(f"unknown_relation:{processing_object}")
+                    else:
+                        step_relations.append(relation)
                     continue
 
                 field_name = self._normalize_field(processing_object)
                 if field_name not in allowed_fields:
                     errors.append(f"unknown_field:{processing_object}")
+                else:
+                    step_fields.add(field_name)
+
+            # --- cross-table integrity ---
+            has_join_instruction = any(
+                "关联" in instr or "JOIN" in instr.upper()
+                for instr in step.operation_instructions
+            )
+            has_relations_in_objects = bool(step_relations)
+            has_multiple_tables = len({
+                obj.rsplit(".", 1)[0] for obj in step.processing_objects
+                if "<->" not in obj and "." in obj
+            }) > 1
+
+            if (has_join_instruction or has_multiple_tables) and not has_relations_in_objects:
+                if not schema_graph.relations:
+                    errors.append(
+                        f"cross_table_no_relations:step_{step.step}"
+                        f"_tables={step_fields}"
+                    )
+
+            # --- output grounding ---
+            output_tokens = self._extract_output_field_tokens(step.output_target)
+            for token in output_tokens:
+                if not self._looks_like_field_reference(token):
+                    continue
+                # Match by full "table.field" or by field name alone
+                matched = (
+                    token in step_fields
+                    or any(f.endswith(f".{token}") for f in step_fields)
+                    or token in self._instruction_tokens(step.operation_instructions)
+                )
+                if not matched:
+                    errors.append(
+                        f"output_not_in_processing:step_{step.step}:{token}"
+                    )
 
         return QueryPlanCoTValidationResult(
             passed=not errors,
             errors=list(dict.fromkeys(errors)),
         )
+
+    # ------------------------------------------------------------------
+    # helpers
+    # ------------------------------------------------------------------
 
     def _allowed_fields(self, schema_graph: SchemaGraph) -> set[str]:
         fields = set()
@@ -98,3 +155,43 @@ class QueryPlanCoTValidator:
         if not table or not field:
             return ""
         return f"{table}.{field}"
+
+    def _extract_output_field_tokens(self, output_target: str) -> set[str]:
+        """Extract candidate field references from output_target text."""
+        import re
+
+        tokens: set[str] = set()
+        # Remove bracket/quotes/descriptions: "门店（['sy_hospital_name']）" → "门店 sy_hospital_name"
+        cleaned = re.sub(r"[（(]['\"]?\[?|]?['\"]?[）)]", " ", output_target)
+        # Remove common aggregation wrappers and keep field names
+        cleaned = re.sub(
+            r"(?:SUM|COUNT|AVG|MAX|MIN)\s*\(\s*(?:DISTINCT\s+)?(\w+(?:\.\w+)?)\s*\)",
+            r"\1", cleaned, flags=re.IGNORECASE,
+        )
+        # Split on separators
+        for part in re.split(r"[、，,;；\s/]+", cleaned):
+            part = part.strip().strip("'\"[]（）()")
+            if part and not part.upper() in ("SUM", "COUNT", "AVG", "MAX", "MIN",
+                                              "DISTINCT", "AS", "GROUP", "BY", "ORDER"):
+                tokens.add(part)
+        return tokens - {""}
+
+    def _instruction_tokens(self, instructions: list[str]) -> set[str]:
+        """Collect field-like tokens from operation instructions."""
+        tokens: set[str] = set()
+        for instr in instructions:
+            for part in instr.replace("、", ",").replace("，", ",").split(","):
+                part = part.strip()
+                if "." in part:
+                    tokens.add(self._normalize_field(part))
+        return tokens
+
+    def _looks_like_field_reference(self, token: str) -> bool:
+        """Only flag tokens that look like technical field references.
+
+        Chinese business labels ("门店", "核销收入") are display names that
+        naturally appear in output_target without being in processing_objects.
+        Only check tokens that contain dots or underscores — these are actual
+        field identifiers that must be grounded.
+        """
+        return "." in token or "_" in token

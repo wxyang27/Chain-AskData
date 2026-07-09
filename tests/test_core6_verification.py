@@ -235,6 +235,22 @@ class TestCore6Verification:
                 )
             else:
                 report["status"] = "FALLBACK"
+                # Strict: LLM fallback is a test failure unless it's a
+                # transient infrastructure issue (timeout / connection error)
+                if "timeout" in plan.llm_fallback_reason.lower() or \
+                   "connection" in plan.llm_fallback_reason.lower() or \
+                   "unreachable" in plan.llm_fallback_reason.lower():
+                    pytest.skip(
+                        f"{query_info['case_id']}: LLM infrastructure unavailable "
+                        f"({plan.llm_fallback_reason})"
+                    )
+                else:
+                    pytest.fail(
+                        f"{query_info['case_id']}: LLM fallback — "
+                        f"reason={plan.llm_fallback_reason} "
+                        f"errors={plan.llm_validation_errors} "
+                        f"repair_count={plan.llm_repair_count}"
+                    )
         else:
             report["status"] = "LLM_DISABLED"
 

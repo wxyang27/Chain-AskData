@@ -24,7 +24,7 @@ class Settings:
     llm_base_url: str = os.getenv("LLM_BASE_URL", "http://localhost:8000/v1")
     llm_api_key: str = os.getenv("LLM_API_KEY", "EMPTY")
     llm_cot_model: str = os.getenv("LLM_COT_MODEL", "qwen3.7-plus")
-    llm_timeout_seconds: int = int(os.getenv("LLM_TIMEOUT_SECONDS", "30"))
+    llm_timeout_seconds: int = int(os.getenv("LLM_TIMEOUT_SECONDS", "60"))
 
     llm_keyword_model: str = os.getenv("LLM_KEYWORD_MODEL", "qwen")
     llm_sql_model: str = os.getenv("LLM_SQL_MODEL", "qwen-coder")
