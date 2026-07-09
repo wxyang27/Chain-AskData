@@ -139,6 +139,27 @@ class ValidationResult(BaseModel):
     warnings: list[str] = Field(default_factory=list)
 
 
+class LlmSqlValidation(BaseModel):
+    """LLM SQL 安全门禁校验结果。"""
+
+    passed: bool = False
+    errors: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+    used_tables: list[str] = Field(default_factory=list)
+    used_fields: list[str] = Field(default_factory=list)
+
+
+class LlmSqlResult(BaseModel):
+    """LLM SQL 生成结果（影子模式）。"""
+
+    sql: str = ""
+    used_tables: list[str] = Field(default_factory=list)
+    used_fields: list[str] = Field(default_factory=list)
+    explanation: str = ""
+    generated: bool = False
+    error: str = ""
+
+
 class QueryResponse(BaseModel):
     """自然语言取数响应。"""
 
@@ -151,3 +172,11 @@ class QueryResponse(BaseModel):
     retrieval_trace: list[dict[str, Any]] = Field(default_factory=list)
     retrieval_context: dict[str, Any] = Field(default_factory=dict)
     schema_graph: dict[str, Any] = Field(default_factory=dict)
+
+    # --- LLM SQL shadow mode ---
+    template_sql: str = ""
+    llm_sql: str = ""
+    llm_sql_adopted: bool = False
+    llm_sql_validation: LlmSqlValidation = Field(default_factory=LlmSqlValidation)
+    llm_sql_detail: LlmSqlResult = Field(default_factory=LlmSqlResult)
+    sql_source: str = "template"

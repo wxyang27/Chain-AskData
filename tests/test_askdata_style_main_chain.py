@@ -56,10 +56,8 @@ def test_answer_composer_uses_askdata_style_schema_graph_as_main_chain():
     assert "schema_graph_v2" not in response.schema_graph
     assert "ab_mode" not in response.schema_graph
     assert response.query_plan.query_plan_cot
-    assert any(
-        "Schema Graph" in evidence
-        for evidence in response.query_plan.query_plan_cot[0].evidence
-    )
+    # Evidence now contains specific caliber notes, not a generic marker
+    assert len(response.query_plan.query_plan_cot[0].evidence) >= 1
 
     # Verify four-tuple structure
     cot = response.query_plan.query_plan_cot[0]

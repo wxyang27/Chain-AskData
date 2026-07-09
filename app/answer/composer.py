@@ -1,12 +1,33 @@
-from app.knowledge_indexer.service import KnowledgeSearchService
+from app.core.config import settings
 from app.intent_router.router import IntentRouter, IntentRouteResult
 from app.knowledge_indexer.retrieval_context import RetrievalContext
-from app.models.query import QueryPlan, QueryResponse, ValidationResult
+from app.knowledge_indexer.service import KnowledgeSearchService
+from app.llm.local_client import LocalLLMClient
+from app.llm.sql_generator import LLMSqlGenerator, LLMSqlResult
+from app.llm.sql_safety_gate import SqlSafetyGate, SqlSafetyResult
+from app.models.query import (
+    LlmSqlResult as LlmSqlResultModel,
+    LlmSqlValidation,
+    QueryPlan,
+    QueryResponse,
+    ValidationResult,
+)
 from app.query_planner.planner import QueryPlanner
 from app.schema_graph.graph import SchemaGraph
 from app.schema_retrieval.askdata_style_retriever import AskDataStyleSchemaRetriever
 from app.sql_generator.generator import SqlGenerator
 from app.sql_validator.validator import SqlValidator
+
+
+# Core 6 queries approved for LLM SQL adoption (gate must pass)
+_CORE6_TEMPLATES = {
+    "execution_summary_yesterday",
+    "store_income_top10_30d",
+    "private_new_customer_income_this_week",
+    "channel_execution_30d",
+    "new_old_customer_execution_30d",
+    "revenue_category_execution_30d",
+}
 
 
 class AnswerComposer:
@@ -21,6 +42,16 @@ class AnswerComposer:
         self.schema_retriever = AskDataStyleSchemaRetriever(
             schema_indexes=self.knowledge_search.schema_indexes,
         )
+        self.llm_sql_generator = LLMSqlGenerator(
+            enabled=settings.llm_enabled,
+            model=settings.llm_cot_model,
+            timeout_seconds=settings.llm_timeout_seconds,
+            client=LocalLLMClient(
+                base_url=settings.llm_base_url,
+                api_key=settings.llm_api_key,
+            ),
+        )
+        self.sql_safety_gate = SqlSafetyGate()
 
     def compose(self, question: str) -> QueryResponse:
         retrieval_context = self.knowledge_search.search_structured(question, top_k=20)
@@ -30,11 +61,8 @@ class AnswerComposer:
         route_result = self.intent_router.route(question, retrieval_context)
         if route_result.intent != "nl2sql":
             return self._compose_explain_response(
-                question,
-                retrieval_context,
-                schema_graph,
-                route_result,
-                schema_result,
+                question, retrieval_context, schema_graph,
+                route_result, schema_result,
             )
 
         query_plan = self.planner.plan(
@@ -42,14 +70,29 @@ class AnswerComposer:
             retrieval_context=retrieval_context,
             schema_graph=schema_graph,
         )
-        sql = self.generator.generate(query_plan)
-        validation = self.validator.validate(sql)
+        template_sql = self.generator.generate(query_plan)
+        validation = self.validator.validate(template_sql)
+
+        # --- LLM SQL shadow mode ---
+        llm_sql, llm_sql_validation, llm_sql_detail = self._generate_llm_sql(
+            query_plan=query_plan,
+            schema_graph=schema_graph,
+        )
+
+        # Controlled adoption: core 6 queries + gate passed → use LLM SQL
+        adopt_llm = (
+            template_id in _CORE6_TEMPLATES
+            and llm_sql_detail.generated
+            and llm_sql_validation.passed
+        )
+        sql_source = "llm" if adopt_llm else "template"
+        final_sql = llm_sql if adopt_llm else template_sql
 
         return QueryResponse(
             project="Chain-AskData",
             question_summary=f"你想查询：{question}",
             query_plan=query_plan,
-            sql=sql,
+            sql=final_sql,
             validation=validation,
             caliber_notes=[
                 "本版本只生成 SQL 与口径说明，不真实执行查询。",
@@ -61,7 +104,53 @@ class AnswerComposer:
             retrieval_trace=retrieval_context.raw_matches,
             retrieval_context=retrieval_context.to_dict(),
             schema_graph=self._schema_graph_payload(schema_result),
+            # shadow mode
+            template_sql=template_sql,
+            llm_sql=llm_sql,
+            llm_sql_adopted=adopt_llm,
+            llm_sql_validation=llm_sql_validation,
+            llm_sql_detail=llm_sql_detail,
+            sql_source=sql_source,
         )
+
+    # ------------------------------------------------------------------
+    # LLM SQL shadow mode
+    # ------------------------------------------------------------------
+
+    def _generate_llm_sql(
+        self,
+        query_plan: QueryPlan,
+        schema_graph: SchemaGraph,
+    ) -> tuple[str, LlmSqlValidation, LlmSqlResultModel]:
+        result = self.llm_sql_generator.generate(
+            cot_steps=query_plan.query_plan_cot,
+            schema_graph=schema_graph,
+        )
+        if not result.generated:
+            return "", LlmSqlValidation(), self._to_result_model(result)
+
+        safety = self.sql_safety_gate.validate(result.sql, schema_graph)
+        return result.sql, LlmSqlValidation(
+            passed=safety.passed,
+            errors=safety.errors,
+            warnings=safety.warnings,
+            used_tables=safety.used_tables,
+            used_fields=safety.used_fields,
+        ), self._to_result_model(result)
+
+    def _to_result_model(self, result: LLMSqlResult) -> LlmSqlResultModel:
+        return LlmSqlResultModel(
+            sql=result.sql,
+            used_tables=result.used_tables,
+            used_fields=result.used_fields,
+            explanation=result.explanation,
+            generated=result.generated,
+            error=result.error,
+        )
+
+    # ------------------------------------------------------------------
+    # explain / non-nl2sql
+    # ------------------------------------------------------------------
 
     def _compose_explain_response(
         self,
@@ -80,10 +169,10 @@ class AnswerComposer:
 
         return QueryResponse(
             project="Chain-AskData",
-            question_summary=f"\u4f60\u60f3\u4e86\u89e3\uff1a{question}",
+            question_summary=f"你想了解：{question}",
             query_plan=QueryPlan(
                 intent=route_result.intent,
-                business_domain="\u8fde\u9501\u7ecf\u7ba1-\u53e3\u5f84\u4e0eSchema\u89e3\u91ca",
+                business_domain="连锁经管-口径与Schema解释",
                 original_question=question,
                 sql_strategy="explain_only",
                 metrics=[],
@@ -133,39 +222,36 @@ class AnswerComposer:
         if route_result.intent == "schema_explain":
             notes.extend(field_notes)
             if not notes:
-                notes.append("\u672a\u547d\u4e2d\u53ef\u4fe1\u5b57\u6bb5\u8bc1\u636e\uff0c\u4e0d\u5efa\u8bae\u5f3a\u884c\u751f\u6210 SQL\u3002")
+                notes.append("未命中可信字段证据，不建议强行生成 SQL。")
             return notes
 
-        # caliber_explain: add metric caliber details
         if route_result.intent == "caliber_explain":
             metric_notes = self._metric_caliber_notes(retrieval_context)
             notes.extend(metric_notes)
 
         question_lower = question.lower()
-        if "\u6838\u9500" in question_lower and ("\u652f\u4ed8" in question_lower or "gmv" in question_lower):
+        if "核销" in question_lower and ("支付" in question_lower or "gmv" in question_lower):
             notes.extend([
-                "\u6838\u9500\u6536\u5165\uff1a\u4f7f\u7528 soyoung_dw.dm_opt_qy_user_execution_record_all_d.exe_income\uff0c\u9ed8\u8ba4\u6309 executed_date \u6846\u5b9a\u6838\u9500\u4e1a\u52a1\u65e5\u671f\u3002",
-                "\u652f\u4ed8GMV\uff1a\u4f7f\u7528 soyoung_dw.dm_opt_qy_order_info_all_d.pay_gmv\uff0c\u9ed8\u8ba4\u6309 pay_date \u6846\u5b9a\u652f\u4ed8\u4e1a\u52a1\u65e5\u671f\uff0c\u5e76\u5254\u9664\u5f53\u65e5\u9000\u6b3e\u3002",
-                "\u4e8c\u8005\u4e0d\u662f\u540c\u4e00\u53e3\u5f84\uff1a\u6838\u9500\u6536\u5165\u504f\u670d\u52a1\u5c65\u7ea6/\u6d88\u8017\uff0c\u652f\u4ed8GMV\u504f\u6536\u6b3e/\u4ea4\u6613\u3002",
+                "核销收入：使用 soyoung_dw.dm_opt_qy_user_execution_record_all_d.exe_income，默认按 executed_date 框定核销业务日期。",
+                "支付GMV：使用 soyoung_dw.dm_opt_qy_order_info_all_d.pay_gmv，默认按 pay_date 框定支付业务日期，并剔除当日退款。",
+                "二者不是同一口径：核销收入偏服务履约/消耗，支付GMV偏收款/交易。",
             ])
         notes.extend(field_notes)
         return notes or [
-            "\u5df2\u547d\u4e2d\u53e3\u5f84\u89e3\u91ca\u610f\u56fe\uff0c\u4f46\u5f53\u524d\u5b57\u6bb5\u8bc1\u636e\u4e0d\u8db3\uff0c\u4e0d\u5efa\u8bae\u5f3a\u884c\u751f\u6210 SQL\u3002"
+            "已命中口径解释意图，但当前字段证据不足，不建议强行生成 SQL。"
         ]
 
     def _unknown_notes(self) -> list[str]:
-        """Return helpful notes for unknown/unsupported questions."""
         return [
-            "\u5f53\u524d\u77e5\u8bc6\u5e93\u672a\u767b\u8bb0\u8be5\u95ee\u9898\u9700\u8981\u7684\u8868\u3001\u5b57\u6bb5\u6216\u6307\u6807\uff0c\u4e0d\u80fd\u53ef\u9760\u751f\u6210 SQL\u3002",
+            "当前知识库未登记该问题需要的表、字段或指标，不能可靠生成 SQL。",
             (
-                "\u5df2\u77e5\u652f\u6301\u8303\u56f4\u4ee5\u8fde\u9501\u7ecf\u7ba1\u7684\u6838\u9500\u3001\u652f\u4ed8\u3001\u5f85\u6838\u9500\u3001\u95e8\u5e97\u3001\u54c1\u9879\u3001"
-                "\u6e20\u9053\u7b49\u53e3\u5f84\u4e3a\u4e3b\u3002\u53ef\u5c1d\u8bd5\u7684\u95ee\u9898\u5982\uff1a\u6838\u9500\u6536\u5165\u67e5\u8be2\u3001\u95e8\u5e97\u6392\u884c\u3001"
-                "\u6e20\u9053\u5bf9\u6bd4\u3001\u54c1\u9879\u6e17\u900f\u7387\u3001\u652f\u4ed8GMV\u7edf\u8ba1\u7b49\u3002"
+                "已知支持范围以连锁经管的核销、支付、待核销、门店、品项、"
+                "渠道等口径为主。可尝试的问题如：核销收入查询、门店排行、"
+                "渠道对比、品项渗透率、支付GMV统计等。"
             ),
         ]
 
     def _metric_caliber_notes(self, retrieval_context: RetrievalContext) -> list[str]:
-        """Generate caliber notes from hit metrics in the retrieval context."""
         notes: list[str] = []
         seen = set()
         for hit in retrieval_context.metrics[:5]:
@@ -175,23 +261,22 @@ class AnswerComposer:
                 continue
             seen.add(canonical)
 
-            # Try to get more detail from the metric registry
             metric = (
                 self.planner.metric_registry.get(canonical)
                 if hasattr(self.planner, "metric_registry")
                 else None
             )
             if metric:
-                parts = [f"{metric.display_name}\uff08{canonical}\uff09"]
+                parts = [f"{metric.display_name}（{canonical}）"]
                 if metric.formula:
-                    parts.append(f"\u516c\u5f0f\uff1a{metric.formula}")
-                notes.append("\uff1b".join(parts))
+                    parts.append(f"公式：{metric.formula}")
+                notes.append("；".join(parts))
             elif display_name:
                 notes.append(
-                    f"{display_name}\uff08{canonical}\uff09\uff1a\u53e3\u5f84\u8be6\u60c5\u8bf7\u53c2\u89c1\u6307\u6807\u5b9a\u4e49\u3002"
+                    f"{display_name}（{canonical}）：口径详情请参见指标定义。"
                 )
             else:
-                notes.append(f"\u6307\u6807 {canonical}\uff1a\u53e3\u5f84\u8be6\u60c5\u8bf7\u53c2\u89c1\u6307\u6807\u5b9a\u4e49\u3002")
+                notes.append(f"指标 {canonical}：口径详情请参见指标定义。")
         return notes
 
     def _field_notes(self, retrieval_context: RetrievalContext) -> list[str]:
@@ -201,7 +286,7 @@ class AnswerComposer:
             business_name = hit.metadata.get("business_name") or field_name
             full_name = hit.metadata.get("full_name") or field_name
             if field_name:
-                notes.append(f"{business_name}\uff1a\u4f7f\u7528 {full_name}")
+                notes.append(f"{business_name}：使用 {full_name}")
         return notes
 
     def _schema_evidence_from_context(self, retrieval_context: RetrievalContext) -> list[str]:
@@ -210,5 +295,5 @@ class AnswerComposer:
             full_name = hit.metadata.get("full_name")
             business_name = hit.metadata.get("business_name")
             if full_name:
-                evidence.append(f"\u5b57\u6bb5\u8bc1\u636e\uff1a{full_name}\uff08{business_name or hit.metadata.get('field_name')}\uff09")
+                evidence.append(f"字段证据：{full_name}（{business_name or hit.metadata.get('field_name')}）")
         return evidence

@@ -27,7 +27,8 @@ LIMIT 10;""",
 FROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d
 WHERE   dp = DATE_SUB(CURRENT_DATE(),1)
 AND     is_valid = 1
-AND     executed_date BETWEEN DATE_SUB(CURRENT_DATE(),7) AND DATE_SUB(CURRENT_DATE(),1)
+AND     executed_date >= DATE_SUB(CURRENT_DATE(), WEEKDAY(CAST(CURRENT_DATE() AS DATETIME)))
+AND     executed_date <= DATE_SUB(CURRENT_DATE(),1)
 AND     is_new = 1
 AND     cx_first_channel = '私域';""",
     "channel_execution_30d": """SELECT  cx_first_channel AS channel_l1,

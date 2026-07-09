@@ -96,15 +96,15 @@ class IntentRouter:
 
     def _is_unknown(self, normalized_question: str, retrieval_context: RetrievalContext) -> bool:
         unsupported_words = [
-            "\u5929\u6c14",
-            "\u6ee1\u610f\u5ea6",
-            "\u80a1\u4ef7",
-            "\u6296\u97f3\u70ed\u699c",
+            "\u5929\u6c14", "\u6ee1\u610f\u5ea6", "\u80a1\u4ef7", "\u6296\u97f3\u70ed\u699c",
+            "\u80a1\u7968", "\u7535\u5f71", "\u5916\u5356", "\u5feb\u9012", "\u673a\u7968", "\u9152\u5e97",
         ]
-        has_evidence = bool(
-            retrieval_context.metrics
-            or retrieval_context.fields
-            or retrieval_context.tables
-            or retrieval_context.examples
-        )
-        return any(word in normalized_question for word in unsupported_words) or not has_evidence
+        if any(word in normalized_question for word in unsupported_words):
+            return True
+        supported_business_words = [
+            "核销", "支付", "待核销", "收入", "gmv", "客单价",
+            "门店", "品项", "新客", "老客", "渠道", "升单", "渗透率",
+        ]
+        if any(word in normalized_question for word in supported_business_words):
+            return False
+        return not retrieval_context.has_meaningful_evidence()

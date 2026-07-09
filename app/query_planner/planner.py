@@ -174,7 +174,12 @@ class QueryPlanner:
         filter_map = {
             "execution_summary_yesterday": common_execution_filters + ["executed_date = DATE_SUB(CURRENT_DATE(),1)"],
             "store_income_top10_30d": common_execution_filters + ["executed_date BETWEEN DATE_SUB(CURRENT_DATE(),30) AND DATE_SUB(CURRENT_DATE(),1)"],
-            "private_new_customer_income_this_week": common_execution_filters + ["is_new = 1", "cx_first_channel = '私域'"],
+            "private_new_customer_income_this_week": common_execution_filters + [
+                "executed_date >= DATE_SUB(CURRENT_DATE(), WEEKDAY(CAST(CURRENT_DATE() AS DATETIME)))",
+                "executed_date <= DATE_SUB(CURRENT_DATE(),1)",
+                "is_new = 1",
+                "cx_first_channel = '私域'",
+            ],
             "channel_execution_30d": common_execution_filters + ["cx_first_channel IN ('私域','公域','老带新')"],
             "new_old_customer_execution_30d": common_execution_filters,
             "revenue_category_execution_30d": common_execution_filters + ["revenue_category IN ('大单品','常规品','大师团')"],

@@ -25,6 +25,20 @@ class RetrievalContext:
     risks: list[str] = field(default_factory=list)
     raw_matches: list[dict[str, Any]] = field(default_factory=list)
 
+    def has_meaningful_evidence(self) -> bool:
+        """True when retrieval returned structurally useful evidence.
+
+        Vector search on ChromaDB always returns nearest neighbours even for
+        completely unrelated queries.  A response with only metrics and no
+        fields/tables/examples is almost certainly out-of-domain noise.
+        """
+        return bool(
+            self.fields
+            or self.tables
+            or self.examples
+            or (self.metrics and (self.fields or self.tables))
+        )
+
     def top_metric_ids(self, limit: int = 3) -> list[str]:
         return list(dict.fromkeys(
             hit.metadata.get("canonical") or hit.metadata["metric_id"]

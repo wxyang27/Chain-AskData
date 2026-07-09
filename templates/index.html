@@ -42,16 +42,34 @@
       </section>
 
       <section class="panel sql-panel">
-        <div class="panel-title">
-          <h2>SQL</h2>
-          <button id="copy">复制</button>
+        <h2>SQL <span id="sql-source-badge" class="badge badge-active">模板</span></h2>
+
+        <div class="sql-module">
+          <div class="sql-module-title">
+            <span class="dot dot-template"></span> 模板 SQL
+            <button id="copy-template" class="btn-sm">复制</button>
+          </div>
+          <pre id="sql">等待生成...</pre>
         </div>
-        <pre id="sql">等待生成...</pre>
+
+        <div class="sql-module">
+          <div class="sql-module-title">
+            <span class="dot dot-llm"></span> LLM SQL（影子模式）
+          </div>
+          <pre id="llm-sql">等待生成...</pre>
+          <div class="llm-meta" id="llm-meta"></div>
+        </div>
+
+        <div class="sql-compare" id="sql-compare">
+          <h3>对比结果</h3>
+          <div id="compare-result">等待生成...</div>
+        </div>
+
         <h2>校验结果</h2>
         <pre id="validation">等待生成...</pre>
       </section>
     </main>
 
-    <script src="/static/app.js?v=20260709-qwen37"></script>
+    <script src="/static/app.js?v=20260709-v2"></script>
   </body>
 </html>
