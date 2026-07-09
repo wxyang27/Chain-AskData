@@ -26,32 +26,32 @@ class RetrievalContext:
     raw_matches: list[dict[str, Any]] = field(default_factory=list)
 
     def top_metric_ids(self, limit: int = 3) -> list[str]:
-        return [
+        return list(dict.fromkeys(
             hit.metadata.get("canonical") or hit.metadata["metric_id"]
-            for hit in self.metrics[:limit]
+            for hit in self.metrics
             if hit.metadata.get("canonical") or hit.metadata.get("metric_id")
-        ]
+        ))[:limit]
 
     def top_table_names(self, limit: int = 3) -> list[str]:
-        return [
+        return list(dict.fromkeys(
             hit.metadata["table_name"]
-            for hit in self.tables[:limit]
+            for hit in self.tables
             if hit.metadata.get("table_name")
-        ]
+        ))[:limit]
 
     def top_field_names(self, limit: int = 8) -> list[str]:
-        return [
+        return list(dict.fromkeys(
             hit.metadata["field_name"]
-            for hit in self.fields[:limit]
+            for hit in self.fields
             if hit.metadata.get("field_name")
-        ]
+        ))[:limit]
 
     def top_example_ids(self, limit: int = 3) -> list[str]:
-        return [
+        return list(dict.fromkeys(
             hit.metadata["case_id"]
-            for hit in self.examples[:limit]
+            for hit in self.examples
             if hit.metadata.get("case_id")
-        ]
+        ))[:limit]
 
     def top_template_id(self) -> str | None:
         for hit in self.examples:

@@ -1,5 +1,8 @@
 from app.assets.loader import load_yaml_asset
+from app.core.config import settings
 from app.knowledge_indexer.retrieval_context import RetrievalContext
+from app.llm.local_client import LocalLLMClient
+from app.llm.query_plan_cot_generator import LLMQueryPlanCoTGenerator
 from app.metric_registry.registry import MetricRegistry
 from app.models.query import DimensionPlan, QueryPlan, QueryPlanCoT
 from app.schema_retrieval.retriever import SchemaRetriever
@@ -13,7 +16,7 @@ class QueryPlanner:
     指标、字段、表、样例和风险写回 QueryPlan，便于解释和后续 SQL 生成。
     """
 
-    def __init__(self):
+    def __init__(self, llm_cot_generator: LLMQueryPlanCoTGenerator | None = None):
         self.metric_registry = MetricRegistry()
         self.schema_retriever = SchemaRetriever()
         self.demo_cases = load_yaml_asset("knowledge/examples/demo_queries.json")
@@ -21,6 +24,15 @@ class QueryPlanner:
             case["template_id"]: case
             for case in self.demo_cases
         }
+        self.llm_cot_generator = llm_cot_generator or LLMQueryPlanCoTGenerator(
+            enabled=settings.llm_enabled,
+            model=settings.llm_cot_model,
+            timeout_seconds=settings.llm_timeout_seconds,
+            client=LocalLLMClient(
+                base_url=settings.llm_base_url,
+                api_key=settings.llm_api_key,
+            ),
+        )
 
     def plan(
         self,
@@ -39,10 +51,20 @@ class QueryPlanner:
         retrieved_example_ids = retrieval_context.top_example_ids() if retrieval_context else []
         planning_evidence = self._build_planning_evidence(demo_case, retrieval_context)
         schema_evidence = self._build_schema_evidence(retrieval_context)
-        query_plan_cot = self._build_query_plan_cot(
+        rule_query_plan_cot = self._build_query_plan_cot(
             demo_case=demo_case,
             retrieval_context=retrieval_context,
             schema_graph=schema_graph,
+        )
+        llm_cot_result = self.llm_cot_generator.generate(
+            question=question,
+            schema_graph=schema_graph,
+            fallback_steps=rule_query_plan_cot,
+        )
+        query_plan_cot = (
+            llm_cot_result.steps
+            if llm_cot_result.adopted
+            else rule_query_plan_cot
         )
         risk_flags = demo_case.get("risk_flags", []).copy()
         if retrieval_context:
@@ -71,6 +93,14 @@ class QueryPlanner:
             planning_evidence=planning_evidence,
             schema_evidence=schema_evidence,
             query_plan_cot=query_plan_cot,
+            llm_enabled=llm_cot_result.enabled,
+            llm_adopted=llm_cot_result.adopted,
+            llm_model=llm_cot_result.model,
+            llm_fallback_reason=llm_cot_result.fallback_reason,
+            llm_validation_passed=llm_cot_result.validation_passed,
+            llm_validation_errors=llm_cot_result.validation_errors,
+            llm_latency_ms=llm_cot_result.latency_ms,
+            llm_repair_count=llm_cot_result.repair_count,
         )
 
     def list_demo_questions(self) -> list[dict]:
@@ -170,16 +200,26 @@ class QueryPlanner:
             evidence.append("规划依据：未传入 RetrievalContext，使用规则与样例路由")
             return evidence
 
-        for metric_id in retrieval_context.top_metric_ids():
-            evidence.append(f"采纳指标证据：{metric_id}")
-        for field_name in retrieval_context.top_field_names():
-            evidence.append(f"采纳字段证据：{field_name}")
-        for table_name in retrieval_context.top_table_names():
-            evidence.append(f"采纳表证据：{table_name}")
-        for example_id in retrieval_context.top_example_ids():
-            evidence.append(f"采纳样例证据：{example_id}")
-        for risk in retrieval_context.risks:
-            evidence.append(f"口径风险：{risk}")
+        evidence.extend(
+            f"采纳指标证据：{mid}"
+            for mid in retrieval_context.top_metric_ids()
+        )
+        evidence.extend(
+            f"采纳字段证据：{fn}"
+            for fn in retrieval_context.top_field_names()
+        )
+        evidence.extend(
+            f"采纳表证据：{tn}"
+            for tn in retrieval_context.top_table_names()
+        )
+        evidence.extend(
+            f"采纳样例证据：{eid}"
+            for eid in retrieval_context.top_example_ids()
+        )
+        evidence.extend(
+            f"口径风险：{risk}"
+            for risk in dict.fromkeys(retrieval_context.risks)
+        )
         return evidence
 
     def _build_schema_evidence(
@@ -190,10 +230,15 @@ class QueryPlanner:
             return []
 
         evidence: list[str] = []
+        seen: set[str] = set()
         for hit in retrieval_context.fields[:8]:
             full_name = hit.metadata.get("full_name")
             field_name = hit.metadata.get("field_name")
             business_name = hit.metadata.get("business_name")
+            key = full_name or field_name
+            if not key or key in seen:
+                continue
+            seen.add(key)
             if full_name:
                 evidence.append(f"字段证据：{full_name}（{business_name or field_name}）")
             elif field_name:

@@ -9,6 +9,7 @@ dependencies = [
   "openpyxl",
   "pytest",
   "python-docx",
+  "python-dotenv",
   "uvicorn",
 ]
 

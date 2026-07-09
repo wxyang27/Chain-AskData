@@ -65,6 +65,13 @@ class ApiTestCase(unittest.TestCase):
         self.assertIn("asset_type", body["retrieval_trace"][0]["metadata"])
         self.assertIn("metrics", body["retrieval_context"])
         self.assertIn("examples", body["retrieval_context"])
+        self.assertEqual(
+            body["schema_graph"]["retriever"],
+            "askdata_style_schema_retriever",
+        )
+        self.assertGreater(body["schema_graph"]["field_count"], 0)
+        self.assertIn("llm_enabled", body["query_plan"])
+        self.assertIn("llm_validation_passed", body["query_plan"])
 
 
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
 const questionInput = document.querySelector("#question");
 const generateButton = document.querySelector("#generate");
 const planBlock = document.querySelector("#plan");
+const llmStatusBlock = document.querySelector("#llm-status");
 const sqlBlock = document.querySelector("#sql");
 const validationBlock = document.querySelector("#validation");
 const traceBlock = document.querySelector("#retrieval-trace");
@@ -19,6 +20,7 @@ const text = {
   empty: "\u6682\u65e0\u547d\u4e2d",
   risks: "\u98ce\u9669\u63d0\u793a",
   generatingPlan: "\u6b63\u5728\u751f\u6210 QueryPlan...",
+  generatingLlmStatus: "\u6b63\u5728\u68c0\u67e5 LLM \u72b6\u6001...",
   generatingSql: "\u6b63\u5728\u751f\u6210 SQL...",
   validating: "\u6b63\u5728\u6821\u9a8c...",
   retrieving: "\u6b63\u5728\u68c0\u7d22\u77e5\u8bc6\u5e93...",
@@ -150,6 +152,25 @@ function renderSchemaGraph(schemaGraph) {
   schemaGraphBlock.appendChild(graphText);
 }
 
+function renderLlmStatus(queryPlan) {
+  if (!queryPlan) {
+    llmStatusBlock.textContent = "\u6682\u65e0 LLM \u72b6\u6001";
+    return;
+  }
+
+  const status = {
+    llm_enabled: queryPlan.llm_enabled ?? "未返回",
+    llm_adopted: queryPlan.llm_adopted ?? "未返回",
+    llm_model: queryPlan.llm_model || "未返回",
+    validation_passed: queryPlan.llm_validation_passed ?? "未返回",
+    validation_errors: queryPlan.llm_validation_errors || [],
+    latency_ms: queryPlan.llm_latency_ms ?? "未返回",
+    repair_count: queryPlan.llm_repair_count ?? 0,
+    fallback_reason: queryPlan.llm_fallback_reason || "",
+  };
+  llmStatusBlock.textContent = JSON.stringify(status, null, 2);
+}
+
 generateButton.addEventListener("click", async () => {
   const question = questionInput.value.trim();
   if (!question) {
@@ -157,31 +178,45 @@ generateButton.addEventListener("click", async () => {
   }
 
   planBlock.textContent = text.generatingPlan;
+  llmStatusBlock.textContent = text.generatingLlmStatus;
   sqlBlock.textContent = text.generatingSql;
   validationBlock.textContent = text.validating;
   traceBlock.textContent = text.retrieving;
   schemaGraphBlock.textContent = text.buildingSchemaGraph;
   notesList.innerHTML = "";
 
-  const response = await fetch("/api/query", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({question}),
-  });
+  try {
+    const response = await fetch("/api/query", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({question}),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.detail || `HTTP ${response.status}`);
+    }
 
-  const data = await response.json();
+    planBlock.textContent = JSON.stringify(data.query_plan, null, 2);
+    renderLlmStatus(data.query_plan);
+    sqlBlock.textContent = data.sql;
+    validationBlock.textContent = JSON.stringify(data.validation, null, 2);
+    renderRetrievalContext(data.retrieval_context);
+    renderSchemaGraph(data.schema_graph);
 
-  planBlock.textContent = JSON.stringify(data.query_plan, null, 2);
-  sqlBlock.textContent = data.sql;
-  validationBlock.textContent = JSON.stringify(data.validation, null, 2);
-  renderRetrievalContext(data.retrieval_context);
-  renderSchemaGraph(data.schema_graph);
-
-  data.caliber_notes.forEach((note) => {
-    const item = document.createElement("li");
-    item.textContent = note;
-    notesList.appendChild(item);
-  });
+    (data.caliber_notes || []).forEach((note) => {
+      const item = document.createElement("li");
+      item.textContent = note;
+      notesList.appendChild(item);
+    });
+  } catch (error) {
+    const message = `生成失败：${error.message}`;
+    planBlock.textContent = message;
+    llmStatusBlock.textContent = message;
+    sqlBlock.textContent = "";
+    validationBlock.textContent = message;
+    traceBlock.textContent = message;
+    schemaGraphBlock.textContent = message;
+  }
 });
 
 copyButton.addEventListener("click", async () => {

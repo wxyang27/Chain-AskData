@@ -1,16 +1,42 @@
 import os
 from dataclasses import dataclass
 
+from dotenv import load_dotenv
+
+
+load_dotenv()
+
+
+def _env_bool(name: str, default: bool = False) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
 
 @dataclass(frozen=True)
 class Settings:
-    """应用配置。真实密钥通过本地 .env 或环境变量注入。"""
+    """Application settings loaded from environment variables."""
 
     project_name: str = "Chain-AskData"
-    llm_provider: str = os.getenv("LLM_PROVIDER", "deepseek")
-    deepseek_api_key: str = os.getenv("DEEPSEEK_API_KEY", "")
-    deepseek_base_url: str = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
-    deepseek_model: str = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
+
+    llm_enabled: bool = _env_bool("LLM_ENABLED", False)
+    llm_base_url: str = os.getenv("LLM_BASE_URL", "http://localhost:8000/v1")
+    llm_api_key: str = os.getenv("LLM_API_KEY", "EMPTY")
+    llm_cot_model: str = os.getenv("LLM_COT_MODEL", "qwen3.7-plus")
+    llm_timeout_seconds: int = int(os.getenv("LLM_TIMEOUT_SECONDS", "30"))
+
+    llm_keyword_model: str = os.getenv("LLM_KEYWORD_MODEL", "qwen")
+    llm_sql_model: str = os.getenv("LLM_SQL_MODEL", "qwen-coder")
+    llm_router_model: str = os.getenv("LLM_ROUTER_MODEL", "qwen-router")
+    llm_validator_model: str = os.getenv("LLM_VALIDATOR_MODEL", "qwen-validator")
+    llm_summary_model: str = os.getenv("LLM_SUMMARY_MODEL", "qwen-summary")
+
+    embedding_enabled: bool = _env_bool("EMBEDDING_ENABLED", False)
+    embedding_model: str = os.getenv("EMBEDDING_MODEL", "qwen-embedding")
+
+    rerank_enabled: bool = _env_bool("RERANK_ENABLED", False)
+    rerank_url: str = os.getenv("RERANK_URL", "http://localhost:8001/rerank")
 
 
 settings = Settings()

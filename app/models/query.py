@@ -121,6 +121,14 @@ class QueryPlan(BaseModel):
     planning_evidence: list[str] = Field(default_factory=list)
     schema_evidence: list[str] = Field(default_factory=list)
     query_plan_cot: list[QueryPlanCoT] = Field(default_factory=list)
+    llm_enabled: bool = False
+    llm_adopted: bool = False
+    llm_model: str = ""
+    llm_fallback_reason: str = ""
+    llm_validation_passed: bool = False
+    llm_validation_errors: list[str] = Field(default_factory=list)
+    llm_latency_ms: int = 0
+    llm_repair_count: int = 0
 
 
 class ValidationResult(BaseModel):
