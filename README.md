@@ -8,26 +8,51 @@ Chain-AskData 是面向新氧连锁经管业务的自然语言取数（NL2SQL）
 
 ### 核心管道
 
-- **意图路由**：自动分类问题为 nl2sql / schema_explain / caliber_explain / unknown，非取数问题不强制生成 SQL
-- **混合检索**：关键词 + 向量 RRF 融合，在 RetrievalContext 分组前提升召回率
-- **QueryPlan + QueryPlanCoT**：生成结构化查询计划，包含对象、字段、过滤、计算、输出和证据步骤
-- **Schema Graph**：从检索上下文构建表、字段、关系、指标的结构化图谱，供 SQL 生成和解释响应共享
-- **SQL 生成**：13 个 MVP Demo Query 的确定性 SQL 模板（模板优先，DeepSeek 回退预留）
-- **SQL 校验**：安全校验 + 业务口径校验（只读、dp 分区、LIMIT、表白名单、核销/支付/渗透率口径、敏感字段）
+- **意图路由**：自动分类问题为 nl2sql / schema_explain / caliber_explain / unknown，非取数问题不强制生成 SQL；`has_meaningful_evidence()` 防止仅指标噪音命中误判
+- **Schema 检索**：三级索引（关键词/向量/Rerank）→ 混合检索 → SchemaGraph 构建
+- **SchemaGraph 字段补全**：模板级依赖矩阵自动补入 `dp`/`is_valid`/`tenant_id`/维度字段/表关联关系，13 个模板全覆盖
+- **QueryPlanCoT 四元组生成**：Qwen（百炼 `qwen-plus`）根据用户问题 + SchemaGraph 生成结构化四元组（数据库、处理对象、操作指令、输出目标），含本地校验 + 一次修复闭环 + 规则回退
+- **SQL 生成**：
+  - 模板 SQL：13 个 MVP Demo Query 的确定性 SQL 模板（始终可用）
+  - LLM SQL（影子模式）：Qwen 根据已校验 CoT + SchemaGraph 生成 MaxCompute SQL
+- **SQL 安全门禁**（9 项检查）：
+  - SELECT/WITH only
+  - 表、字段、JOIN 必须来自 SchemaGraph
+  - 快照表 dp 分区过滤（支持别名/裸字段/比较运算符）
+  - 核销表 `is_valid=1` + `executed_date` 强制
+  - ORDER BY 必须有 LIMIT
+  - 除法必须有 NULLIF 保护
+  - MaxCompute 语法禁止：`DATE_TRUNC`/`INTERVAL`/`DATEADD`/`NOW()` 等
+  - `DATE_SUB` 参数校验 + 本周日期语义校验
+- **受控切换**：核心 6 问（Q001-Q006）门禁通过时自动采用 LLM SQL（`sql_source="llm"`），其余模板兜底
 - **口径说明输出**：固定结构的问题复述、QueryPlan 摘要、指标卡片、SQL、校验结果、口径说明、引用来源
+
+### 前端界面
+
+三栏 Web 页面：左侧输入 → 中间 QueryPlan + 检索轨迹 + SchemaGraph → 右侧模板 SQL / LLM SQL 双模块 + 结构对比表 + 校验结果。
 
 ### API 接口
 
 | 端点 | 方法 | 说明 |
 |------|------|------|
-| `/api/query` | POST | 自然语言取数，返回 QueryPlan + SQL + 校验 + 检索轨迹 |
+| `/api/query` | POST | 自然语言取数，返回 QueryPlan + SQL（模板/LLM）+ 校验 + 检索轨迹 |
 | `/api/health` | GET | 健康检查 |
 | `/api/demo-queries` | GET | 获取 13 条 Demo 问题列表 |
-| `/api/knowledge/search` | GET | 知识库语义检索（关键词 + 向量融合 + 轻量 Rerank） |
+| `/api/knowledge/search` | GET | 知识库语义检索 |
 
-### 前端界面
+`POST /api/query` 响应新增字段：
 
-Codex 风格三栏 Web 页面：左侧输入 → 中间 QueryPlan + 检索轨迹（按指标/字段/表/关系/样例分组） → 右侧 SQL + 校验结果。
+```json
+{
+  "sql": "当前使用的 SQL",
+  "template_sql": "模板 SQL（始终保留）",
+  "llm_sql": "Qwen 生成的 SQL",
+  "llm_sql_adopted": true,
+  "llm_sql_validation": { "passed": true, "errors": [], "used_tables": [...], "used_fields": [...] },
+  "llm_sql_detail": { "generated": true, "explanation": "..." },
+  "sql_source": "llm"
+}
+```
 
 ## MVP Demo Query
 
@@ -75,73 +100,31 @@ Codex 风格三栏 Web 页面：左侧输入 → 中间 QueryPlan + 检索轨迹
 
 - **知识块总数**：762 chunks（核心 64 + 批量导入 698）
 - **持久化目录**：`data/chroma`
-- **目标 Collection**：`chain_askdata_knowledge`
-- **类型化 Collection**：`metric_schema_collection`、`table_field_schema_collection`、`sql_example_collection`
-- **Embedding**：MVP 阶段使用本地确定性 HashEmbedding（128 维），不依赖外部服务
-- **检索策略**：HybridRetriever（关键词 + 向量 RRF 融合） + LightweightReranker（词法重排 + 字段/术语加权）
-- **加载策略**：`load_knowledge_chunks()` 默认仅加载核心 MVP 知识，避免大知识库噪声影响核心 QueryPlan；`include_generated=True` 时加载批量导入资产
+- **Embedding**：MVP 阶段使用本地确定性 HashEmbedding（128 维），不依赖外部 Embedding 服务
+- **检索策略**：HybridRetriever（关键词 + 向量 RRF 融合） + LightweightReranker
 
 ## 本地运行
 
 ```powershell
-python -m uvicorn app.main:app --reload
+# 创建 .env 文件（参考 .env.example）
+# 启动服务
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-打开：
-
-```text
-http://127.0.0.1:8000
-```
+打开 `http://127.0.0.1:8000`
 
 ## 测试
 
 ```powershell
-pytest -q
+# 快速测试（不含 LLM 调用）
+pytest tests/ -q --ignore=tests/test_core6_verification.py
+
+# 核心 6 问验收（含 LLM 调用，耗时较长）
+pytest tests/test_core6_verification.py -v
+
+# LLM SQL 专项测试
+pytest tests/test_llm_sql.py -v
 ```
-
-当前状态：**59 passed, 1 warning**（含 API 契约、管道业务正确性、校验规则、意图路由、Schema Graph、QueryPlanCoT、混合检索、ChromaDB 知识库、原始知识导入、生成块加载等 15 个测试文件）。
-
-## ChromaDB 知识库初始化
-
-初始化命令：
-
-```powershell
-python -m app.knowledge_indexer.init_chroma
-```
-
-默认写入位置：
-
-```text
-data/chroma
-```
-
-默认 collection：
-
-```text
-chain_askdata_knowledge
-```
-
-可通过环境变量覆盖：
-
-```powershell
-$env:CHROMA_PERSIST_DIR="data/chroma"
-$env:CHROMA_COLLECTION_NAME="chain_askdata_knowledge"
-```
-
-检索示例：
-
-```text
-GET /api/knowledge/search?q=核销客单价的分母是什么&top_k=3
-```
-
-返回结果包含：
-
-- `document`：命中的知识块文本
-- `metadata`：资产类型、指标编码、表名、模板 ID 等结构化信息
-- `distance`：Chroma 原始距离
-- `rerank_score`：轻量 rerank 分数
-
-`POST /api/query` 也会返回 `retrieval_trace` 和 `retrieval_context`，用于展示本次取数问题命中的知识块（按指标/字段/表/关系/样例分类）。RAG 检索结果现已正式参与 QueryPlan 的指标选择、字段选择、模板选择和风险提示生成。
 
 ## 目录说明
 
@@ -149,18 +132,26 @@ GET /api/knowledge/search?q=核销客单价的分母是什么&top_k=3
 app/
   api/                  API 路由
   answer/               响应组装（AnswerComposer 编排全流程）
-  assets/               本地知识资产加载（YAML/JSON，lru_cache）
+  assets/               本地知识资产加载（YAML/JSON）
   core/                 环境变量配置
   intent_router/        意图路由（nl2sql / schema_explain / caliber_explain / unknown）
-  knowledge_importer/   原始知识批量导入（Excel/Word → JSON 资产 → Chroma chunks）
-  knowledge_indexer/    ChromaDB 知识库初始化、检索与 Rerank
+  knowledge_importer/   原始知识批量导入（Excel/Word → JSON 资产）
+  knowledge_indexer/    ChromaDB 知识库、混合检索、Rerank、RetrievalContext
+  llm/                  Qwen 适配层
+    local_client.py       OpenAI 兼容客户端（SSL + 错误诊断）
+    prompts.py            QueryPlanCoT 系统提示词
+    query_plan_cot_generator.py  CoT 四元组生成 + 解析 + 修复闭环
+    query_plan_cot_validator.py  本地 SchemaGraph 约束校验（字段/关系/跨表/输出接地）
+    sql_generator.py      LLM SQL 生成器（影子模式）
+    sql_safety_gate.py    SQL 安全门禁（9 项检查 + MaxCompute 语法约束）
   metric_registry/      指标注册
-  models/               数据模型（QueryRequest、QueryPlan、QueryPlanCoT、QueryResponse 等）
-  query_planner/        QueryPlan 规划（模板匹配 + RAG 增强 + CoT 步骤）
-  schema_graph/         Schema 结构化图谱（表/字段/关系/指标 + 缺失证据）
-  schema_retrieval/     Schema 检索（MVP 本地 YAML 查找）
-  sql_generator/        SQL 生成（13 个确定性模板）
-  sql_validator/        SQL 安全与口径校验（7 项检查规则）
+  models/               数据模型
+  query_planner/        QueryPlan 规划（模板匹配 + RAG 增强 + CoT）
+  schema_graph/         SchemaGraph 构建 + 字段补全（依赖矩阵）
+  schema_index/         三级索引构建与加载
+  schema_retrieval/     Schema 检索（AskData 风格）
+  sql_generator/        SQL 模板生成（13 个确定性模板）
+  sql_validator/        SQL 安全与口径校验
   web/                  页面路由
 knowledge/
   examples/             Demo Query 资产
@@ -169,9 +160,10 @@ knowledge/
   relations/            表关系资产
   tables/               核心表结构与口径资产
   generated/            批量导入的结构化资产（JSON）
+  generated/indexes/    三级索引 JSON 文件（8 个）
 static/                 前端静态资源
-templates/              页面模板（Codex 风格三栏布局）
-tests/                  测试（15 个文件，59 个用例）
+templates/              页面模板（三栏布局）
+tests/                  测试（16 个文件，140+ 用例）
 data/chroma/            ChromaDB 持久化存储
 docs/
   primary_knowledge/    经管中心原始文档（Excel + Word）
@@ -190,8 +182,7 @@ docs/
 - 核销发生类问题使用 `executed_date`。
 - 支付发生类问题使用 `pay_date`，并过滤 `is_paydate_cash = 0`。
 - 待核销金额是库存快照口径，默认不按 `pay_date` 截断。
-- 品项经营优先使用 `standard_name`。
-- 门店展示优先使用 `sy_hospital_name`，主键使用 `tenant_id`。
+- LLM SQL 禁止 `DATE_TRUNC`/`INTERVAL`/`NOW()` 等非 MaxCompute 语法。
 
 ## 开发进度
 
@@ -202,9 +193,25 @@ docs/
 | Phase 2 | QueryPlan + 13 个 SQL 模板 + 校验器 | ✅ 完成 |
 | Phase 3 | RAG 增强 + 意图路由 + Schema Graph + 混合检索 | ✅ 完成 |
 | Phase 3.5 | 经管中心原始知识批量导入（762 chunks） | ✅ 完成 |
-| Phase 4 | 评估与优化 | ⬜ 待开始 |
-| Phase 5 | 08 版本（语义 Embedding + 检索路径统一 + LLM 回退） | ⬜ 待开始 |
+| Phase 4 | Qwen 接入：QueryPlanCoT 四元组生成 + 修复闭环 | ✅ 完成 |
+| Phase 4.5 | SchemaGraph 依赖矩阵补全 + 校验器强化 | ✅ 完成 |
+| Phase 5 | LLM SQL 影子模式 + 安全门禁 + 核心 6 问受控切换 | ✅ 完成 |
+| Phase 6 | 语义 Embedding + DataWorks/MaxCompute 只读执行 | ⬜ 待开始 |
+| Phase 7 | SQL 修复闭环 + 结果校验与回调修正 | ⬜ 待开始 |
+| Phase 8 | 长短期记忆（滑动窗口 + 向量检索引擎） | ⬜ 待开始 |
+
+### 2026-07-09 工作记录
+
+- **Qwen QueryPlanCoT**：`app/llm/` 模块建成，百炼 `qwen-plus` 根据 SchemaGraph 生成四元组，含本地校验 + 一次修复闭环 + 规则回退
+- **SchemaGraph 字段补全**：`app/schema_graph/enricher.py` 模板级依赖矩阵自动补入 `dp`/`is_valid`/`tenant_id`/维度字段/表关联，13 模板全覆盖
+- **RetrievalContext 去重**：`top_*()` 方法防止重复字段/指标/样例噪声
+- **无关问题过滤**：`has_meaningful_evidence()` + IntentRouter 白名单双重判断
+- **LLM SQL 影子模式**：`app/llm/sql_generator.py` + `app/llm/sql_safety_gate.py`，Qwen 根据 CoT + SchemaGraph 生成 SQL，经 9 项门禁检查
+- **MaxCompute 语法约束**：Prompt + 门禁禁止 `DATE_TRUNC`/`INTERVAL`/`NOW()` 等非 MC 函数
+- **受控切换**：核心 6 问（Q001-Q006）门禁通过时 `sql_source="llm"`，其余模板兜底
+- **前端升级**：双 SQL 模块 + 结构对比表（表/JOIN/WHERE/GROUP BY/ORDER BY/LIMIT 六维对比）
+- **测试**：14 条 CoT 测试 + 21 条 SQL 测试 + 31 条核心 6 实验收 → 140+ passed
 
 ## 技术栈
 
-Python 3.14 · FastAPI · Pydantic · ChromaDB 1.0+ · openpyxl · python-docx · pytest · 原生 HTML/CSS/JS
+Python 3.14 · FastAPI · Pydantic · ChromaDB 1.0+ · 阿里云百炼 Qwen · pytest · 原生 HTML/CSS/JS
