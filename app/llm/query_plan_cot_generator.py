@@ -6,7 +6,7 @@ from typing import Any
 from app.llm.local_client import LocalLLMClient
 from app.llm.prompts import build_query_plan_cot_messages
 from app.llm.query_plan_cot_validator import QueryPlanCoTValidator
-from app.models.query import QueryPlanCoT
+from app.models.query import CoTSemantics, QueryPlanCoT
 from app.schema_graph.graph import SchemaGraph
 
 MAX_REPAIR_ATTEMPTS = 1
@@ -182,10 +182,15 @@ class LLMQueryPlanCoTGenerator:
         if not isinstance(raw_steps, list) or not raw_steps:
             raise ValueError("LLM JSON must include non-empty steps list")
 
+        # Parse query_semantics from payload root
+        semantics = self._parse_semantics(payload.get("query_semantics"))
+
         steps = []
         for index, raw_step in enumerate(raw_steps, start=1):
             if not isinstance(raw_step, dict):
                 raise ValueError("Each LLM step must be an object")
+            # Attach semantics to first step
+            step_semantics = semantics if index == 1 else CoTSemantics()
             steps.append(
                 QueryPlanCoT(
                     step=int(raw_step.get("step") or index),
@@ -198,6 +203,7 @@ class LLMQueryPlanCoTGenerator:
                     ),
                     output_target=str(raw_step.get("output_target") or ""),
                     evidence=self._as_string_list(raw_step.get("evidence")),
+                    query_semantics=step_semantics,
                 )
             )
 
@@ -206,6 +212,17 @@ class LLMQueryPlanCoTGenerator:
         if not any(step.operation_instructions for step in steps):
             raise ValueError("LLM steps must include operation_instructions")
         return steps
+
+    def _parse_semantics(self, raw: Any) -> CoTSemantics:
+        if not isinstance(raw, dict):
+            return CoTSemantics()
+        return CoTSemantics(
+            metrics=self._as_string_list(raw.get("metrics")),
+            time_type=str(raw.get("time_type") or ""),
+            dimensions=self._as_string_list(raw.get("dimensions")),
+            filters=self._as_string_list(raw.get("filters")),
+            top_n=raw.get("top_n") if isinstance(raw.get("top_n"), int) else None,
+        )
 
     def _as_string_list(self, value: Any) -> list[str]:
         if value is None:

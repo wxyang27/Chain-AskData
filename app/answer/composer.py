@@ -19,17 +19,6 @@ from app.sql_generator.generator import SqlGenerator
 from app.sql_validator.validator import SqlValidator
 
 
-# Core 6 queries approved for LLM SQL adoption (gate must pass)
-_CORE6_TEMPLATES = {
-    "execution_summary_yesterday",
-    "store_income_top10_30d",
-    "private_new_customer_income_this_week",
-    "channel_execution_30d",
-    "new_old_customer_execution_30d",
-    "revenue_category_execution_30d",
-}
-
-
 class AnswerComposer:
     """组装自然语言取数响应。"""
 
@@ -79,10 +68,9 @@ class AnswerComposer:
             schema_graph=schema_graph,
         )
 
-        # Controlled adoption: core 6 queries + gate passed → use LLM SQL
+        # Adopt LLM SQL when gate passes (all queries)
         adopt_llm = (
-            template_id in _CORE6_TEMPLATES
-            and llm_sql_detail.generated
+            llm_sql_detail.generated
             and llm_sql_validation.passed
         )
         sql_source = "llm" if adopt_llm else "template"

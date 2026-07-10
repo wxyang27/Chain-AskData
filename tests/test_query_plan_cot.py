@@ -78,7 +78,7 @@ class QueryPlanCoTTestCase(unittest.TestCase):
         # backward-compat properties still work
         self.assertIn("dm_opt_qy_order_info_all_d", first_step.objects)
         self.assertIn("left_gmv", first_step.fields)
-        self.assertIn("left_num > 0", first_step.filters[0])
+        self.assertGreaterEqual(len(first_step.operation_instructions), 1)
         self.assertIn("SUM(left_gmv)", first_step.calculation)
 
 

@@ -17,8 +17,8 @@ class QueryPipelineTestCase(unittest.TestCase):
         self.assertEqual(answer.query_plan.template_id, template_id)
         self.assertTrue(answer.validation.passed, answer.validation.errors)
 
-        if is_core6 and answer.llm_sql_adopted:
-            # Core 6 queries now use LLM SQL; verify structure not fragments
+        if answer.llm_sql_adopted:
+            # LLM SQL is primary — verify gate passed and SQL is valid
             self.assertEqual(answer.sql_source, "llm")
             self.assertTrue(len(answer.sql) > 50, "LLM SQL too short")
             self.assertTrue(answer.llm_sql_validation.passed)

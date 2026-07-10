@@ -25,6 +25,20 @@ class DimensionPlan(BaseModel):
     source_table: str
 
 
+class CoTSemantics(BaseModel):
+    """LLM 对用户问题的语义理解，内嵌于 QueryPlanCoT。
+
+    一次 Qwen 调用同时输出 query_semantics + steps，
+    不需要额外链路或模块。
+    """
+
+    metrics: list[str] = Field(default_factory=list)
+    time_type: str = ""
+    dimensions: list[str] = Field(default_factory=list)
+    filters: list[str] = Field(default_factory=list)
+    top_n: int | None = None
+
+
 class QueryPlanCoT(BaseModel):
     """Structured QueryPlan CoT step - AskData four-tuple format.
 
@@ -45,6 +59,7 @@ class QueryPlanCoT(BaseModel):
     operation_instructions: list[str] = Field(default_factory=list)
     output_target: str = ""
     evidence: list[str] = Field(default_factory=list)
+    query_semantics: CoTSemantics = Field(default_factory=CoTSemantics)
 
     # --- backward-compatibility aliases (deprecated, prefer new names) ---
 

@@ -40,11 +40,8 @@ class QueryPlanner:
         retrieval_context: RetrievalContext | None = None,
         schema_graph: SchemaGraph | None = None,
     ) -> QueryPlan:
+        # Template is always available as fallback
         demo_case = self._match_case(question, retrieval_context)
-        dimensions = [
-            DimensionPlan(**dimension)
-            for dimension in demo_case.get("dimensions", [])
-        ]
         retrieved_metric_ids = retrieval_context.top_metric_ids() if retrieval_context else []
         retrieved_field_names = retrieval_context.top_field_names() if retrieval_context else []
         retrieved_table_names = retrieval_context.top_table_names() if retrieval_context else []
@@ -56,6 +53,8 @@ class QueryPlanner:
             retrieval_context=retrieval_context,
             schema_graph=schema_graph,
         )
+
+        # LLM is the primary source; template is fallback
         llm_cot_result = self.llm_cot_generator.generate(
             question=question,
             schema_graph=schema_graph,
@@ -66,6 +65,36 @@ class QueryPlanner:
             if llm_cot_result.adopted
             else rule_query_plan_cot
         )
+
+        # --- Build QueryPlan: LLM query_semantics primary, template fallback ---
+        semantics = (
+            query_plan_cot[0].query_semantics
+            if llm_cot_result.adopted and query_plan_cot
+            else None
+        )
+
+        if semantics and semantics.metrics:
+            # LLM primary path
+            metrics = self.metric_registry.get_many(semantics.metrics)
+            time_range = self._semantics_time_label(semantics.time_type)
+            dimensions = [
+                DimensionPlan(field=dim, alias=dim, source_table="")
+                for dim in semantics.dimensions
+            ]
+            filters = semantics.filters.copy()
+            sql_strategy = "llm_primary"
+            planning_evidence.insert(0, "LLM 语义理解：主链路")
+        else:
+            # Template fallback path
+            metrics = self.metric_registry.get_many(demo_case["metrics"])
+            time_range = self._infer_time_range(demo_case["template_id"])
+            dimensions = [
+                DimensionPlan(**dimension)
+                for dimension in demo_case.get("dimensions", [])
+            ]
+            filters = self._infer_filters(demo_case["template_id"])
+            sql_strategy = "template_fallback"
+
         risk_flags = demo_case.get("risk_flags", []).copy()
         if retrieval_context:
             risk_flags.extend(flag for flag in retrieval_context.risks if flag not in risk_flags)
@@ -79,11 +108,11 @@ class QueryPlanner:
             original_question=question,
             case_id=demo_case["case_id"],
             template_id=demo_case["template_id"],
-            sql_strategy="rag_enhanced_template",
-            time_range=self._infer_time_range(demo_case["template_id"]),
-            metrics=self.metric_registry.get_many(demo_case["metrics"]),
+            sql_strategy=sql_strategy,
+            time_range=time_range,
+            metrics=metrics,
             dimensions=dimensions,
-            filters=self._infer_filters(demo_case["template_id"]),
+            filters=filters,
             source_tables=source_tables,
             risk_flags=risk_flags,
             retrieved_metric_ids=retrieved_metric_ids,
@@ -152,6 +181,17 @@ class QueryPlanner:
                 return self.cases_by_template[template_id]
 
         return self.cases_by_template["store_income_top10_30d"]
+
+    def _semantics_time_label(self, time_type: str) -> str:
+        """Convert query_semantics time_type to display label."""
+        return {
+            "yesterday": "昨天",
+            "this_week": "本周",
+            "last_30d": "最近30天",
+            "last_90d": "最近90天",
+            "last_60d": "最近60天",
+            "as_of_yesterday": "截至昨天",
+        }.get(time_type, "")
 
     def _infer_time_range(self, template_id: str) -> str:
         if "yesterday" in template_id:
