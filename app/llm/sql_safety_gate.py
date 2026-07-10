@@ -10,6 +10,55 @@ from typing import Any
 
 from app.schema_graph.graph import SchemaGraph
 
+_NAMED_CITY_TERMS = (
+    "\u5317\u4eac",
+    "\u5317\u4eac\u5e02",
+    "\u4e0a\u6d77",
+    "\u4e0a\u6d77\u5e02",
+    "\u5e7f\u5dde",
+    "\u5e7f\u5dde\u5e02",
+    "\u6df1\u5733",
+    "\u6df1\u5733\u5e02",
+    "\u6b66\u6c49",
+    "\u6b66\u6c49\u5e02",
+    "\u676d\u5dde",
+    "\u676d\u5dde\u5e02",
+    "\u6210\u90fd",
+    "\u6210\u90fd\u5e02",
+    "\u91cd\u5e86",
+    "\u91cd\u5e86\u5e02",
+    "\u5929\u6d25",
+    "\u5929\u6d25\u5e02",
+    "\u5357\u4eac",
+    "\u5357\u4eac\u5e02",
+    "\u82cf\u5dde",
+    "\u82cf\u5dde\u5e02",
+    "\u897f\u5b89",
+    "\u897f\u5b89\u5e02",
+    "\u90d1\u5dde",
+    "\u90d1\u5dde\u5e02",
+    "\u957f\u6c99",
+    "\u957f\u6c99\u5e02",
+    "\u9752\u5c9b",
+    "\u9752\u5c9b\u5e02",
+    "\u5b81\u6ce2",
+    "\u5b81\u6ce2\u5e02",
+    "\u5408\u80a5",
+    "\u5408\u80a5\u5e02",
+    "\u4f5b\u5c71",
+    "\u4f5b\u5c71\u5e02",
+    "\u4e1c\u839e",
+    "\u4e1c\u839e\u5e02",
+)
+_STORE_ALIAS = "\u95e8\u5e97"
+_THIS_MONTH_TERMS = ("\u672c\u6708", "\u8fd9\u4e2a\u6708", "\u5f53\u6708")
+_NAMED_ITEM_TERMS = (
+    "\u5947\u8ff9\u80f6\u539f",
+    "BBL HERO",
+    "\u5947\u8ff9\u7ae5\u989c",
+    "\u70ed\u739b\u5409",
+)
+
 
 @dataclass
 class SqlSafetyResult:
@@ -84,21 +133,30 @@ class SqlSafetyGate:
                 if not any(f.endswith(f".{field_name}") for f in allowed_fields):
                     errors.append(f"unknown_field:{field}")
 
-        # 5. Every snapshot table (_d suffix) must have dp filter
+        # 5. Every snapshot table (_d suffix) must have dp = yesterday.
+        # Business date windows must use executed_date/pay_date/etc.  The dp
+        # partition on current full snapshot / all_d tables is the data-version
+        # partition and must not be ranged.
         snapshot_tables = [t for t in tables if t.endswith("_d")]
         if snapshot_tables:
             aliases = self._extract_aliases(sql)
-            DP_OPS = r"(?:=|>=|<=|>|<|BETWEEN|IN|<>|!=)"
             for table in snapshot_tables:
-                table_alias = aliases.get(table, "")
-                dp_ok = (
-                    (table_alias and re.search(
-                        rf"{re.escape(table_alias)}\.dp\s*{DP_OPS}", sql, re.I))
-                    or re.search(rf"{re.escape(table)}\.dp\s*{DP_OPS}", sql, re.I)
-                    or bool(re.search(rf"\bdp\s*{DP_OPS}", sql, re.I))
+                dp_status = self._validate_snapshot_dp_filter(
+                    sql=sql,
+                    table=table,
+                    table_alias=aliases.get(table, ""),
+                    allow_bare_dp=len(snapshot_tables) == 1,
                 )
-                if not dp_ok:
+                if dp_status == "missing":
                     errors.append(f"missing_dp_filter:{table}")
+                elif dp_status == "range":
+                    errors.append(
+                        f"invalid_dp_filter:{table}:dp_must_equal_yesterday_not_range"
+                    )
+                elif dp_status == "not_yesterday":
+                    errors.append(
+                        f"invalid_dp_filter:{table}:dp_must_equal_DATE_SUB_CURRENT_DATE_1"
+                    )
 
         # 6. Execution queries must have is_valid and executed_date
         has_execution_table = any(
@@ -110,11 +168,14 @@ class SqlSafetyGate:
             if not re.search(r"\bexecuted_date\b", sql):
                 errors.append("missing_executed_date_filter")
 
-        # 7. ORDER BY must have LIMIT
+        # 7. Dimension semantics implied by the natural language query.
+        self._validate_dimension_semantics(sql, schema_graph, errors)
+
+        # 8. ORDER BY must have LIMIT
         if "ORDER BY" in sql_upper and "LIMIT" not in sql_upper:
             errors.append("order_by_without_limit")
 
-        # 8. Division without NULLIF guard
+        # 9. Division without NULLIF guard
         div_pattern = re.compile(
             r"(\w+)\s*/\s*(?!NULLIF)(?!0\b)(?![\d.]+)(\w+)", re.I
         )
@@ -215,6 +276,64 @@ class SqlSafetyGate:
 
         return aliases
 
+    def _validate_snapshot_dp_filter(
+        self,
+        *,
+        sql: str,
+        table: str,
+        table_alias: str,
+        allow_bare_dp: bool,
+    ) -> str:
+        """Validate a snapshot table partition predicate.
+
+        Returns:
+        - "ok" when dp is exactly yesterday
+        - "missing" when no dp predicate is present for the table
+        - "range" when dp uses a range/non-equality operator
+        - "not_yesterday" when dp uses equality but not yesterday
+        """
+        qualifiers = [q for q in (table_alias, table) if q]
+        if allow_bare_dp:
+            qualifiers.append("")
+
+        predicates: list[tuple[str, str]] = []
+        for qualifier in dict.fromkeys(qualifiers):
+            predicates.extend(self._dp_predicates(sql, qualifier))
+
+        if not predicates:
+            return "missing"
+
+        if any(op.upper() != "=" for op, _ in predicates):
+            return "range"
+
+        if any(self._is_yesterday_partition(value) for _, value in predicates):
+            return "ok"
+        return "not_yesterday"
+
+    def _dp_predicates(self, sql: str, qualifier: str) -> list[tuple[str, str]]:
+        """Extract dp predicates for a table alias/table name or bare dp."""
+        if qualifier:
+            left = rf"{re.escape(qualifier)}\.dp"
+        else:
+            left = r"(?<!\.)\bdp"
+
+        pattern = re.compile(
+            rf"\b{left}\b\s*(=|>=|<=|<>|!=|>|<|BETWEEN|IN)\s*"
+            rf"(.+?)(?=\s+(?:AND|OR|GROUP\s+BY|ORDER\s+BY|HAVING|LIMIT|JOIN|WHERE|ON)\b|[;\n]|$)",
+            re.IGNORECASE | re.DOTALL,
+        )
+        return [
+            (match.group(1), match.group(2).strip())
+            for match in pattern.finditer(sql)
+        ]
+
+    def _is_yesterday_partition(self, value: str) -> bool:
+        compact = re.sub(r"\s+", "", value).upper().rstrip(";")
+        return compact in {
+            "DATE_SUB(CURRENT_DATE(),1)",
+            "CURRENT_DATE()-1",
+        }
+
     def _allowed_field_names(self, schema_graph: SchemaGraph) -> set[str]:
         """Build set of allowed field references."""
         allowed = set()
@@ -226,6 +345,91 @@ class SqlSafetyGate:
                 db = f.get("database_name") or "soyoung_dw"
                 allowed.add(f"{db}.{table}.{name}")
         return allowed
+
+    def _validate_dimension_semantics(
+        self,
+        sql: str,
+        schema_graph: SchemaGraph,
+        errors: list[str],
+    ) -> None:
+        city_roots = self._named_city_roots(schema_graph.query)
+        if city_roots:
+            if not self._has_city_filter(sql):
+                errors.append("missing_city_filter:city_name")
+            elif not any(root in sql for root in city_roots):
+                errors.append("city_filter_value_mismatch:city_name")
+
+        if re.search(
+            rf"\b(?:\w+\.)?standard_name\b\s+AS\s+[`\"']?{_STORE_ALIAS}",
+            sql,
+            re.IGNORECASE,
+        ):
+            errors.append("alias_semantics:standard_name_is_item_not_store")
+
+        item_roots = self._named_item_roots(schema_graph.query)
+        if item_roots:
+            if not self._has_item_filter(sql):
+                errors.append("missing_item_filter:standard_name")
+            elif not any(root in sql for root in item_roots):
+                errors.append("item_filter_value_mismatch:standard_name")
+
+        required_dimensions = self._required_group_dimensions(schema_graph.query)
+        sql_upper = sql.upper()
+        for dimension_name, field_name in required_dimensions.items():
+            field_upper = field_name.upper()
+            if not re.search(rf"\b(?:\w+\.)?{field_upper}\b", sql_upper):
+                errors.append(f"missing_dimension:{dimension_name}:{field_name}")
+                continue
+            if (
+                self._has_aggregate(sql)
+                and not re.search(rf"GROUP\s+BY[\s\S]+(?:\w+\.)?{field_upper}\b", sql_upper)
+            ):
+                errors.append(f"missing_group_by_dimension:{dimension_name}:{field_name}")
+
+    def _named_city_roots(self, query: str) -> set[str]:
+        roots: set[str] = set()
+        for term in _NAMED_CITY_TERMS:
+            if term in query:
+                roots.add(term.removesuffix("\u5e02"))
+        return roots
+
+    def _named_item_roots(self, query: str) -> set[str]:
+        return {term for term in _NAMED_ITEM_TERMS if term in query}
+
+    def _has_city_filter(self, sql: str) -> bool:
+        return bool(
+            re.search(
+                r"\b(?:\w+\.)?city_name\b\s*(?:=|IN\b|LIKE\b|REGEXP\b|RLIKE\b)",
+                sql,
+                re.IGNORECASE,
+            )
+        )
+
+    def _has_item_filter(self, sql: str) -> bool:
+        return bool(
+            re.search(
+                r"\b(?:\w+\.)?standard_name\b\s*(?:=|IN\b|LIKE\b|REGEXP\b|RLIKE\b)",
+                sql,
+                re.IGNORECASE,
+            )
+        )
+
+    def _required_group_dimensions(self, query: str) -> dict[str, str]:
+        rules = {
+            "\u54c1\u9879": ("standard_name", ("\u5404\u54c1\u9879", "\u6309\u54c1\u9879", "\u54c1\u9879TOP", "\u54c1\u9879\u6392\u884c")),
+            "\u95e8\u5e97": ("sy_hospital_name", ("\u5404\u95e8\u5e97", "\u6309\u95e8\u5e97", "\u95e8\u5e97TOP", "\u95e8\u5e97\u6392\u884c")),
+            "\u57ce\u5e02": ("city_name", ("\u5404\u57ce\u5e02", "\u6309\u57ce\u5e02", "\u5206\u57ce\u5e02", "\u57ce\u5e02\u5bf9\u6bd4")),
+            "\u6e20\u9053": ("cx_first_channel", ("\u5404\u6e20\u9053", "\u6309\u6e20\u9053", "\u5206\u6e20\u9053", "\u6e20\u9053\u5bf9\u6bd4")),
+            "\u65b0\u8001\u5ba2": ("is_new", ("\u65b0\u8001\u5ba2", "\u65b0\u5ba2\u548c\u8001\u5ba2", "\u65b0\u5ba2\u8001\u5ba2")),
+        }
+        required: dict[str, str] = {}
+        for dimension_name, (field_name, triggers) in rules.items():
+            if any(trigger in query for trigger in triggers):
+                required[dimension_name] = field_name
+        return required
+
+    def _has_aggregate(self, sql: str) -> bool:
+        return bool(re.search(r"\b(SUM|COUNT|AVG|MIN|MAX)\s*\(", sql, re.IGNORECASE))
 
     def _cte_aliases(self, sql: str) -> set[str]:
         """Extract CTE alias names from WITH clauses."""
@@ -248,10 +452,29 @@ class SqlSafetyGate:
                     f"expected_2_got_{len(arguments)}"
                 )
 
+        compact_sql = re.sub(r"\s+", "", sql).upper()
+        for business_date_field in ("EXECUTED_DATE", "PAY_DATE"):
+            if re.search(
+                rf"(?:\w+\.)?{business_date_field}<=CURRENT_DATE\(\)",
+                compact_sql,
+            ):
+                errors.append(
+                    f"date_semantics:{business_date_field.lower()}_end_must_be_yesterday"
+                )
+            if re.search(
+                rf"(?:\w+\.)?{business_date_field}BETWEEN.+ANDCURRENT_DATE\(\)",
+                compact_sql,
+            ):
+                errors.append(
+                    f"date_semantics:{business_date_field.lower()}_end_must_be_yesterday"
+                )
+
+        if self._query_requests_this_month_mtd(schema_graph.query):
+            self._validate_this_month_mtd_window(compact_sql, errors)
+
         if "本周" not in schema_graph.query:
             return
 
-        compact_sql = re.sub(r"\s+", "", sql).upper()
         date_field = r"(?:\w+\.)?EXECUTED_DATE"
         week_start = (
             r"DATE_SUB\(CURRENT_DATE\(\),"
@@ -328,3 +551,46 @@ class SqlSafetyGate:
                 calls.append(arguments)
 
         return calls
+
+    def _query_requests_this_month_mtd(self, query: str) -> bool:
+        return any(term in query for term in _THIS_MONTH_TERMS)
+
+    def _validate_this_month_mtd_window(
+        self,
+        compact_sql: str,
+        errors: list[str],
+    ) -> None:
+        if "DATE_SUB(CURRENT_DATE(),30)" in compact_sql:
+            errors.append("date_semantics:this_month_must_not_be_last_30d")
+
+        business_fields = [
+            field
+            for field in ("EXECUTED_DATE", "PAY_DATE")
+            if re.search(rf"(?:\w+\.)?{field}\b", compact_sql)
+        ]
+        if not business_fields:
+            errors.append("date_semantics:this_month_missing_business_date")
+            return
+
+        month_start = r"DATETRUNC\(CURRENT_DATE\(\),['\"]?(?:MONTH|MON|MM)['\"]?\)"
+        yesterday = r"DATE_SUB\(CURRENT_DATE\(\),1\)"
+
+        for field in business_fields:
+            date_field = rf"(?:\w+\.)?{field}"
+            has_month_start = bool(
+                re.search(rf"{date_field}>={month_start}", compact_sql)
+                or re.search(rf"{date_field}BETWEEN{month_start}AND", compact_sql)
+            )
+            has_yesterday_end = bool(
+                re.search(rf"{date_field}<={yesterday}", compact_sql)
+                or re.search(rf"{date_field}BETWEEN{month_start}AND{yesterday}", compact_sql)
+            )
+
+            if not has_month_start:
+                errors.append(
+                    f"date_semantics:this_month_start_must_be_month_first:{field.lower()}"
+                )
+            if not has_yesterday_end:
+                errors.append(
+                    f"date_semantics:this_month_end_must_be_yesterday:{field.lower()}"
+                )

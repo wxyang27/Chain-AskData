@@ -152,7 +152,38 @@ class SqlGenerator:
     """根据 QueryPlan 生成 MaxCompute SQL。"""
 
     def generate(self, query_plan: QueryPlan) -> str:
-        return SQL_TEMPLATES.get(
+        sql = SQL_TEMPLATES.get(
             query_plan.template_id,
             SQL_TEMPLATES["store_income_top10_30d"],
+        )
+        return self._apply_time_overrides(sql, query_plan)
+
+    def _apply_time_overrides(self, sql: str, query_plan: QueryPlan) -> str:
+        if not self._is_this_month_mtd(query_plan):
+            return sql
+
+        replacements = {
+            "executed_date BETWEEN DATE_SUB(CURRENT_DATE(),30) AND DATE_SUB(CURRENT_DATE(),1)": (
+                "executed_date BETWEEN DATETRUNC(CURRENT_DATE(), 'MONTH') AND DATE_SUB(CURRENT_DATE(),1)"
+            ),
+            "executed_date BETWEEN DATE_SUB(CURRENT_DATE(),90) AND DATE_SUB(CURRENT_DATE(),1)": (
+                "executed_date BETWEEN DATETRUNC(CURRENT_DATE(), 'MONTH') AND DATE_SUB(CURRENT_DATE(),1)"
+            ),
+            "pay_date BETWEEN DATE_SUB(CURRENT_DATE(),30) AND DATE_SUB(CURRENT_DATE(),1)": (
+                "pay_date BETWEEN DATETRUNC(CURRENT_DATE(), 'MONTH') AND DATE_SUB(CURRENT_DATE(),1)"
+            ),
+            "pay_date BETWEEN DATE_SUB(CURRENT_DATE(),59) AND DATE_SUB(CURRENT_DATE(),30)": (
+                "pay_date BETWEEN DATETRUNC(CURRENT_DATE(), 'MONTH') AND DATE_SUB(CURRENT_DATE(),1)"
+            ),
+        }
+        for old, new in replacements.items():
+            sql = sql.replace(old, new)
+        return sql
+
+    def _is_this_month_mtd(self, query_plan: QueryPlan) -> bool:
+        if "本月MTD" in query_plan.time_range:
+            return True
+        return any(
+            step.query_semantics.time_type == "this_month_mtd"
+            for step in query_plan.query_plan_cot
         )

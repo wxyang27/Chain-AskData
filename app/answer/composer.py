@@ -44,7 +44,10 @@ class AnswerComposer:
 
     def compose(self, question: str) -> QueryResponse:
         retrieval_context = self.knowledge_search.search_structured(question, top_k=20)
-        template_id = retrieval_context.top_template_id() or ""
+        template_id = retrieval_context.top_template_id() or self.planner._match_case(
+            question,
+            retrieval_context,
+        )["template_id"]
         schema_result = self.schema_retriever.retrieve(retrieval_context, template_id=template_id)
         schema_graph = schema_result["schema_graph"]
         route_result = self.intent_router.route(question, retrieval_context)

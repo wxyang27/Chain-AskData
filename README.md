@@ -15,16 +15,20 @@ Chain-AskData 是面向新氧连锁经管业务的自然语言取数（NL2SQL）
 - **SQL 生成**：
   - 模板 SQL：13 个 MVP Demo Query 的确定性 SQL 模板（始终可用）
   - LLM SQL（影子模式）：Qwen 根据已校验 CoT + SchemaGraph 生成 MaxCompute SQL
-- **SQL 安全门禁**（9 项检查）：
+- **SQL 安全门禁**（规则门 + 业务口径门）：
   - SELECT/WITH only
   - 表、字段、JOIN 必须来自 SchemaGraph
-  - 快照表 dp 分区过滤（支持别名/裸字段/比较运算符）
+  - `_d` / `_all_d` 快照表 `dp` 必须等于 `DATE_SUB(CURRENT_DATE(),1)`，禁止 `dp` 区间
   - 核销表 `is_valid=1` + `executed_date` 强制
+  - 核销/支付业务日期上限必须到昨天，禁止包含 `CURRENT_DATE()`
+  - “本月”统一为自然月 MTD：月初到昨天，禁止按最近 30 天替代
+  - 城市、门店、品项、渠道、新老客维度使用标准字段：`city_name` / `sy_hospital_name` / `standard_name` / `cx_first_channel` / `is_new` 或 `is_pay_new`
+  - 点名城市或品项时必须带对应过滤条件，防止漏筛
   - ORDER BY 必须有 LIMIT
   - 除法必须有 NULLIF 保护
   - MaxCompute 语法禁止：`DATE_TRUNC`/`INTERVAL`/`DATEADD`/`NOW()` 等
   - `DATE_SUB` 参数校验 + 本周日期语义校验
-- **受控切换**：核心 6 问（Q001-Q006）门禁通过时自动采用 LLM SQL（`sql_source="llm"`），其余模板兜底
+- **受控切换**：LLM SQL 通过安全门禁时采用（`sql_source="llm"`），失败时保留模板 SQL 兜底
 - **口径说明输出**：固定结构的问题复述、QueryPlan 摘要、指标卡片、SQL、校验结果、口径说明、引用来源
 
 ### 前端界面
@@ -124,7 +128,44 @@ pytest tests/test_core6_verification.py -v
 
 # LLM SQL 专项测试
 pytest tests/test_llm_sql.py -v
+
+# 黄金评测集（需先启动本地服务，含 LLM 调用，耗时较长）
+python eval/run_eval.py --api http://localhost:8000 --output eval/eval_result_YYYYMMDD.json
 ```
+
+## 黄金评测集与当前基线
+
+`eval/` 目录用于沉淀 NL2SQL 黄金评测集，不校验真实执行数值，重点校验意图、指标、表、字段、过滤条件、SQL 结构、口径说明和 critical rules。
+
+| 文件 | 说明 |
+|------|------|
+| [eval/golden_eval_set.json](eval/golden_eval_set.json) | 46 条黄金评测样例，覆盖标准问法、同义改写、口径易混、组合问题、拒答边界、解释类问题 |
+| [eval/run_eval.py](eval/run_eval.py) | 评测 runner，调用 `/api/query` 并输出通过率、失败归因、质量门槛 |
+| [eval/README.md](eval/README.md) | 评测集设计、字段说明、质量门槛和运行方式 |
+| [eval/eval_result_20260710_after_fix.json](eval/eval_result_20260710_after_fix.json) | 2026-07-10 第二次全量评测结果 |
+
+### Critical Rules
+
+| 规则 | 要求 |
+|------|------|
+| CR001 | 快照表 `dp` 必须锁昨天，禁止区间 |
+| CR002 | “本月”必须按自然月 MTD（月初到昨天） |
+| CR003 | 城市维度/过滤必须使用 `city_name` |
+| CR004 | 门店维度必须使用 `sy_hospital_name`（兼容 `tenant_alias_name`） |
+| CR005 | 品项维度/过滤必须使用 `standard_name` |
+| CR006 | 渠道维度/过滤必须使用 `cx_first_channel` |
+| CR007 | 核销新老客使用 `is_new`，支付新老客使用 `is_pay_new` |
+
+### 2026-07-10 基线
+
+| 指标 | 结果 |
+|------|------|
+| 全量通过率 | 25/46（54.3%） |
+| Hard 通过率 | 9/18（50.0%） |
+| Critical Rule 通过率 | 79/79（100.0%） |
+| 组合类问题 | 9/9（100.0%） |
+
+当前结论：`dp`、MTD、城市/门店/品项/渠道/新老客等硬规则已稳定过线；主要红榜集中在支付/核销双域口径、待核销库存过滤、品类过滤、拒答边界和口径解释完整性。
 
 ## 目录说明
 
@@ -164,6 +205,7 @@ knowledge/
 static/                 前端静态资源
 templates/              页面模板（三栏布局）
 tests/                  测试（16 个文件，140+ 用例）
+eval/                   黄金评测集、评测 runner 与基线结果
 data/chroma/            ChromaDB 持久化存储
 docs/
   primary_knowledge/    经管中心原始文档（Excel + Word）
@@ -175,12 +217,15 @@ docs/
 - 首版只生成 SQL，不真实执行。
 - SQL 只允许 `SELECT` 或 `WITH`。
 - 使用 `soyoung_dw` 库名前缀。
-- 查询 `soyoung_dw` 表必须带 `dp` 分区。
+- 查询 `_d` / `_all_d` 快照表必须带 `dp = DATE_SUB(CURRENT_DATE(),1)`，禁止把 `dp` 当业务日期区间。
 - 出现 `ORDER BY` 必须带 `LIMIT`。
 - 核销收入使用 `exe_income`，核销 GMV 使用 `exe_amount`。
 - 核销人数使用 `customer_id`，核销人次使用 `verify_date_id`。
 - 核销发生类问题使用 `executed_date`。
 - 支付发生类问题使用 `pay_date`，并过滤 `is_paydate_cash = 0`。
+- “本月”默认自然月 MTD：`DATETRUNC(CURRENT_DATE(), 'MONTH')` 到 `DATE_SUB(CURRENT_DATE(),1)`。
+- 城市/大区通过 `tenant_id` 关联 `dim_qy_tenant_info_all_d`，使用 `city_name` / `area_name`。
+- 品项使用 `standard_name`，渠道使用 `cx_first_channel`。
 - 待核销金额是库存快照口径，默认不按 `pay_date` 截断。
 - LLM SQL 禁止 `DATE_TRUNC`/`INTERVAL`/`NOW()` 等非 MaxCompute 语法。
 
@@ -196,6 +241,7 @@ docs/
 | Phase 4 | Qwen 接入：QueryPlanCoT 四元组生成 + 修复闭环 | ✅ 完成 |
 | Phase 4.5 | SchemaGraph 依赖矩阵补全 + 校验器强化 | ✅ 完成 |
 | Phase 5 | LLM SQL 影子模式 + 安全门禁 + 核心 6 问受控切换 | ✅ 完成 |
+| Phase 5.5 | 黄金评测集 v1.2 + critical rules + 红榜归因基线 | ✅ 完成 |
 | Phase 6 | 语义 Embedding + DataWorks/MaxCompute 只读执行 | ⬜ 待开始 |
 | Phase 7 | SQL 修复闭环 + 结果校验与回调修正 | ⬜ 待开始 |
 | Phase 8 | 长短期记忆（滑动窗口 + 向量检索引擎） | ⬜ 待开始 |
@@ -211,6 +257,16 @@ docs/
 - **受控切换**：核心 6 问（Q001-Q006）门禁通过时 `sql_source="llm"`，其余模板兜底
 - **前端升级**：双 SQL 模块 + 结构对比表（表/JOIN/WHERE/GROUP BY/ORDER BY/LIMIT 六维对比）
 - **测试**：14 条 CoT 测试 + 21 条 SQL 测试 + 31 条核心 6 实验收 → 140+ passed
+
+### 2026-07-10 工作记录
+
+- **黄金评测集 v1.2**：新增 46 条评测样例，覆盖 7 条 critical rules、13 Demo 扩展、同义改写、口径易混、组合查询、拒答边界和解释类问题
+- **评测 runner 强化**：`eval/run_eval.py` 支持 critical rule 自动推断、质量门槛、`sql_source` / `llm_sql_adopted` / 安全门错误检查和失败归因
+- **硬规则安全门**：`dp` 昨天分区、MTD、城市过滤、品项过滤、维度分组、新老客字段、业务日期上限等规则已进入 `SqlSafetyGate`
+- **维度管理能力**：支持品项、门店、城市、渠道、新老客维度的 SchemaGraph 补字段、QueryPlan 后处理和 SQL 安全校验
+- **本月口径**：“本月”统一归一为自然月 MTD（月初到昨天），不再按最近 30 天处理
+- **基线结果**：第二次全量评测 25/46，critical rules 79/79，组合类问题 9/9
+- **下一步红榜**：优先修复待核销 `left_num > 0`、支付域 `is_paydate_cash = 0`、品类 `revenue_category`、支付/核销双域问题、拒答边界和口径解释完整性
 
 ## 技术栈
 

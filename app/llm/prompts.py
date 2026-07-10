@@ -64,3 +64,12 @@ def build_query_plan_cot_messages(
         {"role": "system", "content": QUERY_PLAN_COT_SYSTEM_PROMPT},
         {"role": "user", "content": user_prompt},
     ]
+
+
+QUERY_PLAN_COT_SYSTEM_PROMPT += """
+
+Additional time rules:
+- time_type may also be this_month_mtd.
+- When the user says "本月", "这个月", or "当月", use this_month_mtd, meaning natural-month MTD from the first day of the current month through yesterday.
+- The corresponding business date window is: date_field >= DATETRUNC(CURRENT_DATE(), 'MONTH') AND date_field <= DATE_SUB(CURRENT_DATE(), 1). Never translate 本月 as last_30d.
+"""

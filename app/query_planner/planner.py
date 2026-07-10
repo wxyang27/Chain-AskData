@@ -4,7 +4,7 @@ from app.knowledge_indexer.retrieval_context import RetrievalContext
 from app.llm.local_client import LocalLLMClient
 from app.llm.query_plan_cot_generator import LLMQueryPlanCoTGenerator
 from app.metric_registry.registry import MetricRegistry
-from app.models.query import DimensionPlan, QueryPlan, QueryPlanCoT
+from app.models.query import CoTSemantics, DimensionPlan, QueryPlan, QueryPlanCoT
 from app.schema_retrieval.retriever import SchemaRetriever
 from app.schema_graph.graph import SchemaGraph
 
@@ -65,6 +65,7 @@ class QueryPlanner:
             if llm_cot_result.adopted
             else rule_query_plan_cot
         )
+        query_plan_cot = self._postprocess_query_plan_cot(question, query_plan_cot)
 
         # --- Build QueryPlan: LLM query_semantics primary, template fallback ---
         semantics = (
@@ -87,7 +88,11 @@ class QueryPlanner:
         else:
             # Template fallback path
             metrics = self.metric_registry.get_many(demo_case["metrics"])
-            time_range = self._infer_time_range(demo_case["template_id"])
+            time_range = (
+                "本月MTD（自然月1日至昨天）"
+                if self._question_requests_this_month_mtd(question)
+                else self._infer_time_range(demo_case["template_id"])
+            )
             dimensions = [
                 DimensionPlan(**dimension)
                 for dimension in demo_case.get("dimensions", [])
@@ -130,6 +135,209 @@ class QueryPlanner:
             llm_validation_errors=llm_cot_result.validation_errors,
             llm_latency_ms=llm_cot_result.latency_ms,
             llm_repair_count=llm_cot_result.repair_count,
+        )
+
+    def _postprocess_query_plan_cot(
+        self,
+        question: str,
+        steps: list[QueryPlanCoT],
+    ) -> list[QueryPlanCoT]:
+        """Normalize semantics that are commonly drifted by examples."""
+        cleaned_steps: list[QueryPlanCoT] = []
+        for step in steps:
+            semantics = step.query_semantics or CoTSemantics()
+            dimensions = list(semantics.dimensions)
+            instructions = list(step.operation_instructions)
+            output_target = step.output_target
+            semantic_updates: dict[str, object] = {}
+
+            if self._question_requests_this_month_mtd(question):
+                semantic_updates["time_type"] = "this_month_mtd"
+                instructions = self._remove_rolling_30d_time_instructions(instructions)
+                instructions.append(
+                    "时间口径：本月=自然月MTD，业务日期 >= DATETRUNC(CURRENT_DATE(), 'MONTH') 且 <= DATE_SUB(CURRENT_DATE(), 1)，不得按最近30天处理"
+                )
+
+            if not self._question_requests_store_breakdown(question):
+                dimensions = [
+                    dim for dim in dimensions
+                    if dim not in {"\u95e8\u5e97", "\u673a\u6784", "\u533b\u9662", "tenant_id", "sy_hospital_name"}
+                ]
+                before_count = len(instructions)
+                instructions = [
+                    instruction
+                    for instruction in instructions
+                    if not self._looks_like_store_grouping_instruction(instruction)
+                ]
+
+                if self._contains_store_output(output_target):
+                    output_target = "\u54c1\u9879\u3001\u6838\u9500\u6536\u5165" if "\u54c1\u9879" in question else "\u6838\u9500\u6536\u5165"
+
+                if len(instructions) != before_count:
+                    instructions.append(
+                        "\u6700\u540e\u6c47\u603b\uff1a\u4e0d\u505a\u989d\u5916\u7ef4\u5ea6\u5206\u7ec4\uff0c\u6309\u95ee\u9898\u8981\u6c42\u8fd4\u56de\u6838\u9500\u6536\u5165"
+                    )
+
+            for requested_dimension in self._requested_group_dimensions(question):
+                if requested_dimension not in dimensions:
+                    dimensions.append(requested_dimension)
+
+            metrics = self._augment_metrics_from_question(question, list(semantics.metrics))
+            if metrics != list(semantics.metrics):
+                semantic_updates["metrics"] = metrics
+
+            if self._question_requests_named_channel_set(question):
+                channel_filter_instruction = (
+                    "渠道口径：问题点名私域/公域/老带新对比时，"
+                    "必须加 cx_first_channel IN ('私域','公域','老带新')，"
+                    "不得只 GROUP BY 全部渠道"
+                )
+                if channel_filter_instruction not in instructions:
+                    instructions.append(channel_filter_instruction)
+
+            item_name = self._named_item_filter_value(question)
+            if item_name:
+                item_filter_instruction = (
+                    f"品项口径：问题点名{item_name}时，"
+                    f"必须加 standard_name = '{item_name}' 或 standard_name REGEXP '{item_name}'"
+                )
+                if item_filter_instruction not in instructions:
+                    instructions.append(item_filter_instruction)
+
+            semantic_updates["dimensions"] = dimensions
+            cleaned_steps.append(
+                step.model_copy(
+                    update={
+                        "operation_instructions": instructions,
+                        "output_target": output_target,
+                        "query_semantics": semantics.model_copy(
+                            update=semantic_updates
+                        ),
+                    }
+                )
+            )
+        return cleaned_steps
+
+    def _augment_metrics_from_question(self, question: str, metrics: list[str]) -> list[str]:
+        augmented = list(dict.fromkeys(metrics))
+
+        def add(metric: str) -> None:
+            if metric not in augmented:
+                augmented.append(metric)
+
+        payment_context = any(term in question for term in ("支付", "付了", "付的", "GMV"))
+        if "待核销" in question or "没核销" in question:
+            add("unverified_amount")
+        if "渗透率" in question:
+            add("standard_item_penetration")
+        if "0元单" in question or "0 元单" in question:
+            add("zero_income_order_count")
+
+        if payment_context and any(term in question for term in ("支付", "付了", "GMV")):
+            add("payment_gmv")
+        if payment_context and any(term in question for term in ("支付人数", "多少人付", "付的人")):
+            add("payment_user_count")
+        if payment_context and any(term in question for term in ("客单价", "人均")):
+            add("payment_aov_by_user_day")
+
+        execution_income_terms = (
+            "核销收入",
+            "核销了多少钱",
+            "核销金额",
+            "消耗金额",
+            "业绩",
+            "成交后收入",
+        )
+        if any(term in question for term in execution_income_terms) or (
+            "收入" in question and "支付" not in question
+        ):
+            add("execution_income")
+        if "核销GMV" in question:
+            add("execution_gmv")
+        if "人次" in question:
+            add("execution_visit_count")
+        if any(term in question for term in ("核销人数", "核销人头", "涉及多少客人")):
+            add("execution_user_count")
+        if "客单价" in question and "支付" not in question:
+            add("execution_aov_by_visit")
+        return augmented
+
+    def _question_requests_named_channel_set(self, question: str) -> bool:
+        return all(term in question for term in ("私域", "公域", "老带新"))
+
+    def _named_item_filter_value(self, question: str) -> str:
+        for item_name in ("奇迹胶原", "BBL HERO", "奇迹童颜", "热玛吉"):
+            if item_name in question:
+                return item_name
+        return ""
+
+    def _question_requests_store_breakdown(self, question: str) -> bool:
+        return any(
+            term in question
+            for term in ("\u95e8\u5e97", "\u673a\u6784", "\u533b\u9662", "\u5404\u5e97", "\u5e97\u94fa")
+        )
+
+    def _question_requests_this_month_mtd(self, question: str) -> bool:
+        return any(term in question for term in ("\u672c\u6708", "\u8fd9\u4e2a\u6708", "\u5f53\u6708"))
+
+    def _remove_rolling_30d_time_instructions(self, instructions: list[str]) -> list[str]:
+        return [
+            instruction
+            for instruction in instructions
+            if not (
+                "\u6700\u8fd130\u5929" in instruction
+                or "last_30d" in instruction
+                or "DATE_SUB(CURRENT_DATE(), 30)" in instruction
+                or "DATE_SUB(CURRENT_DATE(),30)" in instruction
+            )
+        ]
+
+    def _requested_group_dimensions(self, question: str) -> list[str]:
+        dimensions: list[str] = []
+        dimension_rules = [
+            ("\u54c1\u9879", ("\u5404\u54c1\u9879", "\u6309\u54c1\u9879", "\u54c1\u9879TOP", "\u54c1\u9879\u6392\u884c")),
+            ("\u95e8\u5e97", ("\u5404\u95e8\u5e97", "\u6309\u95e8\u5e97", "\u95e8\u5e97TOP", "\u95e8\u5e97\u6392\u884c")),
+            ("\u57ce\u5e02", ("\u5404\u57ce\u5e02", "\u6309\u57ce\u5e02", "\u5206\u57ce\u5e02", "\u57ce\u5e02\u5bf9\u6bd4")),
+            ("\u6e20\u9053", ("\u5404\u6e20\u9053", "\u6309\u6e20\u9053", "\u5206\u6e20\u9053", "\u6e20\u9053\u5bf9\u6bd4")),
+            ("\u65b0\u8001\u5ba2", ("\u65b0\u8001\u5ba2", "\u65b0\u5ba2\u548c\u8001\u5ba2", "\u65b0\u5ba2\u8001\u5ba2")),
+        ]
+        for dimension, triggers in dimension_rules:
+            if any(trigger in question for trigger in triggers):
+                dimensions.append(dimension)
+        return dimensions
+
+    def _question_has_named_city(self, question: str) -> bool:
+        return any(
+            term in question
+            for term in (
+                "\u5317\u4eac", "\u4e0a\u6d77", "\u5e7f\u5dde", "\u6df1\u5733",
+                "\u6b66\u6c49", "\u676d\u5dde", "\u6210\u90fd", "\u91cd\u5e86",
+                "\u5929\u6d25", "\u5357\u4eac", "\u82cf\u5dde", "\u897f\u5b89",
+                "\u90d1\u5dde", "\u957f\u6c99", "\u9752\u5c9b", "\u5b81\u6ce2",
+                "\u5408\u80a5", "\u4f5b\u5c71", "\u4e1c\u839e",
+            )
+        )
+
+    def _looks_like_store_grouping_instruction(self, instruction: str) -> bool:
+        return (
+            ("\u95e8\u5e97" in instruction or "tenant_id" in instruction or "sy_hospital_name" in instruction)
+            and (
+                "\u805a\u5408" in instruction
+                or "\u5206\u7ec4" in instruction
+                or "\u8f93\u51fa" in instruction
+                or "\u8fd4\u56de" in instruction
+                or "tenant_name" in instruction
+                or "GROUP" in instruction.upper()
+                or "SUM(" in instruction.upper()
+                or "COUNT(" in instruction.upper()
+            )
+        )
+
+    def _contains_store_output(self, output_target: str) -> bool:
+        return (
+            "\u95e8\u5e97" in output_target
+            or "tenant_id" in output_target
+            or "sy_hospital_name" in output_target
         )
 
     def list_demo_questions(self) -> list[dict]:
@@ -187,6 +395,7 @@ class QueryPlanner:
         return {
             "yesterday": "昨天",
             "this_week": "本周",
+            "this_month_mtd": "本月MTD（自然月1日至昨天）",
             "last_30d": "最近30天",
             "last_90d": "最近90天",
             "last_60d": "最近60天",

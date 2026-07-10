@@ -138,6 +138,99 @@ class SchemaGraphBuilderTestCase(unittest.TestCase):
         self.assertIn("Field: exe_income", graph_text)
         self.assertIn("Relation:", graph_text)
 
+    def test_city_query_enriches_tenant_dimension_fields(self):
+        context = RetrievalContext(
+            query="本月北京地区奇迹胶原品项的核销收入",
+            fields=[
+                RetrievalHit(
+                    document="field standard_name",
+                    metadata={
+                        "asset_type": "field",
+                        "field_id": "dm_opt_qy_user_execution_record_all_d.standard_name",
+                        "field_name": "standard_name",
+                        "table_name": "dm_opt_qy_user_execution_record_all_d",
+                    },
+                    distance=0.1,
+                    rerank_score=20.0,
+                ),
+            ],
+            tables=[
+                RetrievalHit(
+                    document="table execution",
+                    metadata={
+                        "asset_type": "table",
+                        "table_name": "dm_opt_qy_user_execution_record_all_d",
+                        "full_name": "soyoung_dw.dm_opt_qy_user_execution_record_all_d",
+                    },
+                    distance=0.1,
+                    rerank_score=18.0,
+                )
+            ],
+        )
+        schema_indexes = SchemaIndexLoader().load()
+
+        graph = SchemaGraphBuilder(schema_indexes=schema_indexes).build(
+            context,
+            template_id="standard_item_income_top20_30d",
+        )
+        field_ids = {
+            f"{field.get('table_name')}.{field.get('field_name')}"
+            for field in graph.fields
+        }
+        relation_keys = {
+            (
+                relation.get("source_table"),
+                relation.get("source_field"),
+                relation.get("target_table"),
+                relation.get("target_field"),
+            )
+            for relation in graph.relations
+        }
+
+        self.assertIn("dm_opt_qy_user_execution_record_all_d.tenant_id", field_ids)
+        self.assertIn("dim_qy_tenant_info_all_d.city_name", field_ids)
+        self.assertIn("dim_qy_tenant_info_all_d.dp", field_ids)
+        self.assertIn("dim_qy_tenant_info_all_d", graph.table_names)
+        self.assertIn(
+            (
+                "dm_opt_qy_user_execution_record_all_d",
+                "tenant_id",
+                "dim_qy_tenant_info_all_d",
+                "tenant_id",
+            ),
+            relation_keys,
+        )
+        self.assertIn("city_name", graph.schema_graph_text)
+
+    def test_named_item_query_enriches_standard_name_even_without_item_word(self):
+        context = RetrievalContext(
+            query="本月北京地区奇迹胶原核销收入",
+            tables=[
+                RetrievalHit(
+                    document="table execution",
+                    metadata={
+                        "asset_type": "table",
+                        "table_name": "dm_opt_qy_user_execution_record_all_d",
+                        "full_name": "soyoung_dw.dm_opt_qy_user_execution_record_all_d",
+                    },
+                    distance=0.1,
+                    rerank_score=18.0,
+                )
+            ],
+        )
+        schema_indexes = SchemaIndexLoader().load()
+
+        graph = SchemaGraphBuilder(schema_indexes=schema_indexes).build(
+            context,
+            template_id="execution_summary_yesterday",
+        )
+        field_ids = {
+            f"{field.get('table_name')}.{field.get('field_name')}"
+            for field in graph.fields
+        }
+
+        self.assertIn("dm_opt_qy_user_execution_record_all_d.standard_name", field_ids)
+
 
 if __name__ == "__main__":
     unittest.main()
