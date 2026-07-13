@@ -52,6 +52,8 @@ class IntentRouter:
         )
 
     def _is_schema_explain(self, normalized_question: str) -> bool:
+        if any(word in normalized_question for word in ["用哪个字段", "哪个字段", "哪些字段"]):
+            return True
         schema_words = [
             "\u54ea\u4e2a\u5b57\u6bb5",
             "\u54ea\u4e9b\u5b57\u6bb5",
@@ -95,6 +97,14 @@ class IntentRouter:
         )
 
     def _is_unknown(self, normalized_question: str, retrieval_context: RetrievalContext) -> bool:
+        reject_words = [
+            "预测", "预估", "为什么", "原因", "下降", "上涨", "有问题", "诊断",
+        ]
+        if any(word in normalized_question for word in reject_words):
+            return True
+        if "帮我分析" in normalized_question or "分析哪个" in normalized_question:
+            return True
+
         unsupported_words = [
             "\u5929\u6c14", "\u6ee1\u610f\u5ea6", "\u80a1\u4ef7", "\u6296\u97f3\u70ed\u699c",
             "\u80a1\u7968", "\u7535\u5f71", "\u5916\u5356", "\u5feb\u9012", "\u673a\u7968", "\u9152\u5e97",

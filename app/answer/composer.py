@@ -4,6 +4,7 @@ from app.knowledge_indexer.retrieval_context import RetrievalContext
 from app.knowledge_indexer.service import KnowledgeSearchService
 from app.llm.local_client import LocalLLMClient
 from app.llm.sql_generator import LLMSqlGenerator, LLMSqlResult
+from app.llm.sql_repairer import StaticSqlRepairer
 from app.llm.sql_safety_gate import SqlSafetyGate, SqlSafetyResult
 from app.models.query import (
     LlmSqlResult as LlmSqlResultModel,
@@ -15,6 +16,7 @@ from app.models.query import (
 from app.query_planner.planner import QueryPlanner
 from app.schema_graph.graph import SchemaGraph
 from app.schema_retrieval.askdata_style_retriever import AskDataStyleSchemaRetriever
+from app.semantic.contract import SemanticContractBuilder
 from app.sql_generator.generator import SqlGenerator
 from app.sql_validator.validator import SqlValidator
 
@@ -28,6 +30,7 @@ class AnswerComposer:
         self.validator = SqlValidator()
         self.knowledge_search = KnowledgeSearchService()
         self.intent_router = IntentRouter()
+        self.semantic_contract_builder = SemanticContractBuilder()
         self.schema_retriever = AskDataStyleSchemaRetriever(
             schema_indexes=self.knowledge_search.schema_indexes,
         )
@@ -41,16 +44,19 @@ class AnswerComposer:
             ),
         )
         self.sql_safety_gate = SqlSafetyGate()
+        self.sql_repairer = StaticSqlRepairer()
 
     def compose(self, question: str) -> QueryResponse:
         retrieval_context = self.knowledge_search.search_structured(question, top_k=20)
-        template_id = retrieval_context.top_template_id() or self.planner._match_case(
+        semantic_contract = self.semantic_contract_builder.build(question, retrieval_context)
+        template_id = semantic_contract.template_id or retrieval_context.top_template_id() or self.planner._match_case(
             question,
             retrieval_context,
         )["template_id"]
         schema_result = self.schema_retriever.retrieve(retrieval_context, template_id=template_id)
         schema_graph = schema_result["schema_graph"]
         route_result = self.intent_router.route(question, retrieval_context)
+        route_result = self._apply_semantic_route_override(route_result, semantic_contract)
         if route_result.intent != "nl2sql":
             return self._compose_explain_response(
                 question, retrieval_context, schema_graph,
@@ -61,8 +67,10 @@ class AnswerComposer:
             question,
             retrieval_context=retrieval_context,
             schema_graph=schema_graph,
+            semantic_contract=semantic_contract,
         )
         template_sql = self.generator.generate(query_plan)
+        template_sql = self._repair_template_sql(template_sql, query_plan, schema_graph)
         validation = self.validator.validate(template_sql)
 
         # --- LLM SQL shadow mode ---
@@ -91,7 +99,7 @@ class AnswerComposer:
                 "核销收入使用 exe_income，核销 GMV 使用 exe_amount。",
                 "核销客单价默认分母为核销人次 verify_date_id；支付客单价默认分母为支付日期+用户。",
                 "门店展示优先使用 sy_hospital_name，主键使用 tenant_id。",
-            ],
+            ] + self._contract_caliber_notes(query_plan.semantic_contract),
             retrieval_trace=retrieval_context.raw_matches,
             retrieval_context=retrieval_context.to_dict(),
             schema_graph=self._schema_graph_payload(schema_result),
@@ -121,6 +129,25 @@ class AnswerComposer:
             return "", LlmSqlValidation(), self._to_result_model(result)
 
         safety = self.sql_safety_gate.validate(result.sql, schema_graph)
+        if not safety.passed:
+            repair = self.sql_repairer.repair(
+                sql=result.sql,
+                semantic_contract=query_plan.semantic_contract,
+                schema_graph=schema_graph,
+                errors=safety.errors,
+            )
+            if repair.repaired:
+                repaired_safety = self.sql_safety_gate.validate(repair.sql, schema_graph)
+                if repaired_safety.passed:
+                    result.sql = repair.sql
+                    result.explanation = (
+                        (result.explanation + "；") if result.explanation else ""
+                    ) + "静态修复：" + "、".join(repair.fixes)
+                    safety = repaired_safety
+                else:
+                    safety.errors.extend(
+                        f"repair_failed:{error}" for error in repaired_safety.errors
+                    )
         return result.sql, LlmSqlValidation(
             passed=safety.passed,
             errors=safety.errors,
@@ -128,6 +155,23 @@ class AnswerComposer:
             used_tables=safety.used_tables,
             used_fields=safety.used_fields,
         ), self._to_result_model(result)
+
+    def _repair_template_sql(
+        self,
+        template_sql: str,
+        query_plan: QueryPlan,
+        schema_graph: SchemaGraph,
+    ) -> str:
+        repair = self.sql_repairer.repair(
+            sql=template_sql,
+            semantic_contract=query_plan.semantic_contract,
+            schema_graph=schema_graph,
+            errors=[],
+        )
+        if not repair.repaired:
+            return template_sql
+        safety = self.sql_safety_gate.validate(repair.sql, schema_graph)
+        return repair.sql if safety.passed else template_sql
 
     def _to_result_model(self, result: LLMSqlResult) -> LlmSqlResultModel:
         return LlmSqlResultModel(
@@ -137,6 +181,64 @@ class AnswerComposer:
             explanation=result.explanation,
             generated=result.generated,
             error=result.error,
+        )
+
+    def _contract_caliber_notes(self, semantic_contract) -> list[str]:
+        notes: list[str] = []
+        metrics_set = set(semantic_contract.metrics)
+
+        # --- 0元单 ---
+        if "zero_income_order_count" in metrics_set:
+            notes.append(
+                "0元单量 = COUNT(DISTINCT main_order_id) WHERE exe_income = 0；"
+                "核销人数使用 COUNT(DISTINCT customer_id)。"
+                "0元单判断条件是 exe_income = 0（核销域），不是 pay_gmv = 0（支付域）。"
+            )
+
+        # --- 支付三指标 ---
+        has_payment = bool(
+            {"payment_gmv", "payment_user_count", "payment_aov_by_user_day"} & metrics_set
+        )
+        if has_payment:
+            notes.append(
+                "支付GMV = SUM(pay_gmv)；"
+                "支付人数 = COUNT(DISTINCT uid)；"
+                "支付客单价 = 支付GMV / NULLIF(支付人次, 0)。"
+                "支付域必须过滤 is_paydate_cash = 0（剔除当日退款），"
+                "业务日期使用 pay_date。新客支付额外过滤 is_pay_new = 1。"
+            )
+
+        # --- 核销人数/人次 ---
+        if "execution_user_count" in metrics_set and "execution_visit_count" in metrics_set:
+            notes.append(
+                "核销人数 = COUNT(DISTINCT customer_id)；"
+                "核销人次 = COUNT(DISTINCT verify_date_id)。"
+                "二者不能混用：客单价分母是核销人次，渗透率分母是核销人数。"
+            )
+
+        # --- 核销+支付双域 ---
+        if "execution_income" in metrics_set and "payment_gmv" in metrics_set:
+            notes.append(
+                "核销收入使用 executed_date + exe_income + is_valid = 1；"
+                "支付GMV使用 pay_date + pay_gmv + is_paydate_cash = 0。"
+            )
+
+        return notes
+
+    def _apply_semantic_route_override(
+        self,
+        route_result: IntentRouteResult,
+        semantic_contract,
+    ) -> IntentRouteResult:
+        if semantic_contract.intent == route_result.intent:
+            return route_result
+        if semantic_contract.intent == "nl2sql":
+            return route_result
+        return IntentRouteResult(
+            intent=semantic_contract.intent,
+            confidence=0.95,
+            reason=semantic_contract.reject_reason or "业务语义约束层覆盖意图",
+            evidence=semantic_contract.required_fields + semantic_contract.metrics,
         )
 
     # ------------------------------------------------------------------
@@ -211,12 +313,20 @@ class AnswerComposer:
         field_notes = self._field_notes(retrieval_context)
 
         if route_result.intent == "schema_explain":
+            if "门店" in question or "机构" in question:
+                notes.append("门店名称：优先使用 soyoung_dw.dim_qy_tenant_info_all_d.sy_hospital_name。")
+                notes.append("sy_hospital_name（工程主推字段，enricher 会补全）；tenant_alias_name 为兼容字段；hospital_id 不作为展示名称。")
+            if "核销人数" in question:
+                notes.append("核销人数：使用 soyoung_dw.dm_opt_qy_user_execution_record_all_d.customer_id 去重。")
             notes.extend(field_notes)
             if not notes:
                 notes.append("未命中可信字段证据，不建议强行生成 SQL。")
             return notes
 
         if route_result.intent == "caliber_explain":
+            if "核销客单价" in question and "分母" in question:
+                notes.append("核销客单价的分母是核销人次：COUNT(DISTINCT verify_date_id)，不是核销人数 customer_id。")
+                notes.append("公式使用 SUM(exe_income) / NULLIF(COUNT(DISTINCT verify_date_id),0)；verify_date_id（COUNT DISTINCT）是分母，customer_id；除法必须用 NULLIF 防止除零。")
             metric_notes = self._metric_caliber_notes(retrieval_context)
             notes.extend(metric_notes)
 

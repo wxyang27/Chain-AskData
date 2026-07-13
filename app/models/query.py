@@ -39,6 +39,24 @@ class CoTSemantics(BaseModel):
     top_n: int | None = None
 
 
+class SemanticContract(BaseModel):
+    """Lightweight business semantics normalized from the user question.
+
+    This is intentionally thin: it captures hard business constraints that
+    should guide retrieval, planning, SQL generation, and static repair.
+    """
+
+    intent: str = "nl2sql"
+    domain: str = ""
+    metrics: list[str] = Field(default_factory=list)
+    dimensions: list[str] = Field(default_factory=list)
+    filters: list[str] = Field(default_factory=list)
+    time_range: str = ""
+    required_fields: list[str] = Field(default_factory=list)
+    reject_reason: str = ""
+    template_id: str = ""
+
+
 class QueryPlanCoT(BaseModel):
     """Structured QueryPlan CoT step - AskData four-tuple format.
 
@@ -144,6 +162,7 @@ class QueryPlan(BaseModel):
     llm_validation_errors: list[str] = Field(default_factory=list)
     llm_latency_ms: int = 0
     llm_repair_count: int = 0
+    semantic_contract: SemanticContract = Field(default_factory=SemanticContract)
 
 
 class ValidationResult(BaseModel):

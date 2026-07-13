@@ -4,7 +4,7 @@ from app.knowledge_indexer.retrieval_context import RetrievalContext
 from app.llm.local_client import LocalLLMClient
 from app.llm.query_plan_cot_generator import LLMQueryPlanCoTGenerator
 from app.metric_registry.registry import MetricRegistry
-from app.models.query import CoTSemantics, DimensionPlan, QueryPlan, QueryPlanCoT
+from app.models.query import CoTSemantics, DimensionPlan, QueryPlan, QueryPlanCoT, SemanticContract
 from app.schema_retrieval.retriever import SchemaRetriever
 from app.schema_graph.graph import SchemaGraph
 
@@ -39,9 +39,10 @@ class QueryPlanner:
         question: str,
         retrieval_context: RetrievalContext | None = None,
         schema_graph: SchemaGraph | None = None,
+        semantic_contract: SemanticContract | None = None,
     ) -> QueryPlan:
         # Template is always available as fallback
-        demo_case = self._match_case(question, retrieval_context)
+        demo_case = self._match_case(question, retrieval_context, semantic_contract)
         retrieved_metric_ids = retrieval_context.top_metric_ids() if retrieval_context else []
         retrieved_field_names = retrieval_context.top_field_names() if retrieval_context else []
         retrieved_table_names = retrieval_context.top_table_names() if retrieval_context else []
@@ -76,18 +77,32 @@ class QueryPlanner:
 
         if semantics and semantics.metrics:
             # LLM primary path
-            metrics = self.metric_registry.get_many(semantics.metrics)
+            semantic_metrics = self._merge_contract_values(
+                semantics.metrics,
+                semantic_contract.metrics if semantic_contract else [],
+            )
+            metrics = self.metric_registry.get_many(semantic_metrics)
             time_range = self._semantics_time_label(semantics.time_type)
             dimensions = [
                 DimensionPlan(field=dim, alias=dim, source_table="")
-                for dim in semantics.dimensions
+                for dim in self._merge_contract_values(
+                    semantics.dimensions,
+                    semantic_contract.dimensions if semantic_contract else [],
+                )
             ]
-            filters = semantics.filters.copy()
+            filters = self._merge_contract_values(
+                semantics.filters,
+                semantic_contract.filters if semantic_contract else [],
+            )
             sql_strategy = "llm_primary"
             planning_evidence.insert(0, "LLM 语义理解：主链路")
         else:
             # Template fallback path
-            metrics = self.metric_registry.get_many(demo_case["metrics"])
+            metric_ids = self._merge_contract_values(
+                demo_case["metrics"],
+                semantic_contract.metrics if semantic_contract else [],
+            )
+            metrics = self.metric_registry.get_many(metric_ids)
             time_range = (
                 "本月MTD（自然月1日至昨天）"
                 if self._question_requests_this_month_mtd(question)
@@ -97,7 +112,10 @@ class QueryPlanner:
                 DimensionPlan(**dimension)
                 for dimension in demo_case.get("dimensions", [])
             ]
-            filters = self._infer_filters(demo_case["template_id"])
+            filters = self._merge_contract_values(
+                self._infer_filters(demo_case["template_id"]),
+                semantic_contract.filters if semantic_contract else [],
+            )
             sql_strategy = "template_fallback"
 
         risk_flags = demo_case.get("risk_flags", []).copy()
@@ -135,6 +153,7 @@ class QueryPlanner:
             llm_validation_errors=llm_cot_result.validation_errors,
             llm_latency_ms=llm_cot_result.latency_ms,
             llm_repair_count=llm_cot_result.repair_count,
+            semantic_contract=semantic_contract or SemanticContract(),
         )
 
     def _postprocess_query_plan_cot(
@@ -351,7 +370,15 @@ class QueryPlanner:
             for case in self.demo_cases
         ]
 
-    def _match_case(self, question: str, retrieval_context: RetrievalContext | None = None) -> dict:
+    def _match_case(
+        self,
+        question: str,
+        retrieval_context: RetrievalContext | None = None,
+        semantic_contract: SemanticContract | None = None,
+    ) -> dict:
+        if semantic_contract and semantic_contract.template_id in self.cases_by_template:
+            return self.cases_by_template[semantic_contract.template_id]
+
         if retrieval_context:
             template_id = retrieval_context.top_template_id()
             if template_id in self.cases_by_template:
@@ -389,6 +416,13 @@ class QueryPlanner:
                 return self.cases_by_template[template_id]
 
         return self.cases_by_template["store_income_top10_30d"]
+
+    def _merge_contract_values(self, primary: list[str], contract_values: list[str]) -> list[str]:
+        merged = list(primary)
+        for value in contract_values:
+            if value and value not in merged:
+                merged.append(value)
+        return merged
 
     def _semantics_time_label(self, time_type: str) -> str:
         """Convert query_semantics time_type to display label."""

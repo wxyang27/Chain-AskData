@@ -166,6 +166,7 @@ REQUIRED_FIELDS_BY_TEMPLATE: dict[str, list[tuple[str, str]]] = {
         ("dm_opt_qy_order_info_all_d", "pay_date"),
         ("dm_opt_qy_order_info_all_d", "pay_gmv"),
         ("dm_opt_qy_order_info_all_d", "uid"),
+        ("dm_opt_qy_order_info_all_d", "is_paydate_cash"),
         ("dm_opt_qy_user_execution_record_all_d", "dp"),
         ("dm_opt_qy_user_execution_record_all_d", "is_valid"),
         ("dm_opt_qy_user_execution_record_all_d", "executed_date"),

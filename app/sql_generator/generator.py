@@ -12,7 +12,7 @@ WHERE   dp = DATE_SUB(CURRENT_DATE(),1)
 AND     is_valid = 1
 AND     executed_date = DATE_SUB(CURRENT_DATE(),1);""",
     "store_income_top10_30d": """SELECT  b.sy_hospital_name AS 门店,
-        SUM(a.exe_income) AS 核销收入
+        SUM(exe_income) AS 核销收入
 FROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d a
 LEFT JOIN soyoung_dw.dim_qy_tenant_info_all_d b
 ON      a.tenant_id = b.tenant_id

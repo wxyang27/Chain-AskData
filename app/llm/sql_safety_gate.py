@@ -170,6 +170,7 @@ class SqlSafetyGate:
 
         # 7. Dimension semantics implied by the natural language query.
         self._validate_dimension_semantics(sql, schema_graph, errors)
+        self._validate_business_semantics(sql, schema_graph, errors)
 
         # 8. ORDER BY must have LIMIT
         if "ORDER BY" in sql_upper and "LIMIT" not in sql_upper:
@@ -184,6 +185,17 @@ class SqlSafetyGate:
             if denominator.upper() in ("NULLIF", "CAST", "CASE"):
                 continue
             errors.append(f"division_without_nullif:{match.group(0).strip()[:40]}")
+
+        # 10. Penetration rate: must use REGEXP or LIKE for item filter
+        if "standard_name" in sql and ("渗透率" in sql or "penetration" in sql.lower()):
+            if not re.search(r"standard_name\s+(?:REGEXP|LIKE)\s+", sql):
+                errors.append("item_penetration_missing_regexp")
+
+        # 11. Pay-to-verify rate: must use CTE (WITH) or DATE_ADD
+        if ("main_order_id" in sql and "pay_date" in sql and "executed_date" in sql
+                and ("核销率" in sql or "verify_rate" in sql.lower() or "30日" in sql)):
+            if "WITH" not in sql_upper and "DATE_ADD" not in sql_upper:
+                errors.append("pay_verify_rate_missing_cte_or_dateadd")
 
         return SqlSafetyResult(
             passed=not errors,
@@ -430,6 +442,65 @@ class SqlSafetyGate:
 
     def _has_aggregate(self, sql: str) -> bool:
         return bool(re.search(r"\b(SUM|COUNT|AVG|MIN|MAX)\s*\(", sql, re.IGNORECASE))
+
+    def _validate_business_semantics(
+        self,
+        sql: str,
+        schema_graph: SchemaGraph,
+        errors: list[str],
+    ) -> None:
+        query = schema_graph.query or ""
+        upper_sql = sql.upper()
+
+        if any(term in query for term in ("待核销", "没核销", "未核销")):
+            if "DM_OPT_QY_ORDER_INFO_ALL_D" not in upper_sql:
+                errors.append("business_semantics:unverified_must_use_order_info")
+            if not re.search(r"\bleft_num\s*>\s*0\b", sql, re.IGNORECASE):
+                errors.append("business_semantics:missing_left_num_filter")
+            if re.search(r"\b(pay_date|executed_date)\b", sql, re.IGNORECASE):
+                errors.append("business_semantics:unverified_should_not_use_business_date")
+
+        if self._query_has_payment_metric(query):
+            if "DM_OPT_QY_ORDER_INFO_ALL_D" not in upper_sql:
+                errors.append("business_semantics:payment_must_use_order_info")
+            if not re.search(r"\bis_paydate_cash\s*=\s*0\b", sql, re.IGNORECASE):
+                errors.append("business_semantics:missing_is_paydate_cash_filter")
+            if not re.search(r"\bpay_date\b", sql, re.IGNORECASE):
+                errors.append("business_semantics:missing_pay_date_filter")
+            if "新客" in query and not re.search(r"\bis_pay_new\s*=\s*1\b", sql, re.IGNORECASE):
+                errors.append("business_semantics:missing_is_pay_new_filter")
+
+        if any(term in query for term in ("大单品", "常规品", "大师团")):
+            if not re.search(
+                r"\brevenue_category\b\s*(?:=|IN\b|LIKE\b|REGEXP\b|RLIKE\b)",
+                sql,
+                re.IGNORECASE,
+            ):
+                errors.append("business_semantics:missing_revenue_category_filter")
+
+        if "0元单" in query or "0 元单" in query:
+            if not re.search(r"\bexe_income\s*=\s*0\b", sql, re.IGNORECASE):
+                errors.append("business_semantics:missing_zero_income_filter")
+            if not re.search(
+                r"COUNT\s*\(\s*DISTINCT\s+(?:\w+\.)?main_order_id\s*\)",
+                sql,
+                re.IGNORECASE,
+            ):
+                errors.append("business_semantics:zero_income_orders_must_count_main_order_id")
+
+        if "私域" in query and not all(term in query for term in ("私域", "公域", "老带新")):
+            if not re.search(
+                r"\bcx_first_channel\b\s*=\s*'私域'",
+                sql,
+                re.IGNORECASE,
+            ):
+                errors.append("business_semantics:missing_private_channel_filter")
+
+    def _query_has_payment_metric(self, query: str) -> bool:
+        return any(
+            term in query
+            for term in ("支付GMV", "支付人数", "支付客单价", "付了多少", "多少人付", "人均", "按支付日")
+        )
 
     def _cte_aliases(self, sql: str) -> set[str]:
         """Extract CTE alias names from WITH clauses."""
