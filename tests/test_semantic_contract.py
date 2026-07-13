@@ -36,3 +36,31 @@ def test_contract_routes_store_field_question_to_schema_explain():
 
     assert contract.intent == "schema_explain"
     assert "sy_hospital_name" in contract.required_fields
+
+
+def test_contract_routes_penetration_how_to_question_to_caliber_explain():
+    contract = SemanticContractBuilder().build("怎么看一个品项的大单品品项渗透率？")
+
+    assert contract.intent == "caliber_explain"
+    assert "standard_item_penetration" in contract.metrics
+    assert "standard_name" in contract.required_fields
+
+
+def test_contract_maps_revenue_category_dimension_and_filters():
+    builder = SemanticContractBuilder()
+
+    category_contract = builder.build("最近30天全连锁各品类的核销收入占比")
+    assert "revenue_category" in category_contract.dimensions
+    assert category_contract.time_range == "last_30d"
+
+    master_contract = builder.build("最近7天大师团核销收入和新客核销人次占比")
+    assert "revenue_category = '大师团'" in master_contract.filters
+    assert "execution_visit_count" in master_contract.metrics
+    assert master_contract.time_range == "last_7d"
+
+
+def test_contract_routes_membership_question_to_schema_explain():
+    contract = SemanticContractBuilder().build("怎么知道一个用户是不是连锁的L3以上会员")
+
+    assert contract.intent == "schema_explain"
+    assert "membership_level" in contract.required_fields

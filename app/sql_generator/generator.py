@@ -51,7 +51,8 @@ AND     is_valid = 1
 AND     executed_date BETWEEN DATE_SUB(CURRENT_DATE(),30) AND DATE_SUB(CURRENT_DATE(),1)
 GROUP BY CASE WHEN is_new = 1 THEN '新客' ELSE '老客' END;""",
     "revenue_category_execution_30d": """SELECT  revenue_category AS product_revenue_category,
-        SUM(exe_income) AS 核销收入
+        SUM(exe_income) AS 核销收入,
+        SUM(exe_income) / NULLIF(SUM(SUM(exe_income)) OVER(),0) AS 核销收入占比
 FROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d
 WHERE   dp = DATE_SUB(CURRENT_DATE(),1)
 AND     is_valid = 1
@@ -159,6 +160,21 @@ class SqlGenerator:
         return self._apply_time_overrides(sql, query_plan)
 
     def _apply_time_overrides(self, sql: str, query_plan: QueryPlan) -> str:
+        if self._is_this_week(query_plan):
+            replacements = {
+                "executed_date BETWEEN DATE_SUB(CURRENT_DATE(),30) AND DATE_SUB(CURRENT_DATE(),1)": (
+                    "executed_date >= DATE_SUB(CURRENT_DATE(), WEEKDAY(CAST(CURRENT_DATE() AS DATETIME))) "
+                    "AND executed_date <= DATE_SUB(CURRENT_DATE(),1)"
+                ),
+                "pay_date BETWEEN DATE_SUB(CURRENT_DATE(),30) AND DATE_SUB(CURRENT_DATE(),1)": (
+                    "pay_date >= DATE_SUB(CURRENT_DATE(), WEEKDAY(CAST(CURRENT_DATE() AS DATETIME))) "
+                    "AND pay_date <= DATE_SUB(CURRENT_DATE(),1)"
+                ),
+            }
+            for old, new in replacements.items():
+                sql = sql.replace(old, new)
+            return sql
+
         if not self._is_this_month_mtd(query_plan):
             return sql
 
@@ -185,5 +201,16 @@ class SqlGenerator:
             return True
         return any(
             step.query_semantics.time_type == "this_month_mtd"
+            for step in query_plan.query_plan_cot
+        )
+
+    def _is_this_week(self, query_plan: QueryPlan) -> bool:
+        if "本周" in query_plan.time_range:
+            return True
+        semantic_contract = getattr(query_plan, "semantic_contract", None)
+        if semantic_contract and semantic_contract.time_range == "this_week":
+            return True
+        return any(
+            step.query_semantics.time_type == "this_week"
             for step in query_plan.query_plan_cot
         )

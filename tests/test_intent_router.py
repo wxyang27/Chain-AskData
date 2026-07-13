@@ -48,6 +48,40 @@ class IntentRouterTestCase(unittest.TestCase):
         self.assertIn("exe_income", result.evidence)
         self.assertIn("pay_gmv", result.evidence)
 
+    def test_routes_how_to_view_penetration_to_caliber_explain(self):
+        context = RetrievalContext(
+            query="怎么看一个品项的大单品品项渗透率",
+            fields=[
+                RetrievalHit(
+                    document="字段：standard_name\n业务含义：品项",
+                    metadata={"asset_type": "field", "field_name": "standard_name"},
+                    distance=0.1,
+                    rerank_score=20.0,
+                )
+            ],
+        )
+
+        result = IntentRouter().route("怎么看一个品项的大单品品项渗透率？", context)
+
+        self.assertEqual(result.intent, "caliber_explain")
+
+    def test_routes_membership_question_to_schema_explain(self):
+        context = RetrievalContext(
+            query="怎么知道一个用户是不是连锁的L3以上会员",
+            fields=[
+                RetrievalHit(
+                    document="字段：membership_level\n业务含义：会员等级",
+                    metadata={"asset_type": "field", "field_name": "membership_level"},
+                    distance=0.1,
+                    rerank_score=20.0,
+                )
+            ],
+        )
+
+        result = IntentRouter().route("怎么知道一个用户是不是连锁的L3以上会员", context)
+
+        self.assertEqual(result.intent, "schema_explain")
+
     def test_routes_unsupported_question_to_unknown(self):
         context = RetrievalContext(query="天气对门店收入的影响")
 

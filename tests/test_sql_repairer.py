@@ -15,6 +15,7 @@ def _graph(query: str) -> SchemaGraph:
             {"table_name": "dm_opt_qy_user_execution_record_all_d", "field_name": "is_valid"},
             {"table_name": "dm_opt_qy_user_execution_record_all_d", "field_name": "executed_date"},
             {"table_name": "dm_opt_qy_user_execution_record_all_d", "field_name": "exe_income"},
+            {"table_name": "dm_opt_qy_user_execution_record_all_d", "field_name": "main_order_id"},
             {"table_name": "dm_opt_qy_user_execution_record_all_d", "field_name": "revenue_category"},
             {"table_name": "dm_opt_qy_order_info_all_d", "field_name": "dp"},
             {"table_name": "dm_opt_qy_order_info_all_d", "field_name": "pay_date"},
@@ -86,3 +87,96 @@ def test_repairer_rewrites_dual_payment_execution_metrics():
     assert "SUM(pay_gmv)" in result.sql
     assert "e.executed_date = DATE_SUB(CURRENT_DATE(),1)" in result.sql
     assert "p.pay_date = DATE_SUB(CURRENT_DATE(),1)" in result.sql
+
+
+def test_repairer_rewrites_missing_revenue_category_share_dimension():
+    contract = SemanticContract(
+        metrics=["execution_income"],
+        dimensions=["revenue_category"],
+        time_range="last_30d",
+    )
+
+    result = StaticSqlRepairer().repair(
+        sql="""SELECT SUM(exe_income) AS total_exe_income
+FROM soyoung_dw.dm_opt_qy_user_execution_record_all_d
+WHERE dp = DATE_SUB(CURRENT_DATE(), 1)
+AND is_valid = 1
+AND executed_date >= DATE_SUB(CURRENT_DATE(), 30)
+AND executed_date <= DATE_SUB(CURRENT_DATE(), 1)""",
+        semantic_contract=contract,
+        schema_graph=_graph("最近30天全连锁各品类的核销收入占比"),
+        errors=["missing_dimension:品类:revenue_category"],
+    )
+
+    assert result.repaired is True
+    assert "revenue_category" in result.sql
+    assert "SUM(SUM(exe_income)) OVER ()" in result.sql
+    assert "核销收入占比" in result.sql
+
+
+def test_repairer_rewrites_payment_template_to_this_week():
+    contract = SemanticContract(
+        metrics=["payment_gmv", "payment_user_count", "payment_aov_by_user_day"],
+        filters=["is_paydate_cash = 0", "is_pay_new = 1"],
+        time_range="this_week",
+    )
+
+    result = StaticSqlRepairer().repair(
+        sql="""SELECT SUM(pay_gmv)
+FROM soyoung_dw.dm_opt_qy_order_info_all_d
+WHERE dp = DATE_SUB(CURRENT_DATE(),1)
+AND is_paydate_cash = 0
+AND is_pay_new = 1
+AND pay_date BETWEEN DATE_SUB(CURRENT_DATE(),30) AND DATE_SUB(CURRENT_DATE(),1)""",
+        semantic_contract=contract,
+        schema_graph=_graph("本周新客支付人数和支付客单价"),
+        errors=[],
+    )
+
+    assert result.repaired is True
+    assert "WEEKDAY(CAST(CURRENT_DATE() AS DATETIME))" in result.sql
+    assert "DATE_SUB(CURRENT_DATE(),30)" not in result.sql
+
+
+def test_repairer_rewrites_zero_income_ratio_to_distinct_order_count():
+    contract = SemanticContract(metrics=["zero_income_order_count"])
+
+    result = StaticSqlRepairer().repair(
+        sql="""SELECT CAST(SUM(CASE WHEN t1.exe_income = 0 THEN 1 ELSE 0 END) AS DOUBLE)
+  / NULLIF(COUNT(*), 0) AS zero_ratio
+FROM soyoung_dw.dm_opt_qy_user_execution_record_all_d t1
+WHERE t1.dp = DATE_SUB(CURRENT_DATE(),1)
+AND t1.is_valid = 1""",
+        semantic_contract=contract,
+        schema_graph=_graph("昨天哪些门店出现了超过20%的0元核销？"),
+        errors=["business_semantics:zero_income_orders_must_count_main_order_id"],
+    )
+
+    assert result.repaired is True
+    assert "COUNT(DISTINCT CASE WHEN t1.exe_income = 0 THEN t1.main_order_id END)" in result.sql
+    assert "COUNT(DISTINCT main_order_id)" in result.sql
+    assert "COUNT(*)" not in result.sql
+
+
+def test_repairer_rewrites_new_customer_visit_ratio():
+    contract = SemanticContract(
+        metrics=["execution_income", "execution_visit_count"],
+        filters=["is_valid = 1", "is_new = 1", "revenue_category = '大师团'"],
+        time_range="last_7d",
+    )
+
+    result = StaticSqlRepairer().repair(
+        sql="""SELECT SUM(exe_income), COUNT(DISTINCT CASE WHEN is_new = 1 THEN verify_date_id END)
+FROM soyoung_dw.dm_opt_qy_user_execution_record_all_d
+WHERE dp = DATE_SUB(CURRENT_DATE(), 1)
+AND is_valid = 1""",
+        semantic_contract=contract,
+        schema_graph=_graph("最近7天大师团核销收入和新客核销人次占比"),
+        errors=["business_semantics:missing_visit_ratio_nullif"],
+    )
+
+    assert result.repaired is True
+    assert "COUNT(DISTINCT verify_date_id) AS 总核销人次" in result.sql
+    assert "新客核销人次占比" in result.sql
+    assert "revenue_category = '大师团'" in result.sql
+    assert "DATE_SUB(CURRENT_DATE(),7)" in result.sql

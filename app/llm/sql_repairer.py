@@ -41,6 +41,14 @@ class StaticSqlRepairer:
         repaired_sql = sql
         fixes: list[str] = []
 
+        repaired_sql, fixed = self._repair_new_customer_visit_ratio(
+            repaired_sql,
+            semantic_contract,
+            errors,
+        )
+        if fixed:
+            fixes.append("rewrite_new_customer_visit_ratio")
+
         repaired_sql, fixed = self._repair_unverified_filter(repaired_sql, semantic_contract)
         if fixed:
             fixes.append("add_left_num_filter")
@@ -48,6 +56,10 @@ class StaticSqlRepairer:
         repaired_sql, fixed = self._repair_payment_filters(repaired_sql, semantic_contract)
         if fixed:
             fixes.append("add_payment_filters")
+
+        repaired_sql, fixed = self._repair_revenue_category_dimension(repaired_sql, semantic_contract)
+        if fixed:
+            fixes.append("rewrite_revenue_category_share")
 
         repaired_sql, fixed = self._repair_revenue_category_filter(repaired_sql, semantic_contract, schema_graph)
         if fixed:
@@ -135,6 +147,40 @@ class StaticSqlRepairer:
         condition = f"{alias}.left_num > 0" if alias else "left_num > 0"
         return self._add_condition(sql, condition), True
 
+    def _repair_new_customer_visit_ratio(
+        self,
+        sql: str,
+        contract: SemanticContract,
+        errors: list[str],
+    ) -> tuple[str, bool]:
+        if not any(error.startswith("business_semantics:missing_visit_ratio") for error in errors):
+            return sql, False
+        if "execution_visit_count" not in contract.metrics:
+            return sql, False
+
+        date_condition = self._date_condition("executed_date", contract.time_range)
+        filters = [
+            "dp = DATE_SUB(CURRENT_DATE(),1)",
+            "is_valid = 1",
+            date_condition,
+        ]
+        category_filter = next(
+            (item for item in contract.filters if item.startswith("revenue_category")),
+            "",
+        )
+        if category_filter:
+            filters.append(category_filter)
+
+        where_clause = "\nAND ".join(filters)
+        return f"""SELECT
+  SUM(exe_income) AS 核销收入,
+  COUNT(DISTINCT CASE WHEN is_new = 1 THEN verify_date_id END) AS 新客核销人次,
+  COUNT(DISTINCT verify_date_id) AS 总核销人次,
+  COUNT(DISTINCT CASE WHEN is_new = 1 THEN verify_date_id END)
+    / NULLIF(COUNT(DISTINCT verify_date_id),0) AS 新客核销人次占比
+FROM soyoung_dw.dm_opt_qy_user_execution_record_all_d
+WHERE {where_clause}""", True
+
     def _repair_payment_filters(
         self,
         sql: str,
@@ -160,6 +206,14 @@ class StaticSqlRepairer:
             repaired = self._add_condition(repaired, self._date_condition("pay_date", contract.time_range, prefix))
             changed = True
 
+        repaired, time_changed = self._repair_business_date_range(
+            repaired,
+            field_name="pay_date",
+            time_range=contract.time_range,
+            prefix=prefix,
+        )
+        changed = changed or time_changed
+
         return repaired, changed
 
     def _repair_revenue_category_filter(
@@ -182,6 +236,38 @@ class StaticSqlRepairer:
         if alias:
             condition = condition.replace("revenue_category", f"{alias}.revenue_category")
         return self._add_condition(sql, condition), True
+
+    def _repair_revenue_category_dimension(
+        self,
+        sql: str,
+        contract: SemanticContract,
+    ) -> tuple[str, bool]:
+        if "revenue_category" not in contract.dimensions:
+            return sql, False
+
+        has_category_filter = any(
+            item.startswith("revenue_category") for item in contract.filters
+        )
+        if has_category_filter:
+            return sql, False
+        if re.search(r"\brevenue_category\b", sql, re.IGNORECASE):
+            return sql, False
+        if "execution_income" not in contract.metrics:
+            return sql, False
+
+        return self._revenue_category_share_sql(contract), True
+
+    def _revenue_category_share_sql(self, contract: SemanticContract) -> str:
+        date_condition = self._date_condition("executed_date", contract.time_range)
+        return f"""SELECT
+  revenue_category,
+  SUM(exe_income) AS 核销收入,
+  SUM(exe_income) / NULLIF(SUM(SUM(exe_income)) OVER (),0) AS 核销收入占比
+FROM soyoung_dw.dm_opt_qy_user_execution_record_all_d
+WHERE dp = DATE_SUB(CURRENT_DATE(),1)
+AND is_valid = 1
+AND {date_condition}
+GROUP BY revenue_category"""
 
     def _repair_channel_filter(
         self,
@@ -219,24 +305,85 @@ class StaticSqlRepairer:
     ) -> tuple[str, bool]:
         if "zero_income_order_count" not in contract.metrics:
             return sql, False
-        if "main_order_id" in sql:
-            return sql, False
         repaired = re.sub(
-            r"COUNT\s*\(\s*\*\s*\)",
-            "COUNT(DISTINCT main_order_id)",
+            r"SUM\s*\(\s*CASE\s+WHEN\s+((?:\w+\.)?exe_income)\s*=\s*0\s+THEN\s+1\s+ELSE\s+0\s+END\s*\)",
+            lambda m: f"COUNT(DISTINCT CASE WHEN {m.group(1)} = 0 THEN {self._alias_prefix_from_field(m.group(1))}main_order_id END)",
             sql,
             count=1,
             flags=re.IGNORECASE,
         )
+        repaired = re.sub(
+            r"COUNT\s*\(\s*\*\s*\)",
+            "COUNT(DISTINCT main_order_id)",
+            repaired,
+            count=0,
+            flags=re.IGNORECASE,
+        )
         return repaired, repaired != sql
+
+    def _alias_prefix_from_field(self, field: str) -> str:
+        if "." not in field:
+            return ""
+        return field.split(".", 1)[0] + "."
+
+    def _repair_business_date_range(
+        self,
+        sql: str,
+        *,
+        field_name: str,
+        time_range: str,
+        prefix: str = "",
+    ) -> tuple[str, bool]:
+        if not time_range:
+            return sql, False
+        desired = self._date_condition(field_name, time_range, prefix)
+        if not desired or self._condition_already_present(sql, desired):
+            return sql, False
+
+        field = f"{prefix}{field_name}"
+        escaped_field = re.escape(field)
+        generic_range = re.compile(
+            rf"{escaped_field}\s+BETWEEN\s+DATE_SUB\(CURRENT_DATE\(\),\s*\d+\)\s+AND\s+DATE_SUB\(CURRENT_DATE\(\),\s*1\)",
+            re.IGNORECASE,
+        )
+        repaired, count = generic_range.subn(desired, sql, count=1)
+        if count:
+            return repaired, True
+
+        lower_upper_range = re.compile(
+            rf"{escaped_field}\s*>=\s*DATE_SUB\(CURRENT_DATE\(\),\s*\d+\)\s+AND\s+{escaped_field}\s*<=\s*DATE_SUB\(CURRENT_DATE\(\),\s*1\)",
+            re.IGNORECASE,
+        )
+        repaired, count = lower_upper_range.subn(desired, sql, count=1)
+        return repaired, bool(count)
 
     def _date_condition(self, field_name: str, time_range: str, prefix: str = "") -> str:
         field = f"{prefix}{field_name}"
         if time_range == "yesterday":
             return f"{field} = DATE_SUB(CURRENT_DATE(),1)"
+        if time_range == "this_week":
+            return (
+                f"{field} >= DATE_SUB(CURRENT_DATE(), WEEKDAY(CAST(CURRENT_DATE() AS DATETIME))) "
+                f"AND {field} <= DATE_SUB(CURRENT_DATE(),1)"
+            )
         if time_range == "this_month_mtd":
             return (
                 f"{field} >= DATETRUNC(CURRENT_DATE(), 'MONTH') "
+                f"AND {field} <= DATE_SUB(CURRENT_DATE(),1)"
+            )
+        if time_range == "last_7d":
+            return (
+                f"{field} >= DATE_SUB(CURRENT_DATE(),7) "
+                f"AND {field} <= DATE_SUB(CURRENT_DATE(),1)"
+            )
+        if time_range == "last_90d":
+            return (
+                f"{field} >= DATE_SUB(CURRENT_DATE(),90) "
+                f"AND {field} <= DATE_SUB(CURRENT_DATE(),1)"
+            )
+        if time_range == "last_60d":
+            return (
+                f"{field} >= DATE_SUB(CURRENT_DATE(),60) "
                 f"AND {field} <= DATE_SUB(CURRENT_DATE(),1)"
             )
         return (

@@ -150,11 +150,14 @@ def _filter_matches(sql: str, expected_filter: str) -> bool:
         return True
 
     semantic_filters = {
+        "executed_date 近7天": lambda: _has_date_range(sql, "executed_date", 7),
         "executed_date 近30天": lambda: _has_date_range(sql, "executed_date", 30),
         "executed_date 近90天": lambda: _has_date_range(sql, "executed_date", 90),
         "pay_date 近30天": lambda: _has_date_range(sql, "pay_date", 30),
         "pay_date 近60天": lambda: _has_date_range(sql, "pay_date", 60),
         "executed_date 本周": lambda: _has_this_week_range(sql, "executed_date"),
+        "pay_date 本周": lambda: _has_this_week_range(sql, "pay_date"),
+        "pay_date 近14天": lambda: _has_date_range(sql, "pay_date", 14),
         "executed_date >= 本月1日": lambda: _has_mtd_start(sql, "executed_date"),
         "pay_date >= 本月1日": lambda: _has_mtd_start(sql, "pay_date"),
         "city_name LIKE '%北京%'": lambda: _has_city_beijing_filter(sql),

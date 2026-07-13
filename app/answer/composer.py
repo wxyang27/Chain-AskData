@@ -193,6 +193,8 @@ class AnswerComposer:
                 "0元单量 = COUNT(DISTINCT main_order_id) WHERE exe_income = 0；"
                 "核销人数使用 COUNT(DISTINCT customer_id)。"
                 "0元单判断条件是 exe_income = 0（核销域），不是 pay_gmv = 0（支付域）。"
+                "0元核销占比 = COUNT(DISTINCT CASE WHEN exe_income = 0 THEN main_order_id END) "
+                "/ NULLIF(COUNT(DISTINCT main_order_id),0)，按门店筛选时用 HAVING 判断阈值。"
             )
 
         # --- 支付三指标 ---
@@ -214,6 +216,18 @@ class AnswerComposer:
                 "核销人数 = COUNT(DISTINCT customer_id)；"
                 "核销人次 = COUNT(DISTINCT verify_date_id)。"
                 "二者不能混用：客单价分母是核销人次，渗透率分母是核销人数。"
+            )
+        elif "execution_visit_count" in metrics_set:
+            notes.append(
+                "核销人次 = COUNT(DISTINCT verify_date_id)。"
+                "涉及新客核销人次占比时，分子为新客核销人次，分母为总核销人次，"
+                "并用 NULLIF 防止除零。"
+            )
+
+        if "execution_income" in metrics_set and "revenue_category" in semantic_contract.dimensions:
+            notes.append(
+                "品类/大师团等分类口径使用 revenue_category；"
+                "核销收入 = SUM(exe_income)，需要叠加 is_valid = 1 和 executed_date 业务日期。"
             )
 
         # --- 核销+支付双域 ---
@@ -313,6 +327,16 @@ class AnswerComposer:
         field_notes = self._field_notes(retrieval_context)
 
         if route_result.intent == "schema_explain":
+            if any(term in question for term in ("会员", "membership_level", "L3", "l3")):
+                notes.append(
+                    "会员等级字段：优先查看 membership_level，可在 "
+                    "soyoung_dw.dm_opt_qy_user_summary_info_all_d 或 "
+                    "soyoung_dw.dim_user_qy_crm_customer_info_all_d 中取。"
+                )
+                notes.append(
+                    "关联键根据场景使用 crm_customer_id 或 user_id；两张表的 membership_level "
+                    "可能存在 bigint/string 类型差异，用户维表为快照口径。"
+                )
             if "门店" in question or "机构" in question:
                 notes.append("门店名称：优先使用 soyoung_dw.dim_qy_tenant_info_all_d.sy_hospital_name。")
                 notes.append("sy_hospital_name（工程主推字段，enricher 会补全）；tenant_alias_name 为兼容字段；hospital_id 不作为展示名称。")
@@ -327,6 +351,15 @@ class AnswerComposer:
             if "核销客单价" in question and "分母" in question:
                 notes.append("核销客单价的分母是核销人次：COUNT(DISTINCT verify_date_id)，不是核销人数 customer_id。")
                 notes.append("公式使用 SUM(exe_income) / NULLIF(COUNT(DISTINCT verify_date_id),0)；verify_date_id（COUNT DISTINCT）是分母，customer_id；除法必须用 NULLIF 防止除零。")
+            if "渗透率" in question and ("品项" in question or "项目" in question):
+                notes.append(
+                    "品项渗透率 = 品项核销人数 / NULLIF(总核销人数,0)。"
+                    "品项匹配使用 standard_name REGEXP/LIKE，人数去重使用 COUNT(DISTINCT customer_id)。"
+                )
+                notes.append(
+                    "计算时必须过滤 is_valid = 1，并用 executed_date 框定核销业务日期；"
+                    "不要用 product_id/product_name 替代 standard_name，也不要用核销人次作分母。"
+                )
             metric_notes = self._metric_caliber_notes(retrieval_context)
             notes.extend(metric_notes)
 

@@ -1,0 +1,725 @@
+{
+  "meta": {
+    "eval_set_version": "1.0.0",
+    "run_at": "2026-07-13T14:47:08.604538",
+    "api_base": "http://127.0.0.1:8010"
+  },
+  "summary": {
+    "total": 10,
+    "passed": 10,
+    "failed": 0,
+    "pass_rate": 100.0,
+    "hard_pass_rate": 100.0,
+    "critical_rule_pass_rate": 100.0,
+    "critical_rule_total": 11,
+    "critical_rule_passed": 11,
+    "by_category": {
+      "caliber_explain": "2/2",
+      "composite": "6/6",
+      "schema_explain": "1/1",
+      "reject_boundary": "1/1"
+    },
+    "by_difficulty": {
+      "easy": "3/3",
+      "medium": "4/4",
+      "hard": "3/3"
+    },
+    "failure_attributions": {},
+    "quality_gates": {
+      "thresholds": {
+        "overall": 80,
+        "hard": 75,
+        "critical_rule": 95
+      },
+      "actuals": {
+        "overall": 100.0,
+        "hard": 100.0,
+        "critical_rule": 100.0
+      },
+      "passed": {
+        "overall_80": true,
+        "hard_75": true,
+        "critical_95": true
+      },
+      "all_pass": true
+    }
+  },
+  "results": [
+    {
+      "id": "GEN_001",
+      "question": "核销收入和核销GMV有什么不同？",
+      "category": "caliber_explain",
+      "difficulty": "easy",
+      "expected_intent": "caliber_explain",
+      "actual_intent": "caliber_explain",
+      "sql_source": "template",
+      "llm_enabled": false,
+      "llm_adopted": false,
+      "passed": true,
+      "checks": [
+        {
+          "check": "intent",
+          "passed": true,
+          "detail": "expected=caliber_explain actual=caliber_explain"
+        },
+        {
+          "check": "no_sql_generated",
+          "passed": true,
+          "detail": "SQL should be empty for caliber_explain, got: ..."
+        },
+        {
+          "check": "explain_content",
+          "passed": true,
+          "detail": "matched 2/3 key terms"
+        }
+      ],
+      "failed_checks": [],
+      "critical_failures": [],
+      "applicable_critical_rules": [],
+      "attribution": "none",
+      "effective_sql": "",
+      "api_error": "",
+      "evaluation_focus": [
+        "intent_routing",
+        "reject_boundary"
+      ]
+    },
+    {
+      "id": "GEN_002",
+      "question": "怎么看一个品项的大单品品项渗透率？",
+      "category": "caliber_explain",
+      "difficulty": "medium",
+      "expected_intent": "caliber_explain",
+      "actual_intent": "caliber_explain",
+      "sql_source": "template",
+      "llm_enabled": false,
+      "llm_adopted": false,
+      "passed": true,
+      "checks": [
+        {
+          "check": "intent",
+          "passed": true,
+          "detail": "expected=caliber_explain actual=caliber_explain"
+        },
+        {
+          "check": "no_sql_generated",
+          "passed": true,
+          "detail": "SQL should be empty for caliber_explain, got: ..."
+        },
+        {
+          "check": "explain_content",
+          "passed": true,
+          "detail": "matched 2/5 key terms"
+        }
+      ],
+      "failed_checks": [],
+      "critical_failures": [],
+      "applicable_critical_rules": [],
+      "attribution": "none",
+      "effective_sql": "",
+      "api_error": "",
+      "evaluation_focus": [
+        "intent_routing",
+        "caliber",
+        "reject_boundary"
+      ]
+    },
+    {
+      "id": "GEN_003",
+      "question": "最近7天大师团核销收入和新客核销人次占比",
+      "category": "composite",
+      "difficulty": "hard",
+      "expected_intent": "nl2sql",
+      "actual_intent": "nl2sql",
+      "sql_source": "llm",
+      "llm_enabled": true,
+      "llm_adopted": true,
+      "passed": true,
+      "checks": [
+        {
+          "check": "intent",
+          "passed": true,
+          "detail": "expected=nl2sql actual=nl2sql"
+        },
+        {
+          "check": "metrics",
+          "passed": true,
+          "detail": "matched 1 metrics"
+        },
+        {
+          "check": "tables",
+          "passed": true,
+          "detail": "matched 1 tables"
+        },
+        {
+          "check": "fields",
+          "passed": true,
+          "detail": "matched 7 fields"
+        },
+        {
+          "check": "filters",
+          "passed": true,
+          "detail": "matched 4 filters"
+        },
+        {
+          "check": "must_contain",
+          "passed": true,
+          "detail": "all 5 patterns present"
+        },
+        {
+          "check": "any_of",
+          "passed": true,
+          "detail": "passed"
+        },
+        {
+          "check": "forbidden",
+          "passed": true,
+          "detail": "no forbidden patterns"
+        },
+        {
+          "check": "caliber",
+          "passed": true,
+          "detail": "matched 2/3 key terms (67%)"
+        },
+        {
+          "check": "CR:CR001_dp",
+          "passed": true,
+          "detail": "dp=DATE_SUB(CURRENT_DATE(),1)"
+        },
+        {
+          "check": "CR:CR007_newold",
+          "passed": true,
+          "detail": "execution: correct field used"
+        },
+        {
+          "check": "llm_adoption",
+          "passed": true,
+          "detail": "LLM SQL adopted (gate passed)"
+        }
+      ],
+      "failed_checks": [],
+      "critical_failures": [],
+      "applicable_critical_rules": [
+        "CR001_dp",
+        "CR007_newold"
+      ],
+      "attribution": "none",
+      "effective_sql": "SELECT\n  SUM(exe_income) AS 核销收入,\n  COUNT(DISTINCT CASE WHEN is_new = 1 THEN verify_date_id END) AS 新客核销人次,\n  COUNT(DISTINCT verify_date_id) AS 总核销人次,\n  COUNT(DISTINCT CASE WHEN is_new = 1 THEN verify_date_id END)\n    / NULLIF(COUNT(DISTINCT verify_date_id),0) AS 新客核销人次占比\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_valid = 1\nAND executed_date >= DATE_SUB(CURRENT_DATE(),7) AND executed_date <= DATE_SUB(CURRENT_DATE(),1)\nAND revenue_category =",
+      "api_error": "",
+      "evaluation_focus": [
+        "intent_routing",
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ]
+    },
+    {
+      "id": "GEN_004",
+      "question": "本周新客支付人数和支付客单价",
+      "category": "composite",
+      "difficulty": "hard",
+      "expected_intent": "nl2sql",
+      "actual_intent": "nl2sql",
+      "sql_source": "template",
+      "llm_enabled": true,
+      "llm_adopted": false,
+      "passed": true,
+      "checks": [
+        {
+          "check": "intent",
+          "passed": true,
+          "detail": "expected=nl2sql actual=nl2sql"
+        },
+        {
+          "check": "metrics",
+          "passed": true,
+          "detail": "matched 2 metrics"
+        },
+        {
+          "check": "tables",
+          "passed": true,
+          "detail": "matched 1 tables"
+        },
+        {
+          "check": "fields",
+          "passed": true,
+          "detail": "matched 6 fields"
+        },
+        {
+          "check": "filters",
+          "passed": true,
+          "detail": "matched 4 filters"
+        },
+        {
+          "check": "must_contain",
+          "passed": true,
+          "detail": "all 4 patterns present"
+        },
+        {
+          "check": "any_of",
+          "passed": true,
+          "detail": "passed"
+        },
+        {
+          "check": "forbidden",
+          "passed": true,
+          "detail": "no forbidden patterns"
+        },
+        {
+          "check": "caliber",
+          "passed": true,
+          "detail": "matched 6/6 key terms (100%)"
+        },
+        {
+          "check": "CR:CR001_dp",
+          "passed": true,
+          "detail": "dp=DATE_SUB(CURRENT_DATE(),1)"
+        },
+        {
+          "check": "CR:CR007_newold",
+          "passed": true,
+          "detail": "payment: correct field used"
+        },
+        {
+          "check": "llm_adoption",
+          "passed": true,
+          "detail": "LLM SQL rejected by gate, template fallback. errors=['date_semantics:this_week_start_must_be_monday', 'date_semantics:this_week_end_must_be_yesterday']"
+        }
+      ],
+      "failed_checks": [],
+      "critical_failures": [],
+      "applicable_critical_rules": [
+        "CR001_dp",
+        "CR007_newold"
+      ],
+      "attribution": "none",
+      "effective_sql": "SELECT  SUM(pay_gmv) AS 支付GMV,\n        COUNT(DISTINCT uid) AS 支付人数,\n        SUM(pay_gmv) / NULLIF(COUNT(DISTINCT CASE WHEN pay_flag = 1 THEN CONCAT(CAST(pay_date AS STRING), '_', CAST(uid AS STRING)) END),0) AS 支付客单价\nFROM    soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE   dp = DATE_SUB(CURRENT_DATE(),1)\nAND     is_paydate_cash = 0\nAND     is_pay_new = 1\nAND     pay_date >= DATE_SUB(CURRENT_DATE(), WEEKDAY(CAST(CURRENT_DATE() AS DATETIME))) AND pay_date <= DATE_SUB(CURRENT_DATE(),1);",
+      "api_error": "",
+      "evaluation_focus": [
+        "intent_routing",
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ]
+    },
+    {
+      "id": "GEN_005",
+      "question": "截至昨天各城市待核销服务点排行TOP5",
+      "category": "composite",
+      "difficulty": "medium",
+      "expected_intent": "nl2sql",
+      "actual_intent": "nl2sql",
+      "sql_source": "llm",
+      "llm_enabled": true,
+      "llm_adopted": true,
+      "passed": true,
+      "checks": [
+        {
+          "check": "intent",
+          "passed": true,
+          "detail": "expected=nl2sql actual=nl2sql"
+        },
+        {
+          "check": "metrics",
+          "passed": true,
+          "detail": "matched 0 metrics"
+        },
+        {
+          "check": "tables",
+          "passed": true,
+          "detail": "matched 2 tables"
+        },
+        {
+          "check": "fields",
+          "passed": true,
+          "detail": "matched 5 fields"
+        },
+        {
+          "check": "filters",
+          "passed": true,
+          "detail": "matched 2 filters"
+        },
+        {
+          "check": "must_contain",
+          "passed": true,
+          "detail": "all 6 patterns present"
+        },
+        {
+          "check": "any_of",
+          "passed": true,
+          "detail": "passed"
+        },
+        {
+          "check": "forbidden",
+          "passed": true,
+          "detail": "no forbidden patterns"
+        },
+        {
+          "check": "caliber",
+          "passed": true,
+          "detail": "matched 0/2 key terms (0%)"
+        },
+        {
+          "check": "CR:CR001_dp",
+          "passed": true,
+          "detail": "dp=DATE_SUB(CURRENT_DATE(),1)"
+        },
+        {
+          "check": "CR:CR003_city",
+          "passed": true,
+          "detail": "city_name present"
+        },
+        {
+          "check": "llm_adoption",
+          "passed": true,
+          "detail": "LLM SQL adopted (gate passed)"
+        }
+      ],
+      "failed_checks": [],
+      "critical_failures": [],
+      "applicable_critical_rules": [
+        "CR001_dp",
+        "CR003_city"
+      ],
+      "attribution": "none",
+      "effective_sql": "SELECT t2.city_name AS city_name, SUM(t1.left_num) AS left_num FROM soyoung_dw.dm_opt_qy_order_info_all_d t1 JOIN soyoung_dw.dim_qy_tenant_info_all_d t2 ON t1.tenant_id = t2.tenant_id WHERE t1.dp = DATE_SUB(CURRENT_DATE(), 1) AND t2.dp = DATE_SUB(CURRENT_DATE(), 1)\nAND t1.left_num > 0\nGROUP BY t2.city_name ORDER BY left_num DESC LIMIT 5",
+      "api_error": "",
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ]
+    },
+    {
+      "id": "GEN_006",
+      "question": "最近90天大单品的核销客单价和新客核销客单价分别是多少",
+      "category": "composite",
+      "difficulty": "medium",
+      "expected_intent": "nl2sql",
+      "actual_intent": "nl2sql",
+      "sql_source": "llm",
+      "llm_enabled": true,
+      "llm_adopted": true,
+      "passed": true,
+      "checks": [
+        {
+          "check": "intent",
+          "passed": true,
+          "detail": "expected=nl2sql actual=nl2sql"
+        },
+        {
+          "check": "metrics",
+          "passed": true,
+          "detail": "matched 1 metrics"
+        },
+        {
+          "check": "tables",
+          "passed": true,
+          "detail": "matched 1 tables"
+        },
+        {
+          "check": "fields",
+          "passed": true,
+          "detail": "matched 7 fields"
+        },
+        {
+          "check": "filters",
+          "passed": true,
+          "detail": "matched 4 filters"
+        },
+        {
+          "check": "must_contain",
+          "passed": true,
+          "detail": "all 6 patterns present"
+        },
+        {
+          "check": "any_of",
+          "passed": true,
+          "detail": "passed"
+        },
+        {
+          "check": "forbidden",
+          "passed": true,
+          "detail": "no forbidden patterns"
+        },
+        {
+          "check": "caliber",
+          "passed": true,
+          "detail": "matched 0/0 key terms (0%)"
+        },
+        {
+          "check": "CR:CR001_dp",
+          "passed": true,
+          "detail": "dp=DATE_SUB(CURRENT_DATE(),1)"
+        },
+        {
+          "check": "CR:CR007_newold",
+          "passed": true,
+          "detail": "execution: correct field used"
+        },
+        {
+          "check": "llm_adoption",
+          "passed": true,
+          "detail": "LLM SQL adopted (gate passed)"
+        }
+      ],
+      "failed_checks": [],
+      "critical_failures": [],
+      "applicable_critical_rules": [
+        "CR001_dp",
+        "CR007_newold"
+      ],
+      "attribution": "none",
+      "effective_sql": "SELECT SUM(exe_income) / NULLIF(COUNT(DISTINCT verify_date_id), 0) AS execution_aov_by_visit, SUM(CASE WHEN is_new = 1 THEN exe_income ELSE 0 END) / NULLIF(COUNT(DISTINCT CASE WHEN is_new = 1 THEN verify_date_id END), 0) AS D067 FROM soyoung_dw.dm_opt_qy_user_execution_record_all_d WHERE dp = DATE_SUB(CURRENT_DATE(), 1) AND is_valid = 1 AND revenue_category = '大单品' AND executed_date >= DATE_SUB(CURRENT_DATE(), 90) AND executed_date <= DATE_SUB(CURRENT_DATE(), 1)",
+      "api_error": "",
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ]
+    },
+    {
+      "id": "GEN_007",
+      "question": "昨天哪些门店出现了超过20%的0元核销？",
+      "category": "composite",
+      "difficulty": "hard",
+      "expected_intent": "nl2sql",
+      "actual_intent": "nl2sql",
+      "sql_source": "llm",
+      "llm_enabled": true,
+      "llm_adopted": true,
+      "passed": true,
+      "checks": [
+        {
+          "check": "intent",
+          "passed": true,
+          "detail": "expected=nl2sql actual=nl2sql"
+        },
+        {
+          "check": "metrics",
+          "passed": true,
+          "detail": "matched 0 metrics"
+        },
+        {
+          "check": "tables",
+          "passed": true,
+          "detail": "matched 2 tables"
+        },
+        {
+          "check": "fields",
+          "passed": true,
+          "detail": "matched 7 fields"
+        },
+        {
+          "check": "filters",
+          "passed": true,
+          "detail": "matched 3 filters"
+        },
+        {
+          "check": "must_contain",
+          "passed": true,
+          "detail": "all 5 patterns present"
+        },
+        {
+          "check": "any_of",
+          "passed": true,
+          "detail": "passed"
+        },
+        {
+          "check": "forbidden",
+          "passed": true,
+          "detail": "no forbidden patterns"
+        },
+        {
+          "check": "caliber",
+          "passed": true,
+          "detail": "matched 3/4 key terms (75%)"
+        },
+        {
+          "check": "CR:CR001_dp",
+          "passed": true,
+          "detail": "dp=DATE_SUB(CURRENT_DATE(),1)"
+        },
+        {
+          "check": "CR:CR004_store",
+          "passed": true,
+          "detail": "sy_hospital_name/tenant_alias_name present"
+        },
+        {
+          "check": "llm_adoption",
+          "passed": true,
+          "detail": "LLM SQL adopted (gate passed)"
+        }
+      ],
+      "failed_checks": [],
+      "critical_failures": [],
+      "applicable_critical_rules": [
+        "CR001_dp",
+        "CR004_store"
+      ],
+      "attribution": "none",
+      "effective_sql": "SELECT t2.sy_hospital_name AS 门店, SUM(t1.exe_income) AS 核销收入, COUNT(DISTINCT CASE WHEN t1.exe_income = 0 THEN t1.main_order_id END) AS `0元核销订单数`, COUNT(DISTINCT t1.main_order_id) AS 总订单数, CAST(COUNT(DISTINCT CASE WHEN t1.exe_income = 0 THEN t1.main_order_id END) AS DOUBLE) / NULLIF(COUNT(DISTINCT t1.main_order_id), 0) AS `0元核销占比` FROM soyoung_dw.dm_opt_qy_user_execution_record_all_d t1 JOIN soyoung_dw.dim_qy_tenant_info_all_d t2 ON t1.tenant_id = t2.tenant_id WHERE t1.is_valid = 1 AND t1.execute",
+      "api_error": "",
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ]
+    },
+    {
+      "id": "GEN_008",
+      "question": "怎么知道一个用户是不是连锁的L3以上会员",
+      "category": "schema_explain",
+      "difficulty": "easy",
+      "expected_intent": "schema_explain",
+      "actual_intent": "schema_explain",
+      "sql_source": "template",
+      "llm_enabled": false,
+      "llm_adopted": false,
+      "passed": true,
+      "checks": [
+        {
+          "check": "intent",
+          "passed": true,
+          "detail": "expected=schema_explain actual=schema_explain"
+        },
+        {
+          "check": "no_sql_generated",
+          "passed": true,
+          "detail": "SQL should be empty for schema_explain, got: ..."
+        },
+        {
+          "check": "explain_content",
+          "passed": true,
+          "detail": "matched 3/5 key terms"
+        }
+      ],
+      "failed_checks": [],
+      "critical_failures": [],
+      "applicable_critical_rules": [],
+      "attribution": "none",
+      "effective_sql": "",
+      "api_error": "",
+      "evaluation_focus": [
+        "intent_routing",
+        "reject_boundary"
+      ]
+    },
+    {
+      "id": "GEN_009",
+      "question": "帮我分析为什么上周核销收入比上上周下降了",
+      "category": "reject_boundary",
+      "difficulty": "easy",
+      "expected_intent": "unknown",
+      "actual_intent": "unknown",
+      "sql_source": "template",
+      "llm_enabled": false,
+      "llm_adopted": false,
+      "passed": true,
+      "checks": [
+        {
+          "check": "intent",
+          "passed": true,
+          "detail": "expected=unknown actual=unknown"
+        },
+        {
+          "check": "no_sql_generated",
+          "passed": true,
+          "detail": "SQL should be empty for unknown, got: ..."
+        }
+      ],
+      "failed_checks": [],
+      "critical_failures": [],
+      "applicable_critical_rules": [],
+      "attribution": "none",
+      "effective_sql": "",
+      "api_error": "",
+      "evaluation_focus": [
+        "intent_routing",
+        "reject_boundary"
+      ]
+    },
+    {
+      "id": "GEN_010",
+      "question": "最近30天全连锁各品类的核销收入占比",
+      "category": "composite",
+      "difficulty": "medium",
+      "expected_intent": "nl2sql",
+      "actual_intent": "nl2sql",
+      "sql_source": "template",
+      "llm_enabled": true,
+      "llm_adopted": false,
+      "passed": true,
+      "checks": [
+        {
+          "check": "intent",
+          "passed": true,
+          "detail": "expected=nl2sql actual=nl2sql"
+        },
+        {
+          "check": "metrics",
+          "passed": true,
+          "detail": "matched 1 metrics"
+        },
+        {
+          "check": "tables",
+          "passed": true,
+          "detail": "matched 1 tables"
+        },
+        {
+          "check": "fields",
+          "passed": true,
+          "detail": "matched 5 fields"
+        },
+        {
+          "check": "filters",
+          "passed": true,
+          "detail": "matched 3 filters"
+        },
+        {
+          "check": "must_contain",
+          "passed": true,
+          "detail": "all 4 patterns present"
+        },
+        {
+          "check": "any_of",
+          "passed": true,
+          "detail": "passed"
+        },
+        {
+          "check": "forbidden",
+          "passed": true,
+          "detail": "no forbidden patterns"
+        },
+        {
+          "check": "caliber",
+          "passed": true,
+          "detail": "matched 1/1 key terms (100%)"
+        },
+        {
+          "check": "CR:CR001_dp",
+          "passed": true,
+          "detail": "dp=DATE_SUB(CURRENT_DATE(),1)"
+        },
+        {
+          "check": "llm_adoption",
+          "passed": true,
+          "detail": "LLM SQL rejected by gate, template fallback. errors=['unknown_field:ci.category_exe_income', 'unknown_field:ti.total_exe_income']"
+        }
+      ],
+      "failed_checks": [],
+      "critical_failures": [],
+      "applicable_critical_rules": [
+        "CR001_dp"
+      ],
+      "attribution": "none",
+      "effective_sql": "SELECT  revenue_category AS product_revenue_category,\n        SUM(exe_income) AS 核销收入,\n        SUM(exe_income) / NULLIF(SUM(SUM(exe_income)) OVER(),0) AS 核销收入占比\nFROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE   dp = DATE_SUB(CURRENT_DATE(),1)\nAND     is_valid = 1\nAND     executed_date BETWEEN DATE_SUB(CURRENT_DATE(),30) AND DATE_SUB(CURRENT_DATE(),1)\nAND     revenue_category IN ('大单品','常规品','大师团')\nGROUP BY revenue_category;",
+      "api_error": "",
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ]
+    }
+  ]
+}

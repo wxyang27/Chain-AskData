@@ -1,7 +1,7 @@
 # Chain-AskData 黄金评测集 v1.2 · 使用说明
 
 > 创建时间：2026-07-10
-> 更新时间：2026-07-10（v1.2：新增 10 条 critical rule hard case + 质量门槛 + critical rule 自动校验）
+> 更新时间：2026-07-13（v1.3·基线固化：46/46 + 10/10 全量通过）
 > 评测集文件：`eval/golden_eval_set.json`
 > 评测脚本：`eval/run_eval.py`
 > 总样例数：46 条
@@ -286,7 +286,34 @@ fail
 
 ---
 
-## 八、后续扩展建议
+## 八、泛化补充集（v1 extra）
+
+### 8.1 定位
+
+`eval/golden_eval_set_v1_extra.json` 是**泛化补充集**，不替代主黄金集：
+
+| 维度 | 主黄金集 | 泛化补充集 |
+|------|---------|-----------|
+| 文件 | `golden_eval_set.json` | `golden_eval_set_v1_extra.json` |
+| 数量 | 46 条 | 10 条 |
+| 定位 | 能力验收基线 | 泛化边界验证 |
+| 来源 | 13 Demo 扩写 | 模板外口语/自由组合 |
+| 评测时机 | 每次改动必跑 | 重大版本后验证 |
+
+### 8.2 v1 基线结果
+
+```
+主黄金集: 46/46 (100%)
+泛化补充集: 10/10 (100%)
+```
+
+评测结果文件：
+- `eval/eval_result_after_step2_gold46.json`
+- `eval/eval_result_v1_extra_after_step2.json`
+
+---
+
+## 九、后续扩展建议
 
 | 阶段 | 扩展方向 | 目标数量 |
 |---|---|---|

@@ -52,6 +52,10 @@ class IntentRouter:
         )
 
     def _is_schema_explain(self, normalized_question: str) -> bool:
+        if any(term in normalized_question for term in ["会员", "membership_level", "l3"]) and any(
+            term in normalized_question for term in ["怎么知道", "是不是", "哪里取", "字段"]
+        ):
+            return True
         if any(word in normalized_question for word in ["用哪个字段", "哪个字段", "哪些字段"]):
             return True
         schema_words = [
@@ -82,6 +86,12 @@ class IntentRouter:
             "\u5b9a\u4e49",
             "\u5206\u6bcd",
             "\u5206\u5b50",
+            "怎么算",
+            "怎么计算",
+            "怎么看",
+            "如何算",
+            "如何计算",
+            "如何看",
         ]
         metric_words = [
             "\u6838\u9500",
@@ -91,6 +101,10 @@ class IntentRouter:
             "\u5ba2\u5355\u4ef7",
             "\u4eba\u6570",
             "\u4eba\u6b21",
+            "渗透率",
+            "占比",
+            "0元",
+            "品项",
         ]
         return any(word in normalized_question for word in caliber_words) and any(
             word in normalized_question for word in metric_words

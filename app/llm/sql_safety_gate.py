@@ -196,6 +196,8 @@ class SqlSafetyGate:
                 and ("核销率" in sql or "verify_rate" in sql.lower() or "30日" in sql)):
             if "WITH" not in sql_upper and "DATE_ADD" not in sql_upper:
                 errors.append("pay_verify_rate_missing_cte_or_dateadd")
+            if "NULLIF" not in sql_upper:
+                errors.append("pay_verify_rate_missing_nullif_rate")
 
         return SqlSafetyResult(
             passed=not errors,
@@ -429,6 +431,7 @@ class SqlSafetyGate:
     def _required_group_dimensions(self, query: str) -> dict[str, str]:
         rules = {
             "\u54c1\u9879": ("standard_name", ("\u5404\u54c1\u9879", "\u6309\u54c1\u9879", "\u54c1\u9879TOP", "\u54c1\u9879\u6392\u884c")),
+            "\u54c1\u7c7b": ("revenue_category", ("\u5404\u54c1\u7c7b", "\u6309\u54c1\u7c7b", "\u54c1\u7c7b\u5360\u6bd4", "\u54c1\u7c7b\u5bf9\u6bd4")),
             "\u95e8\u5e97": ("sy_hospital_name", ("\u5404\u95e8\u5e97", "\u6309\u95e8\u5e97", "\u95e8\u5e97TOP", "\u95e8\u5e97\u6392\u884c")),
             "\u57ce\u5e02": ("city_name", ("\u5404\u57ce\u5e02", "\u6309\u57ce\u5e02", "\u5206\u57ce\u5e02", "\u57ce\u5e02\u5bf9\u6bd4")),
             "\u6e20\u9053": ("cx_first_channel", ("\u5404\u6e20\u9053", "\u6309\u6e20\u9053", "\u5206\u6e20\u9053", "\u6e20\u9053\u5bf9\u6bd4")),
@@ -478,7 +481,7 @@ class SqlSafetyGate:
             ):
                 errors.append("business_semantics:missing_revenue_category_filter")
 
-        if "0元单" in query or "0 元单" in query:
+        if any(term in query for term in ("0元单", "0 元单", "0元核销", "0 元核销")):
             if not re.search(r"\bexe_income\s*=\s*0\b", sql, re.IGNORECASE):
                 errors.append("business_semantics:missing_zero_income_filter")
             if not re.search(
@@ -487,6 +490,16 @@ class SqlSafetyGate:
                 re.IGNORECASE,
             ):
                 errors.append("business_semantics:zero_income_orders_must_count_main_order_id")
+
+        if "人次占比" in query or ("占比" in query and "人次" in query):
+            if not re.search(r"/\s*NULLIF\s*\(", sql, re.IGNORECASE):
+                errors.append("business_semantics:missing_visit_ratio_nullif")
+            if not re.search(
+                r"COUNT\s*\(\s*DISTINCT\s+(?:\w+\.)?verify_date_id\s*\)",
+                sql,
+                re.IGNORECASE,
+            ):
+                errors.append("business_semantics:missing_total_visit_denominator")
 
         if "私域" in query and not all(term in query for term in ("私域", "公域", "老带新")):
             if not re.search(

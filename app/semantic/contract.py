@@ -80,13 +80,21 @@ class SemanticContractBuilder:
         return any(term in question for term in reject_terms) or diagnostic_phrase
 
     def _is_schema_explain(self, question: str) -> bool:
+        if any(term in question for term in ("会员", "membership_level", "L3", "l3")) and any(
+            term in question for term in ("怎么知道", "是不是", "哪里取", "字段")
+        ):
+            return True
         return any(
             term in question
             for term in ("哪个字段", "哪些字段", "用什么字段", "用哪个字段", "应该用哪个字段")
         )
 
     def _is_caliber_explain(self, question: str) -> bool:
-        return any(term in question for term in ("口径", "区别", "差别", "分母", "分子", "定义"))
+        if any(term in question for term in ("口径", "区别", "差别", "分母", "分子", "定义")):
+            return True
+        explain_style = any(term in question for term in ("怎么看", "怎么算", "怎么计算", "如何看", "如何算", "如何计算"))
+        metric_style = any(term in question for term in ("渗透率", "客单价", "占比", "核销", "支付", "GMV", "品项"))
+        return explain_style and metric_style
 
     def _metrics(self, question: str) -> list[str]:
         metrics: list[str] = []
@@ -101,7 +109,7 @@ class SemanticContractBuilder:
         if "待核销" in question or "没核销" in question or "未核销" in question:
             add("unverified_amount")
 
-        if "0元单" in question or "0 元单" in question:
+        if "0元单" in question or "0 元单" in question or "0元核销" in question or "0 元核销" in question:
             add("zero_income_order_count")
             if "客" in question or "人数" in question:
                 add("execution_user_count")
@@ -127,7 +135,7 @@ class SemanticContractBuilder:
                 add("execution_income")
             if "核销GMV" in question:
                 add("execution_gmv")
-            if "人次" in question:
+            if "人次" in question or "人次占比" in question:
                 add("execution_visit_count")
             if any(term in question for term in ("核销人数", "核销人头", "涉及多少客人", "多少客人")):
                 add("execution_user_count")
@@ -153,7 +161,7 @@ class SemanticContractBuilder:
             add("is_new")
         if any(term in question for term in ("品项", "项目")):
             add("standard_name")
-        if any(term in question for term in ("大单品", "常规品", "大师团")):
+        if any(term in question for term in ("大单品", "常规品", "大师团", "品类", "各品类")):
             add("revenue_category")
         return dimensions
 
@@ -176,13 +184,17 @@ class SemanticContractBuilder:
             add("revenue_category IN ('大单品','常规品','大师团')")
         elif "大单品" in question:
             add("revenue_category = '大单品'")
+        elif "大师团" in question:
+            add("revenue_category = '大师团'")
+        elif "常规品" in question:
+            add("revenue_category = '常规品'")
         if "私域" in question and not all(term in question for term in ("私域", "公域", "老带新")):
             add("cx_first_channel = '私域'")
         if "公域" in question and not all(term in question for term in ("私域", "公域", "老带新")):
             add("cx_first_channel = '公域'")
         if "老带新" in question and not all(term in question for term in ("私域", "公域", "老带新")):
             add("cx_first_channel = '老带新'")
-        if "0元单" in question or "0 元单" in question:
+        if "0元单" in question or "0 元单" in question or "0元核销" in question or "0 元核销" in question:
             add("exe_income = 0")
         return filters
 
@@ -205,6 +217,8 @@ class SemanticContractBuilder:
         return fields
 
     def _required_fields_for_schema_question(self, question: str) -> list[str]:
+        if any(term in question for term in ("会员", "membership_level", "L3", "l3")):
+            return ["membership_level", "crm_customer_id", "user_id"]
         if "门店" in question or "机构" in question:
             return ["sy_hospital_name"]
         if "核销人数" in question:
@@ -212,18 +226,20 @@ class SemanticContractBuilder:
         return []
 
     def _time_range(self, question: str) -> str:
+        if "截至昨天" in question:
+            return "as_of_yesterday"
         if "本月" in question or "这个月" in question or "当月" in question:
             return "this_month_mtd"
         if "本周" in question or "这周" in question:
             return "this_week"
         if "昨天" in question:
             return "yesterday"
+        if "7" in question:
+            return "last_7d"
         if "90" in question:
             return "last_90d"
         if "60" in question:
             return "last_60d"
-        if "截至昨天" in question:
-            return "as_of_yesterday"
         return "last_30d"
 
     def _template_hint(self, question: str, metrics: list[str]) -> str:
@@ -243,7 +259,7 @@ class SemanticContractBuilder:
             return "zero_income_orders_30d"
         if "升单" in question:
             return "upgrade_execution_30d"
-        if any(term in question for term in ("大单品", "常规品", "大师团")):
+        if any(term in question for term in ("大单品", "常规品", "大师团", "品类", "各品类")):
             return "revenue_category_execution_30d"
         if any(term in question for term in ("品项", "项目")) and any(term in question for term in ("TOP", "前", "排行", "最高")):
             return "standard_item_income_top20_30d"
