@@ -12,6 +12,7 @@ from typing import Any
 from app.core.config import settings
 from app.intent_router.router import IntentRouter, IntentRouteResult
 from app.knowledge_indexer.retrieval_context import RetrievalContext
+from app.knowledge_indexer.retrieval_context import RetrievalContext
 from app.knowledge_indexer.service import KnowledgeSearchService
 from app.llm.local_client import LocalLLMClient
 from app.llm.sql_generator import LLMSqlGenerator, LLMSqlResult
@@ -146,15 +147,41 @@ class AskDataPipeline:
             name="knowledge_retrieval",
             inputs={"question": question},
         )
+        retrieval_trace_dict = {}
         try:
-            ctx = self.knowledge_search.search_structured(question, top_k=20)
+            # Use trace-capable retrieval if available
+            if hasattr(self.knowledge_search.hybrid_retriever, "retrieve_with_trace"):
+                matches, retrieval_trace_obj = (
+                    self.knowledge_search.hybrid_retriever.retrieve_with_trace(
+                        query_text=question,
+                        vector_matches=self.knowledge_search.store.query(question, top_k=20),
+                        top_k=10,
+                    )
+                )
+                retrieval_trace_dict = retrieval_trace_obj.to_dict()
+                # Rebuild RetrievalContext from traced matches
+                ctx = self.knowledge_search.context_builder.build(question, matches)
+            else:
+                ctx = self.knowledge_search.search_structured(question, top_k=20)
+
             stage.outputs = {
                 "metric_count": len(ctx.metrics),
                 "field_count": len(ctx.fields),
                 "table_count": len(ctx.tables),
                 "example_count": len(ctx.examples),
+                "keyword_hits": retrieval_trace_dict.get("keyword_hit_count", 0),
+                "vector_hits": retrieval_trace_dict.get("vector_hit_count", 0),
+                "rrf_hits": retrieval_trace_dict.get("rrf_hit_count", 0),
+                "rerank_hits": retrieval_trace_dict.get("rerank_hit_count", 0),
+                "keywords": retrieval_trace_dict.get("keywords", []),
             }
-            stage.summary = f"metrics={len(ctx.metrics)} fields={len(ctx.fields)} tables={len(ctx.tables)}"
+            stage.summary = (
+                f"metrics={len(ctx.metrics)} fields={len(ctx.fields)} "
+                f"tables={len(ctx.tables)} "
+                f"recall=kw:{retrieval_trace_dict.get('keyword_hit_count','?')}/"
+                f"vec:{retrieval_trace_dict.get('vector_hit_count','?')}/"
+                f"rrf:{retrieval_trace_dict.get('rrf_hit_count','?')}"
+            )
         except Exception as exc:
             stage.status = "error"
             stage.errors.append(str(exc))

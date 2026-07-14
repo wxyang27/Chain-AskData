@@ -1,0 +1,137 @@
+[
+  {
+    "id": "SCHEMA_001",
+    "question": "最近30天各门店核销收入 TOP10",
+    "expected_tables": ["dm_opt_qy_user_execution_record_all_d", "dim_qy_tenant_info_all_d"],
+    "expected_fields": ["exe_income", "executed_date", "tenant_id", "sy_hospital_name", "dp", "is_valid"],
+    "critical_fields": ["exe_income", "sy_hospital_name"],
+    "expected_relations": ["tenant_id"],
+    "difficulty": "medium"
+  },
+  {
+    "id": "SCHEMA_002",
+    "question": "截至昨天各门店待核销金额TOP10",
+    "expected_tables": ["dm_opt_qy_order_info_all_d", "dim_qy_tenant_info_all_d"],
+    "expected_fields": ["left_gmv", "left_num", "tenant_id", "sy_hospital_name", "dp"],
+    "critical_fields": ["left_gmv", "left_num", "sy_hospital_name"],
+    "expected_relations": ["tenant_id"],
+    "difficulty": "hard"
+  },
+  {
+    "id": "SCHEMA_003",
+    "question": "最近30天新客支付GMV、支付人数、支付客单价是多少？",
+    "expected_tables": ["dm_opt_qy_order_info_all_d"],
+    "expected_fields": ["pay_gmv", "uid", "pay_date", "is_paydate_cash", "is_pay_new", "dp", "pay_flag"],
+    "critical_fields": ["pay_gmv", "uid", "is_paydate_cash", "is_pay_new"],
+    "expected_relations": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "SCHEMA_004",
+    "question": "最近30天各品类核销收入对比",
+    "expected_tables": ["dm_opt_qy_user_execution_record_all_d"],
+    "expected_fields": ["revenue_category", "exe_income", "executed_date", "dp", "is_valid"],
+    "critical_fields": ["revenue_category", "exe_income"],
+    "expected_relations": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "SCHEMA_005",
+    "question": "最近30天0元单数量和核销人数是多少？",
+    "expected_tables": ["dm_opt_qy_user_execution_record_all_d"],
+    "expected_fields": ["main_order_id", "customer_id", "exe_income", "executed_date", "dp", "is_valid"],
+    "critical_fields": ["main_order_id", "customer_id", "exe_income"],
+    "expected_relations": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "SCHEMA_006",
+    "question": "昨天整体核销收入、核销GMV、核销人次、核销人数、核销客单价",
+    "expected_tables": ["dm_opt_qy_user_execution_record_all_d"],
+    "expected_fields": ["exe_income", "exe_amount", "verify_date_id", "customer_id", "executed_date", "dp", "is_valid"],
+    "critical_fields": ["exe_income", "exe_amount", "verify_date_id", "customer_id"],
+    "expected_relations": [],
+    "difficulty": "easy"
+  },
+  {
+    "id": "SCHEMA_007",
+    "question": "最近90天奇迹胶原品项渗透率",
+    "expected_tables": ["dm_opt_qy_user_execution_record_all_d"],
+    "expected_fields": ["standard_name", "customer_id", "executed_date", "dp", "is_valid"],
+    "critical_fields": ["standard_name", "customer_id"],
+    "expected_relations": [],
+    "difficulty": "hard"
+  },
+  {
+    "id": "SCHEMA_008",
+    "question": "本周私域新客核销收入是多少？",
+    "expected_tables": ["dm_opt_qy_user_execution_record_all_d"],
+    "expected_fields": ["exe_income", "cx_first_channel", "is_new", "executed_date", "dp", "is_valid"],
+    "critical_fields": ["cx_first_channel", "is_new", "exe_income"],
+    "expected_relations": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "SCHEMA_009",
+    "question": "最近30天升单人数、升单核销人次、升单核销收入",
+    "expected_tables": ["dm_opt_qy_user_execution_record_all_d"],
+    "expected_fields": ["customer_id", "verify_date_id", "exe_income", "is_up", "executed_date", "dp", "is_valid"],
+    "critical_fields": ["is_up", "customer_id", "verify_date_id", "exe_income"],
+    "expected_relations": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "SCHEMA_010",
+    "question": "最近60天支付后30日核销率",
+    "expected_tables": ["dm_opt_qy_order_info_all_d", "dm_opt_qy_user_execution_record_all_d"],
+    "expected_fields": ["pay_gmv", "main_order_id", "pay_date", "is_paydate_cash", "exe_income", "executed_date", "is_valid", "dp"],
+    "critical_fields": ["main_order_id", "pay_date", "executed_date", "pay_gmv"],
+    "expected_relations": ["main_order_id"],
+    "difficulty": "hard"
+  },
+  {
+    "id": "SCHEMA_011",
+    "question": "最近30天新客和老客核销收入、人次、客单价分别是多少？",
+    "expected_tables": ["dm_opt_qy_user_execution_record_all_d"],
+    "expected_fields": ["is_new", "exe_income", "verify_date_id", "customer_id", "executed_date", "dp", "is_valid"],
+    "critical_fields": ["is_new", "exe_income", "verify_date_id"],
+    "expected_relations": [],
+    "difficulty": "hard"
+  },
+  {
+    "id": "SCHEMA_012",
+    "question": "最近30天品项核销收入 TOP20",
+    "expected_tables": ["dm_opt_qy_user_execution_record_all_d"],
+    "expected_fields": ["standard_name", "exe_income", "executed_date", "dp", "is_valid"],
+    "critical_fields": ["standard_name", "exe_income"],
+    "expected_relations": [],
+    "difficulty": "easy"
+  },
+  {
+    "id": "SCHEMA_013",
+    "question": "最近30天私域、公域、老带新的核销收入、人次、客单价对比",
+    "expected_tables": ["dm_opt_qy_user_execution_record_all_d"],
+    "expected_fields": ["cx_first_channel", "exe_income", "verify_date_id", "customer_id", "executed_date", "dp", "is_valid"],
+    "critical_fields": ["cx_first_channel", "exe_income", "verify_date_id"],
+    "expected_relations": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "SCHEMA_014",
+    "question": "最近30天大单品、常规品、大师团核销收入对比",
+    "expected_tables": ["dm_opt_qy_user_execution_record_all_d"],
+    "expected_fields": ["revenue_category", "exe_income", "executed_date", "dp", "is_valid"],
+    "critical_fields": ["revenue_category", "exe_income"],
+    "expected_relations": [],
+    "difficulty": "easy"
+  },
+  {
+    "id": "SCHEMA_015",
+    "question": "核销客单价和支付客单价有什么区别？",
+    "expected_tables": [],
+    "expected_fields": [],
+    "critical_fields": [],
+    "expected_relations": [],
+    "difficulty": "hard"
+  }
+]

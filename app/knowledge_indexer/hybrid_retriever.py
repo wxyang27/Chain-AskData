@@ -4,6 +4,7 @@ from app.knowledge_indexer.keyword_extractor import KeywordExtractor
 from app.knowledge_indexer.reranker import LightweightReranker
 from app.knowledge_indexer.types import KnowledgeChunk
 from app.schema_index.loader import SchemaIndexBundle
+from app.schema_retrieval.objects import RecallHit, SchemaRetrievalTrace
 
 
 def reciprocal_rank_fusion(
@@ -67,6 +68,103 @@ class HybridRetriever:
             for item in fused
         ]
         return self.reranker.rerank(query_text, candidates, top_k)
+
+    def retrieve_with_trace(
+        self,
+        query_text: str,
+        vector_matches: list[dict[str, Any]],
+        top_k: int,
+    ) -> tuple[list[dict[str, Any]], SchemaRetrievalTrace]:
+        """Retrieve with full observability trace.
+
+        Returns (final_matches, trace) so callers can inspect
+        keyword / vector / RRF / rerank stages independently.
+        """
+        trace = SchemaRetrievalTrace(query=query_text)
+        keywords = self.keyword_extractor.extract(query_text)
+        trace.keywords = keywords
+
+        # --- keyword recall ---
+        keyword_matches = self._keyword_retrieve(query_text, limit=max(top_k * 4, 20))
+        trace.keyword_hits = [
+            RecallHit(
+                id=m.get("id", ""),
+                asset_type=(m.get("metadata") or {}).get("asset_type", ""),
+                name=(m.get("metadata") or {}).get("field_name")
+                     or (m.get("metadata") or {}).get("metric_name")
+                     or (m.get("metadata") or {}).get("table_name", ""),
+                score=float(m.get("keyword_score", 0)),
+                source="keyword",
+                metadata=m.get("metadata", {}),
+            )
+            for m in keyword_matches[:20]
+        ]
+
+        # --- vector recall ---
+        normalized_vector_matches = [
+            self._normalize_vector_match(match)
+            for match in vector_matches
+        ]
+        trace.vector_hits = [
+            RecallHit(
+                id=_match_id(m),
+                asset_type=(m.get("metadata") or {}).get("asset_type", ""),
+                name=(m.get("metadata") or {}).get("field_name")
+                     or (m.get("metadata") or {}).get("metric_name")
+                     or "",
+                score=float(m.get("distance", 0)),
+                source="vector",
+                metadata=m.get("metadata", {}),
+            )
+            for m in normalized_vector_matches[:20]
+        ]
+
+        # --- schema index recall ---
+        schema_index_matches = self._schema_index_retrieve(
+            query_text, limit=max(top_k * 4, 20),
+        )
+
+        # --- RRF fusion ---
+        fused = reciprocal_rank_fusion(
+            [keyword_matches, schema_index_matches, normalized_vector_matches],
+        )
+        trace.rrf_hits = [
+            RecallHit(
+                id=_match_id(item),
+                asset_type=(item.get("metadata") or {}).get("asset_type", ""),
+                name=(item.get("metadata") or {}).get("field_name")
+                     or (item.get("metadata") or {}).get("metric_name", ""),
+                score=float(item.get("rrf_score", 0)),
+                source="rrf",
+                metadata=item.get("metadata", {}),
+            )
+            for item in fused[:30]
+        ]
+
+        # --- rerank ---
+        candidates = [
+            {
+                "document": item.get("document", ""),
+                "metadata": item.get("metadata", {}) or {},
+                "distance": float(item.get("distance", 1.0)) - float(item.get("rrf_score", 0.0)),
+            }
+            for item in fused
+        ]
+        reranked = self.reranker.rerank(query_text, candidates, top_k)
+        trace.rerank_hits = [
+            RecallHit(
+                id=_match_id(m),
+                asset_type=(m.get("metadata") or {}).get("asset_type", ""),
+                name=(m.get("metadata") or {}).get("field_name")
+                     or (m.get("metadata") or {}).get("metric_name", ""),
+                score=float(m.get("rerank_score", 0)),
+                source="rerank",
+                metadata=m.get("metadata", {}),
+            )
+            for m in reranked[:top_k]
+        ]
+
+        return reranked, trace
 
     def _keyword_retrieve(self, query_text: str, limit: int) -> list[dict[str, Any]]:
         keywords = self.keyword_extractor.extract(query_text)

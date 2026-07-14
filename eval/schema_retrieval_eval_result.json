@@ -1,0 +1,371 @@
+{
+  "eval_type": "schema_retrieval_eval",
+  "total_cases": 15,
+  "passed": 0,
+  "metrics": {
+    "table_recall": 0.0,
+    "field_recall": 0.25,
+    "critical_field_recall": 0.539,
+    "relation_recall": 0.8
+  },
+  "details": [
+    {
+      "id": "SCHEMA_001",
+      "passed": false,
+      "table_recall": 0.0,
+      "field_recall": 0.167,
+      "critical_field_recall": 0.5,
+      "relation_recall": 0.0,
+      "missing_fields": [
+        "dp",
+        "executed_date",
+        "is_valid",
+        "sy_hospital_name",
+        "tenant_id"
+      ],
+      "unexpected_fields": [],
+      "trace_keywords": [
+        "核销收入",
+        "门店",
+        "TOP10"
+      ],
+      "trace_keyword_hits": 20,
+      "trace_vector_hits": 20,
+      "trace_rrf_hits": 30,
+      "trace_rerank_hits": 10
+    },
+    {
+      "id": "SCHEMA_002",
+      "passed": false,
+      "table_recall": 0.0,
+      "field_recall": 0.8,
+      "critical_field_recall": 1.0,
+      "relation_recall": 0.0,
+      "missing_fields": [
+        "dp"
+      ],
+      "unexpected_fields": [],
+      "trace_keywords": [
+        "待核销金额",
+        "待核销",
+        "门店",
+        "TOP10"
+      ],
+      "trace_keyword_hits": 20,
+      "trace_vector_hits": 20,
+      "trace_rrf_hits": 30,
+      "trace_rerank_hits": 10
+    },
+    {
+      "id": "SCHEMA_003",
+      "passed": false,
+      "table_recall": 0.0,
+      "field_recall": 0.429,
+      "critical_field_recall": 0.5,
+      "relation_recall": 1.0,
+      "missing_fields": [
+        "dp",
+        "is_pay_new",
+        "is_paydate_cash",
+        "pay_date"
+      ],
+      "unexpected_fields": [
+        "stat_date"
+      ],
+      "trace_keywords": [
+        "支付GMV",
+        "支付客单价",
+        "新客",
+        "GMV"
+      ],
+      "trace_keyword_hits": 20,
+      "trace_vector_hits": 20,
+      "trace_rrf_hits": 30,
+      "trace_rerank_hits": 10
+    },
+    {
+      "id": "SCHEMA_004",
+      "passed": false,
+      "table_recall": 0.0,
+      "field_recall": 0.2,
+      "critical_field_recall": 0.5,
+      "relation_recall": 1.0,
+      "missing_fields": [
+        "dp",
+        "executed_date",
+        "is_valid",
+        "revenue_category"
+      ],
+      "unexpected_fields": [],
+      "trace_keywords": [
+        "核销收入"
+      ],
+      "trace_keyword_hits": 20,
+      "trace_vector_hits": 20,
+      "trace_rrf_hits": 30,
+      "trace_rerank_hits": 10
+    },
+    {
+      "id": "SCHEMA_005",
+      "passed": false,
+      "table_recall": 0.0,
+      "field_recall": 0.333,
+      "critical_field_recall": 0.667,
+      "relation_recall": 1.0,
+      "missing_fields": [
+        "dp",
+        "executed_date",
+        "is_valid",
+        "main_order_id"
+      ],
+      "unexpected_fields": [],
+      "trace_keywords": [
+        "核销人数"
+      ],
+      "trace_keyword_hits": 19,
+      "trace_vector_hits": 20,
+      "trace_rrf_hits": 30,
+      "trace_rerank_hits": 10
+    },
+    {
+      "id": "SCHEMA_006",
+      "passed": false,
+      "table_recall": 0.0,
+      "field_recall": 0.429,
+      "critical_field_recall": 0.75,
+      "relation_recall": 1.0,
+      "missing_fields": [
+        "dp",
+        "exe_amount",
+        "executed_date",
+        "is_valid"
+      ],
+      "unexpected_fields": [],
+      "trace_keywords": [
+        "核销人数",
+        "核销人次",
+        "核销收入",
+        "核销GMV",
+        "核销客单价",
+        "GMV"
+      ],
+      "trace_keyword_hits": 20,
+      "trace_vector_hits": 20,
+      "trace_rrf_hits": 30,
+      "trace_rerank_hits": 10
+    },
+    {
+      "id": "SCHEMA_007",
+      "passed": false,
+      "table_recall": 0.0,
+      "field_recall": 0.2,
+      "critical_field_recall": 0.5,
+      "relation_recall": 1.0,
+      "missing_fields": [
+        "customer_id",
+        "dp",
+        "executed_date",
+        "is_valid"
+      ],
+      "unexpected_fields": [
+        "item_product_id"
+      ],
+      "trace_keywords": [
+        "品项"
+      ],
+      "trace_keyword_hits": 20,
+      "trace_vector_hits": 20,
+      "trace_rrf_hits": 30,
+      "trace_rerank_hits": 10
+    },
+    {
+      "id": "SCHEMA_008",
+      "passed": false,
+      "table_recall": 0.0,
+      "field_recall": 0.167,
+      "critical_field_recall": 0.333,
+      "relation_recall": 1.0,
+      "missing_fields": [
+        "cx_first_channel",
+        "dp",
+        "executed_date",
+        "is_new",
+        "is_valid"
+      ],
+      "unexpected_fields": [],
+      "trace_keywords": [
+        "核销收入",
+        "新客"
+      ],
+      "trace_keyword_hits": 20,
+      "trace_vector_hits": 20,
+      "trace_rrf_hits": 30,
+      "trace_rerank_hits": 10
+    },
+    {
+      "id": "SCHEMA_009",
+      "passed": false,
+      "table_recall": 0.0,
+      "field_recall": 0.286,
+      "critical_field_recall": 0.5,
+      "relation_recall": 1.0,
+      "missing_fields": [
+        "customer_id",
+        "dp",
+        "executed_date",
+        "is_up",
+        "is_valid"
+      ],
+      "unexpected_fields": [
+        "exe_user_cnt",
+        "up_user_cnt"
+      ],
+      "trace_keywords": [
+        "核销人次",
+        "核销收入"
+      ],
+      "trace_keyword_hits": 20,
+      "trace_vector_hits": 20,
+      "trace_rrf_hits": 30,
+      "trace_rerank_hits": 10
+    },
+    {
+      "id": "SCHEMA_010",
+      "passed": false,
+      "table_recall": 0.0,
+      "field_recall": 0.0,
+      "critical_field_recall": 0.0,
+      "relation_recall": 0.0,
+      "missing_fields": [
+        "dp",
+        "exe_income",
+        "executed_date",
+        "is_paydate_cash",
+        "is_valid",
+        "main_order_id",
+        "pay_date",
+        "pay_gmv"
+      ],
+      "unexpected_fields": [],
+      "trace_keywords": [],
+      "trace_keyword_hits": 0,
+      "trace_vector_hits": 20,
+      "trace_rrf_hits": 20,
+      "trace_rerank_hits": 10
+    },
+    {
+      "id": "SCHEMA_011",
+      "passed": false,
+      "table_recall": 0.0,
+      "field_recall": 0.0,
+      "critical_field_recall": 0.0,
+      "relation_recall": 1.0,
+      "missing_fields": [
+        "customer_id",
+        "dp",
+        "exe_income",
+        "executed_date",
+        "is_new",
+        "is_valid",
+        "verify_date_id"
+      ],
+      "unexpected_fields": [],
+      "trace_keywords": [
+        "核销收入",
+        "新客",
+        "老客"
+      ],
+      "trace_keyword_hits": 20,
+      "trace_vector_hits": 20,
+      "trace_rrf_hits": 30,
+      "trace_rerank_hits": 10
+    },
+    {
+      "id": "SCHEMA_012",
+      "passed": false,
+      "table_recall": 0.0,
+      "field_recall": 0.2,
+      "critical_field_recall": 0.5,
+      "relation_recall": 1.0,
+      "missing_fields": [
+        "dp",
+        "executed_date",
+        "is_valid",
+        "standard_name"
+      ],
+      "unexpected_fields": [],
+      "trace_keywords": [
+        "核销收入",
+        "品项",
+        "TOP20"
+      ],
+      "trace_keyword_hits": 20,
+      "trace_vector_hits": 20,
+      "trace_rrf_hits": 30,
+      "trace_rerank_hits": 10
+    },
+    {
+      "id": "SCHEMA_013",
+      "passed": false,
+      "table_recall": 0.0,
+      "field_recall": 0.143,
+      "critical_field_recall": 0.333,
+      "relation_recall": 1.0,
+      "missing_fields": [
+        "customer_id",
+        "dp",
+        "exe_income",
+        "executed_date",
+        "is_valid",
+        "verify_date_id"
+      ],
+      "unexpected_fields": [],
+      "trace_keywords": [
+        "核销收入"
+      ],
+      "trace_keyword_hits": 20,
+      "trace_vector_hits": 20,
+      "trace_rrf_hits": 30,
+      "trace_rerank_hits": 10
+    },
+    {
+      "id": "SCHEMA_014",
+      "passed": false,
+      "table_recall": 0.0,
+      "field_recall": 0.4,
+      "critical_field_recall": 1.0,
+      "relation_recall": 1.0,
+      "missing_fields": [
+        "dp",
+        "executed_date",
+        "is_valid"
+      ],
+      "unexpected_fields": [],
+      "trace_keywords": [
+        "核销收入"
+      ],
+      "trace_keyword_hits": 20,
+      "trace_vector_hits": 20,
+      "trace_rrf_hits": 30,
+      "trace_rerank_hits": 10
+    },
+    {
+      "id": "SCHEMA_015",
+      "passed": false,
+      "table_recall": 0.0,
+      "field_recall": 0.0,
+      "critical_field_recall": 1.0,
+      "relation_recall": 1.0,
+      "missing_fields": [],
+      "unexpected_fields": [],
+      "trace_keywords": [
+        "核销客单价",
+        "支付客单价"
+      ],
+      "trace_keyword_hits": 20,
+      "trace_vector_hits": 20,
+      "trace_rrf_hits": 30,
+      "trace_rerank_hits": 10
+    }
+  ]
+}
