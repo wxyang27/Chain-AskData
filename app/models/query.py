@@ -214,3 +214,6 @@ class QueryResponse(BaseModel):
     llm_sql_validation: LlmSqlValidation = Field(default_factory=LlmSqlValidation)
     llm_sql_detail: LlmSqlResult = Field(default_factory=LlmSqlResult)
     sql_source: str = "template"
+
+    # --- Pipeline observability ---
+    pipeline_trace: dict[str, Any] = Field(default_factory=dict)

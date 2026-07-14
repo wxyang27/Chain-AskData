@@ -1,11 +1,7 @@
 from app.core.config import settings
-from app.intent_router.router import IntentRouter, IntentRouteResult
+from app.intent_router.router import IntentRouteResult
 from app.knowledge_indexer.retrieval_context import RetrievalContext
-from app.knowledge_indexer.service import KnowledgeSearchService
-from app.llm.local_client import LocalLLMClient
-from app.llm.sql_generator import LLMSqlGenerator, LLMSqlResult
-from app.llm.sql_repairer import StaticSqlRepairer
-from app.llm.sql_safety_gate import SqlSafetyGate, SqlSafetyResult
+from app.llm.sql_generator import LLMSqlResult
 from app.models.query import (
     LlmSqlResult as LlmSqlResultModel,
     LlmSqlValidation,
@@ -13,103 +9,56 @@ from app.models.query import (
     QueryResponse,
     ValidationResult,
 )
-from app.query_planner.planner import QueryPlanner
+from app.pipeline.pipeline import AskDataPipeline
 from app.schema_graph.graph import SchemaGraph
-from app.schema_retrieval.askdata_style_retriever import AskDataStyleSchemaRetriever
-from app.semantic.contract import SemanticContractBuilder
-from app.sql_generator.generator import SqlGenerator
-from app.sql_validator.validator import SqlValidator
 
 
 class AnswerComposer:
     """组装自然语言取数响应。"""
 
     def __init__(self):
-        self.planner = QueryPlanner()
-        self.generator = SqlGenerator()
-        self.validator = SqlValidator()
-        self.knowledge_search = KnowledgeSearchService()
-        self.intent_router = IntentRouter()
-        self.semantic_contract_builder = SemanticContractBuilder()
-        self.schema_retriever = AskDataStyleSchemaRetriever(
-            schema_indexes=self.knowledge_search.schema_indexes,
-        )
-        self.llm_sql_generator = LLMSqlGenerator(
-            enabled=settings.llm_enabled,
-            model=settings.llm_cot_model,
-            timeout_seconds=settings.llm_timeout_seconds,
-            client=LocalLLMClient(
-                base_url=settings.llm_base_url,
-                api_key=settings.llm_api_key,
-            ),
-        )
-        self.sql_safety_gate = SqlSafetyGate()
-        self.sql_repairer = StaticSqlRepairer()
+        self.pipeline = AskDataPipeline()
+        # Keep metric_registry reference for explain notes
+        self.planner = self.pipeline.planner
 
     def compose(self, question: str) -> QueryResponse:
-        retrieval_context = self.knowledge_search.search_structured(question, top_k=20)
-        semantic_contract = self.semantic_contract_builder.build(question, retrieval_context)
-        template_id = semantic_contract.template_id or retrieval_context.top_template_id() or self.planner._match_case(
-            question,
-            retrieval_context,
-        )["template_id"]
-        schema_result = self.schema_retriever.retrieve(retrieval_context, template_id=template_id)
-        schema_graph = schema_result["schema_graph"]
-        route_result = self.intent_router.route(question, retrieval_context)
-        route_result = self._apply_semantic_route_override(route_result, semantic_contract)
-        if route_result.intent != "nl2sql":
+        result = self.pipeline.run(question)
+
+        # Non-nl2sql path (explain / reject)
+        if result.intent_route and result.intent_route.intent != "nl2sql":
             return self._compose_explain_response(
-                question, retrieval_context, schema_graph,
-                route_result, schema_result,
+                question,
+                result.retrieval_context,
+                result.schema_graph,
+                result.intent_route,
+                result.schema_result,
+                pipeline_trace=result.trace.to_dict() if result.trace else {},
             )
-
-        query_plan = self.planner.plan(
-            question,
-            retrieval_context=retrieval_context,
-            schema_graph=schema_graph,
-            semantic_contract=semantic_contract,
-        )
-        template_sql = self.generator.generate(query_plan)
-        template_sql = self._repair_template_sql(template_sql, query_plan, schema_graph)
-        validation = self.validator.validate(template_sql)
-
-        # --- LLM SQL shadow mode ---
-        llm_sql, llm_sql_validation, llm_sql_detail = self._generate_llm_sql(
-            query_plan=query_plan,
-            schema_graph=schema_graph,
-        )
-
-        # Adopt LLM SQL when gate passes (all queries)
-        adopt_llm = (
-            llm_sql_detail.generated
-            and llm_sql_validation.passed
-        )
-        sql_source = "llm" if adopt_llm else "template"
-        final_sql = llm_sql if adopt_llm else template_sql
 
         return QueryResponse(
             project="Chain-AskData",
             question_summary=f"你想查询：{question}",
-            query_plan=query_plan,
-            sql=final_sql,
-            validation=validation,
+            query_plan=result.query_plan,
+            sql=result.final_sql,
+            validation=result.validation,
             caliber_notes=[
                 "本版本只生成 SQL 与口径说明，不真实执行查询。",
                 "核销发生类问题默认使用 executed_date；支付发生类问题默认使用 pay_date。",
                 "核销收入使用 exe_income，核销 GMV 使用 exe_amount。",
                 "核销客单价默认分母为核销人次 verify_date_id；支付客单价默认分母为支付日期+用户。",
                 "门店展示优先使用 sy_hospital_name，主键使用 tenant_id。",
-            ] + self._contract_caliber_notes(query_plan.semantic_contract),
-            retrieval_trace=retrieval_context.raw_matches,
-            retrieval_context=retrieval_context.to_dict(),
-            schema_graph=self._schema_graph_payload(schema_result),
+            ] + self._contract_caliber_notes(result.query_plan.semantic_contract),
+            retrieval_trace=result.retrieval_context.raw_matches,
+            retrieval_context=result.retrieval_context.to_dict(),
+            schema_graph=self._schema_graph_payload(result.schema_result),
             # shadow mode
-            template_sql=template_sql,
-            llm_sql=llm_sql,
-            llm_sql_adopted=adopt_llm,
-            llm_sql_validation=llm_sql_validation,
-            llm_sql_detail=llm_sql_detail,
-            sql_source=sql_source,
+            template_sql=result.template_sql,
+            llm_sql=result.llm_sql,
+            llm_sql_adopted=result.sql_source == "llm",
+            llm_sql_validation=result.llm_sql_validation or LlmSqlValidation(),
+            llm_sql_detail=result.llm_sql_detail or LlmSqlResultModel(),
+            sql_source=result.sql_source,
+            pipeline_trace=result.trace.to_dict() if result.trace else {},
         )
 
     # ------------------------------------------------------------------
@@ -266,6 +215,7 @@ class AnswerComposer:
         schema_graph: SchemaGraph,
         route_result: IntentRouteResult,
         schema_result: dict,
+        pipeline_trace: dict | None = None,
     ) -> QueryResponse:
         notes = self._build_explain_notes(question, retrieval_context, route_result)
         validation = ValidationResult(
