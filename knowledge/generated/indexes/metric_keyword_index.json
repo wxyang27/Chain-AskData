@@ -7,7 +7,7 @@
     "source_tables": [
       "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
     ],
-    "keyword_text": "A001 核销gmv verify_gmv 统计周期内，连锁业务总核销gmv SUM(exe_amount) soyoung_dw.dm_opt_qy_user_execution_record_all_d SELECT  SUM(exe_amount) 核销gmv\nFROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE   dp = DATE_SUB(CURRENT_DATE(),1)\nAND     is_valid = 1\n"
+    "keyword_text": "A001 核销gmv verify_gmv 统计周期内，连锁业务总核销gmv SUM(金额字段) soyoung_dw.dm_opt_qy_user_execution_record_all_d SELECT SUM(exe_amount) 核销gmv\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_valid = 1"
   },
   {
     "asset_type": "metric",
@@ -17,7 +17,7 @@
     "source_tables": [
       "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
     ],
-    "keyword_text": "A002 核销收入 verify_income 统计周期内，连锁业务总核销收入 SUM(exe_income) soyoung_dw.dm_opt_qy_user_execution_record_all_d SELECT  SUM(exe_income) 核销收入\nFROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE   dp = DATE_SUB(CURRENT_DATE(),1)\nAND     is_valid = 1\n"
+    "keyword_text": "A002 核销收入 verify_income 统计周期内，连锁业务总核销收入 SUM(金额字段) soyoung_dw.dm_opt_qy_user_execution_record_all_d SELECT SUM(exe_income) 核销收入\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_valid = 1"
   },
   {
     "asset_type": "metric",
@@ -27,7 +27,7 @@
     "source_tables": [
       "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
     ],
-    "keyword_text": "A003 核销客单价 verify_avg_price 统计周期内，总核销收入/总核销人次 SUM(exe_income) / COUNT(DISTINCT verify_date_id) soyoung_dw.dm_opt_qy_user_execution_record_all_d SELECT SUM(exe_income)/COUNT(DISTINCT verify_date_id) 核销客单价\nFROM  soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_valid = 1\n ⚠ 原SQL使用verify_date_id统计人次，请确认是否等同于核销人次"
+    "keyword_text": "A003 核销客单价 verify_avg_price 统计周期内，总核销收入/总核销人次 SUM(收入) / COUNT(DISTINCT 人次) soyoung_dw.dm_opt_qy_user_execution_record_all_d SELECT SUM(exe_income)/COUNT(DISTINCT verify_date_id) 核销客单价\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_valid = 1 ⚠ 原SQL使用verify_date_id统计人次，请确认是否等同于核销人次"
   },
   {
     "asset_type": "metric",
@@ -37,7 +37,7 @@
     "source_tables": [
       "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
     ],
-    "keyword_text": "A004 核销服务点数 verify_service_points 统计周期内，总核销服务点数 SUM(exe_cnt) soyoung_dw.dm_opt_qy_user_execution_record_all_d SELECT  SUM(exe_cnt) 核销服务点数\nFROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE   dp = DATE_SUB(CURRENT_DATE(),1)\nAND     is_valid = 1\n"
+    "keyword_text": "A004 核销服务点数 verify_service_points 统计周期内，总核销服务点数 SUM(exe_cnt) soyoung_dw.dm_opt_qy_user_execution_record_all_d SELECT SUM(exe_cnt) 核销服务点数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_valid = 1"
   },
   {
     "asset_type": "metric",
@@ -47,7 +47,7 @@
     "source_tables": [
       "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
     ],
-    "keyword_text": "A005 核销人数 verify_user_cnt 统计周期内，总核销用户数 COUNT(DISTINCT customer_id) soyoung_dw.dm_opt_qy_user_execution_record_all_d SELECT COUNT(DISTINCT customer_id) 核销人数\nFROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE   dp = DATE_SUB(CURRENT_DATE(),1)\nAND     is_valid = 1\n"
+    "keyword_text": "A005 核销人数 verify_user_cnt 统计周期内，总核销用户数 COUNT(DISTINCT uid) soyoung_dw.dm_opt_qy_user_execution_record_all_d SELECT COUNT(DISTINCT customer_id) 核销人数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_valid = 1"
   },
   {
     "asset_type": "metric",
@@ -57,7 +57,7 @@
     "source_tables": [
       "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
     ],
-    "keyword_text": "A006 核销人次 verify_visit_cnt 统计周期内，总核销人次 COUNT(DISTINCT verify_date_id) soyoung_dw.dm_opt_qy_user_execution_record_all_d SELECT  count(DISTINCT verify_date_id) 核销人次\nFROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE   dp = DATE_SUB(CURRENT_DATE(),1)\nAND     is_valid = 1\n"
+    "keyword_text": "A006 核销人次 verify_visit_cnt 统计周期内，总核销人次 COUNT(DISTINCT verify_date_id) soyoung_dw.dm_opt_qy_user_execution_record_all_d SELECT count(DISTINCT verify_date_id) 核销人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_valid = 1"
   },
   {
     "asset_type": "metric",
@@ -67,7 +67,7 @@
     "source_tables": [
       "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
     ],
-    "keyword_text": "A007 核销订单数 verify_order_cnt 统计周期内，总核销订单数 COUNT(DISTINCT main_order_id) soyoung_dw.dm_opt_qy_user_execution_record_all_d SELECT  count(DISTINCT main_order_id) 核销订单数\nFROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE   dp = DATE_SUB(CURRENT_DATE(),1)\nAND     is_valid = 1\n"
+    "keyword_text": "A007 核销订单数 verify_order_cnt 统计周期内，总核销订单数 COUNT(DISTINCT order_id) soyoung_dw.dm_opt_qy_user_execution_record_all_d SELECT count(DISTINCT main_order_id) 核销订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_valid = 1"
   },
   {
     "asset_type": "metric",
@@ -77,7 +77,7 @@
     "source_tables": [
       "soyoung_dw.dm_opt_qy_order_info_all_d"
     ],
-    "keyword_text": "A008 支付gmv pay_gmv 统计周期内，总支付gmv(剔除当日退款) SUM(pay_gmv) soyoung_dw.dm_opt_qy_order_info_all_d select sum(pay_gmv) as 支付gmv\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_paydate_cash = 0\n"
+    "keyword_text": "A008 支付gmv pay_gmv 统计周期内，总支付gmv(剔除当日退款) SUM(金额字段) soyoung_dw.dm_opt_qy_order_info_all_d select sum(pay_gmv) as 支付gmv\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_paydate_cash = 0\n;"
   },
   {
     "asset_type": "metric",
@@ -87,7 +87,7 @@
     "source_tables": [
       "soyoung_dw.dm_opt_qy_order_info_all_d"
     ],
-    "keyword_text": "A009 支付订单数 pay_order_cnt 统计周期内，总支付订单数(剔除当日退款) COUNT(DISTINCT main_order_id) soyoung_dw.dm_opt_qy_order_info_all_d select count(distinct main_order_id) as 支付订单数\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_paydate_cash = 0\n"
+    "keyword_text": "A009 支付订单数 pay_order_cnt 统计周期内，总支付订单数(剔除当日退款) COUNT(DISTINCT order_id) soyoung_dw.dm_opt_qy_order_info_all_d select count(disticnt main_order_id) as 支付订单数\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_paydate_cash = 0\n;"
   },
   {
     "asset_type": "metric",
@@ -97,7 +97,7 @@
     "source_tables": [
       "soyoung_dw.dm_opt_qy_order_info_all_d"
     ],
-    "keyword_text": "A010 支付人数 pay_user_cnt 统计周期内，总支付人数(剔除当日退款) COUNT(DISTINCT uid) soyoung_dw.dm_opt_qy_order_info_all_d SELECT  COUNT(DISTINCT uid) as 支付人数\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_paydate_cash = 0\n"
+    "keyword_text": "A010 支付人数 pay_user_cnt 统计周期内，总支付人数(剔除当日退款) COUNT(DISTINCT uid) soyoung_dw.dm_opt_qy_order_info_all_d SELECT COUNT(DISTINCT uid) as 支付人数\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_paydate_cash = 0\n;"
   },
   {
     "asset_type": "metric",
@@ -107,7 +107,7 @@
     "source_tables": [
       "soyoung_dw.dm_opt_qy_order_info_all_d"
     ],
-    "keyword_text": "A011 支付客单价 pay_avg_price 统计周期内，总支付GMV/总支付人次(剔除当日退款) SUM(pay_gmv) / COUNT(DISTINCT CONCAT(uid, pay_date)) soyoung_dw.dm_opt_qy_order_info_all_d SELECT sum(pay_gmv)/count(distinct concat(uid,pay_date)) as 支付客单价\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_paydate_cash = 0\n"
+    "keyword_text": "A011 支付客单价 pay_avg_price 统计周期内，总支付GMV/总支付人次(剔除当日退款) SUM(收入) / COUNT(DISTINCT 人次) soyoung_dw.dm_opt_qy_order_info_all_d SELECT sum(pay_gmv)/count(distinct concat(uid,pay_date)) as 支付客单价\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_paydate_cash = 0\n;"
   },
   {
     "asset_type": "metric",
@@ -117,7 +117,7 @@
     "source_tables": [
       "soyoung_dw.dm_opt_qy_order_info_all_d"
     ],
-    "keyword_text": "A012 待核销gmv pending_verify_gmv 统计周期内，总待核销gmv SUM(left_gmv) soyoung_dw.dm_opt_qy_order_info_all_d SELECT sum(left_gmv) as 待核销gmv\nFROM  soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND left_num > 0\n"
+    "keyword_text": "A012 待核销gmv pending_verify_gmv 统计周期内，总待核销gmv SUM(金额字段) soyoung_dw.dm_opt_qy_order_info_all_d SELECT\nsum(left_gmv) as 待核销gmv\nFROM soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND left_num > 0\n;"
   },
   {
     "asset_type": "metric",
@@ -127,7 +127,7 @@
     "source_tables": [
       "soyoung_dw.dm_opt_qy_order_info_all_d"
     ],
-    "keyword_text": "A013 待核销服务点 pending_verify_sp 统计周期内，总待核销服务点 SUM(left_num) soyoung_dw.dm_opt_qy_order_info_all_d SELECT sum(left_num) as 待核销服务点\nFROM  soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND left_num > 0\n"
+    "keyword_text": "A013 待核销服务点 pending_verify_sp 统计周期内，总待核销服务点 SUM(exe_cnt) soyoung_dw.dm_opt_qy_order_info_all_d SELECT\nsum(left_num) as 待核销服务点\nFROM soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND left_num > 0\n;"
   },
   {
     "asset_type": "metric",
@@ -137,7 +137,7 @@
     "source_tables": [
       "soyoung_dw.dm_opt_qy_order_info_all_d"
     ],
-    "keyword_text": "A014 待核销订单数 pending_verify_order_cnt 统计周期内，总待核销订单数 COUNT(DISTINCT main_order_id) soyoung_dw.dm_opt_qy_order_info_all_d SELECT COUNT(DISTINCT main_order_id) as 待核销订单数\nFROM  soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND left_num > 0\n"
+    "keyword_text": "A014 待核销订单数 pending_verify_order_cnt 统计周期内，总待核销订单数 COUNT(DISTINCT order_id) soyoung_dw.dm_opt_qy_order_info_all_d SELECT\nCOUNT(DISTINCT main_order_id) as 待核销订单数\nFROM soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND left_num > 0\n;"
   },
   {
     "asset_type": "metric",
@@ -147,7 +147,7 @@
     "source_tables": [
       "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
     ],
-    "keyword_text": "A015 升单订单数 upsell_order_cnt 统计周期内，升单的总订单数 COUNT(DISTINCT main_order_id) soyoung_dw.dm_opt_qy_user_execution_record_all_d SELECT COUNT(DISTINCT main_order_id) as 升单订单数\nFROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE   dp = DATE_SUB(current_date(),1)\nAND     is_up = 1\nAND     is_valid = 1\n"
+    "keyword_text": "A015 升单订单数 upsell_order_cnt 统计周期内，升单的总订单数 COUNT(DISTINCT order_id) soyoung_dw.dm_opt_qy_user_execution_record_all_d SELECT\nCOUNT(DISTINCT main_order_id) as 升单订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND is_valid = 1"
   },
   {
     "asset_type": "metric",
@@ -157,7 +157,7 @@
     "source_tables": [
       "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
     ],
-    "keyword_text": "A016 升单人数 upsell_user_cnt 统计周期内，升单的总用户数 COUNT(DISTINCT customer_id) soyoung_dw.dm_opt_qy_user_execution_record_all_d SELECT COUNT(DISTINCT customer_id) AS 升单人数\nFROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE   dp = DATE_SUB(current_date(),1)\nAND     is_up = 1\nAND     is_valid = 1\n"
+    "keyword_text": "A016 升单人数 upsell_user_cnt 统计周期内，升单的总用户数 COUNT(DISTINCT uid) soyoung_dw.dm_opt_qy_user_execution_record_all_d SELECT\nCOUNT(DISTINCT customer_id) AS 升单人数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND is_valid = 1"
   },
   {
     "asset_type": "metric",
@@ -167,7 +167,7 @@
     "source_tables": [
       "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
     ],
-    "keyword_text": "A017 升单人次 upsell_visit_cnt 统计周期内，升单的总人次 COUNT(DISTINCT verify_date_id) soyoung_dw.dm_opt_qy_user_execution_record_all_d SELECT  COUNT(DISTINCT verify_date_id) AS 升单人次\nFROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE   dp = DATE_SUB(current_date(),1)\nAND     is_up = 1\nAND     is_valid = 1\n"
+    "keyword_text": "A017 升单人次 upsell_visit_cnt 统计周期内，升单的总人次 COUNT(DISTINCT verify_date_id) soyoung_dw.dm_opt_qy_user_execution_record_all_d SELECT COUNT(DISTINCT verify_date_id) AS 升单人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND is_valid = 1"
   },
   {
     "asset_type": "metric",
@@ -177,7 +177,7 @@
     "source_tables": [
       "soyoung_dw.dws_qy_sc_ware_stock_stats_all_d"
     ],
-    "keyword_text": "A018 库存数 inventory_cnt 截止至今，总库存数量 SUM(warehouse_stock_num_td) soyoung_dw.dws_qy_sc_ware_stock_stats_all_d SELECT ware_name,\n       ROUND(SUM(warehouse_stock_num_td), 0) AS 库存数\nFROM soyoung_dw.dws_qy_sc_ware_stock_stats_all_d\nWHERE pt = DATE_SUB(CURRENT_DATE(), 1)\nGROUP BY ware_name\n"
+    "keyword_text": "A018 库存数 inventory_cnt 截止至今，总库存数量 soyoung_dw.dws_qy_sc_ware_stock_stats_all_d SELECT ware_name,\nROUND(SUM(warehouse_stock_num_td), 0) AS 库存数\nFROM soyoung_dw.dws_qy_sc_ware_stock_stats_all_d\nWHERE pt = DATE_SUB(CURRENT_DATE(), 1)\nGROUP BY ware_name"
   },
   {
     "asset_type": "metric",
@@ -187,7 +187,7 @@
     "source_tables": [
       "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
     ],
-    "keyword_text": "A019 相控微针升单率 micro_needle_upsell_rate 统计周期内，原单为相控微针且当日发生升单的核销人次/相控微针原单核销人次 升单人次 / 原单核销人次 soyoung_dw.dm_opt_qy_user_execution_record_all_d SELECT a.standard_name,\n       COUNT(DISTINCT IF(b.verify_date_id IS NOT NULL,a.verify_date_id,NULL))\n       / COUNT(DISTINCT a.verify_date_id) 升单率\nFROM (\n    SELECT standard_name, verify_date_id\n    FROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\n    WHERE dp = DATE_SUB(current_date(),1)\n    AND is_valid = 1\n    AND standard_name REGEXP '相控微针'\n    AND ord_up_type_name = '原单'\n) a\nLEFT JOIN (\n    SELECT standard_name, verify_date_id\n    FROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\n    WHERE dp = DATE_SUB(current_date(),1)\n    AND ord_up_type_name = '升单'\n    AND is_valid = 1\n) b ON a.verify_date_id = b.verify_date_id\nGROUP BY a.standard_name\n"
+    "keyword_text": "A019 相控微针升单率 micro_needle_upsell_rate 统计周期内，原单为相控微针且当日发生升单的核销人次/相控微针原单核销人次 分子指标 / 分母指标 soyoung_dw.dm_opt_qy_user_execution_record_all_d SELECT a.standard_name ,COUNT(DISTINCT IF(b.verify_date_id IS NOT NULL,a.verify_date_id,NULL)) / COUNT(DISTINCT a.verify_date_id)升单率\nFROM (\nSELECT standard_name\n,verify_date_id\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nand is_valid = 1\nAND standard_name REGEXP '相控微针'\nAND ord_up_type_name = '原单'\n) a\nLEFT JOIN (\nSELECT\nstandard_name\n,verify_date_id\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND ord_up_type_name = '升单'\nAND is_valid = 1\n) b\nON a.verify_date_id = b.verify_date_id\nGROUP BY a.standard_name\n;"
   },
   {
     "asset_type": "metric",

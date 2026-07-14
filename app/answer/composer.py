@@ -1,7 +1,5 @@
-from app.core.config import settings
 from app.intent_router.router import IntentRouteResult
 from app.knowledge_indexer.retrieval_context import RetrievalContext
-from app.llm.sql_generator import LLMSqlResult
 from app.models.query import (
     LlmSqlResult as LlmSqlResultModel,
     LlmSqlValidation,
@@ -61,76 +59,6 @@ class AnswerComposer:
             pipeline_trace=result.trace.to_dict() if result.trace else {},
         )
 
-    # ------------------------------------------------------------------
-    # LLM SQL shadow mode
-    # ------------------------------------------------------------------
-
-    def _generate_llm_sql(
-        self,
-        query_plan: QueryPlan,
-        schema_graph: SchemaGraph,
-    ) -> tuple[str, LlmSqlValidation, LlmSqlResultModel]:
-        result = self.llm_sql_generator.generate(
-            cot_steps=query_plan.query_plan_cot,
-            schema_graph=schema_graph,
-        )
-        if not result.generated:
-            return "", LlmSqlValidation(), self._to_result_model(result)
-
-        safety = self.sql_safety_gate.validate(result.sql, schema_graph)
-        if not safety.passed:
-            repair = self.sql_repairer.repair(
-                sql=result.sql,
-                semantic_contract=query_plan.semantic_contract,
-                schema_graph=schema_graph,
-                errors=safety.errors,
-            )
-            if repair.repaired:
-                repaired_safety = self.sql_safety_gate.validate(repair.sql, schema_graph)
-                if repaired_safety.passed:
-                    result.sql = repair.sql
-                    result.explanation = (
-                        (result.explanation + "；") if result.explanation else ""
-                    ) + "静态修复：" + "、".join(repair.fixes)
-                    safety = repaired_safety
-                else:
-                    safety.errors.extend(
-                        f"repair_failed:{error}" for error in repaired_safety.errors
-                    )
-        return result.sql, LlmSqlValidation(
-            passed=safety.passed,
-            errors=safety.errors,
-            warnings=safety.warnings,
-            used_tables=safety.used_tables,
-            used_fields=safety.used_fields,
-        ), self._to_result_model(result)
-
-    def _repair_template_sql(
-        self,
-        template_sql: str,
-        query_plan: QueryPlan,
-        schema_graph: SchemaGraph,
-    ) -> str:
-        repair = self.sql_repairer.repair(
-            sql=template_sql,
-            semantic_contract=query_plan.semantic_contract,
-            schema_graph=schema_graph,
-            errors=[],
-        )
-        if not repair.repaired:
-            return template_sql
-        safety = self.sql_safety_gate.validate(repair.sql, schema_graph)
-        return repair.sql if safety.passed else template_sql
-
-    def _to_result_model(self, result: LLMSqlResult) -> LlmSqlResultModel:
-        return LlmSqlResultModel(
-            sql=result.sql,
-            used_tables=result.used_tables,
-            used_fields=result.used_fields,
-            explanation=result.explanation,
-            generated=result.generated,
-            error=result.error,
-        )
 
     def _contract_caliber_notes(self, semantic_contract) -> list[str]:
         notes: list[str] = []
@@ -188,21 +116,6 @@ class AnswerComposer:
 
         return notes
 
-    def _apply_semantic_route_override(
-        self,
-        route_result: IntentRouteResult,
-        semantic_contract,
-    ) -> IntentRouteResult:
-        if semantic_contract.intent == route_result.intent:
-            return route_result
-        if semantic_contract.intent == "nl2sql":
-            return route_result
-        return IntentRouteResult(
-            intent=semantic_contract.intent,
-            confidence=0.95,
-            reason=semantic_contract.reject_reason or "业务语义约束层覆盖意图",
-            evidence=semantic_contract.required_fields + semantic_contract.metrics,
-        )
 
     # ------------------------------------------------------------------
     # explain / non-nl2sql
@@ -248,6 +161,7 @@ class AnswerComposer:
             retrieval_trace=retrieval_context.raw_matches,
             retrieval_context=retrieval_context.to_dict(),
             schema_graph=self._schema_graph_payload(schema_result),
+            pipeline_trace=pipeline_trace or {},
         )
 
     def _schema_graph_payload(self, schema_result: dict) -> dict:

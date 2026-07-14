@@ -42,6 +42,35 @@ class KnowledgeSearchService:
         matches = self.search(query_text, top_k=top_k)
         return self.context_builder.build(query_text, matches)
 
+    def search_structured_with_trace(
+        self,
+        query_text: str,
+        top_k: int = 10,
+    ) -> tuple[RetrievalContext, dict[str, Any]]:
+        """Search knowledge assets and expose recall-stage trace.
+
+        This keeps Pipeline orchestration clean: callers do not need to know
+        about Chroma, vector matches, RRF, or rerank internals.
+        """
+
+        self._ensure_initialized()
+        vector_matches = self.store.query(query_text, top_k=max(top_k, 10))
+
+        if hasattr(self.hybrid_retriever, "retrieve_with_trace"):
+            matches, trace = self.hybrid_retriever.retrieve_with_trace(
+                query_text=query_text,
+                vector_matches=vector_matches,
+                top_k=top_k,
+            )
+            return self.context_builder.build(query_text, matches), trace.to_dict()
+
+        matches = self.hybrid_retriever.retrieve(
+            query_text=query_text,
+            vector_matches=vector_matches,
+            top_k=top_k,
+        )
+        return self.context_builder.build(query_text, matches), {}
+
     def _ensure_initialized(self) -> None:
         if self.store.count() > 0:
             return

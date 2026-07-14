@@ -1,8 +1,8 @@
-"""AskDataPipeline — Text2SQL main chain with per-stage observability.
+"""AskDataPipeline: Text2SQL main chain with per-stage observability.
 
 Each stage is a private method that records inputs, outputs, errors,
 and latency in a PipelineTrace.  This makes it easy to answer the
-interview question "where did the error happen — retrieval, planning,
+interview question "where did the error happen: retrieval, planning,
 or SQL generation?"
 """
 
@@ -12,12 +12,11 @@ from typing import Any
 from app.core.config import settings
 from app.intent_router.router import IntentRouter, IntentRouteResult
 from app.knowledge_indexer.retrieval_context import RetrievalContext
-from app.knowledge_indexer.retrieval_context import RetrievalContext
 from app.knowledge_indexer.service import KnowledgeSearchService
 from app.llm.local_client import LocalLLMClient
 from app.llm.sql_generator import LLMSqlGenerator, LLMSqlResult
 from app.llm.sql_repairer import StaticSqlRepairer
-from app.llm.sql_safety_gate import SqlSafetyGate, SqlSafetyResult
+from app.llm.sql_safety_gate import SqlSafetyGate
 from app.models.query import (
     LlmSqlResult as LlmSqlResultModel,
     LlmSqlValidation,
@@ -149,20 +148,10 @@ class AskDataPipeline:
         )
         retrieval_trace_dict = {}
         try:
-            # Use trace-capable retrieval if available
-            if hasattr(self.knowledge_search.hybrid_retriever, "retrieve_with_trace"):
-                matches, retrieval_trace_obj = (
-                    self.knowledge_search.hybrid_retriever.retrieve_with_trace(
-                        query_text=question,
-                        vector_matches=self.knowledge_search.store.query(question, top_k=20),
-                        top_k=10,
-                    )
-                )
-                retrieval_trace_dict = retrieval_trace_obj.to_dict()
-                # Rebuild RetrievalContext from traced matches
-                ctx = self.knowledge_search.context_builder.build(question, matches)
-            else:
-                ctx = self.knowledge_search.search_structured(question, top_k=20)
+            ctx, retrieval_trace_dict = self.knowledge_search.search_structured_with_trace(
+                question,
+                top_k=20,
+            )
 
             stage.outputs = {
                 "metric_count": len(ctx.metrics),

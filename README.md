@@ -58,6 +58,44 @@ Chain-AskData 是面向新氧连锁经管业务的自然语言取数（NL2SQL）
 }
 ```
 
+## 总体架构
+
+项目按**离线 / 在线**分层，各层通过抽象接口解耦，可独立替换。
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  离线层（Offline）                                       │
+│  Raw Word/Excel/YAML                                     │
+│    → knowledge_importer → generated assets               │
+│    → app.offline.build_indexes → schema indexes (8 JSON) │
+│    → ChromaDB (897 chunks)                               │
+│                                                          │
+│  在线层（Online）                                        │
+│  User Question                                           │
+│    → Pipeline (8 stages)                                 │
+│      1. knowledge_retrieval  (keyword + vector + RRF)    │
+│      2. semantic_contract    (业务语义归一)              │
+│      3. schema_retrieval     (SchemaGraph 构建)          │
+│      4. intent_route         (意图路由)                  │
+│      5. query_plan           (QueryPlanCoT 生成)         │
+│      6. template_sql         (模板 SQL)                  │
+│      7. llm_sql              (Qwen SQL 生成 + 门禁)      │
+│      8. sql_selection        (受控切换)                  │
+│    → QueryResponse (SQL + caliber + trace)               │
+└─────────────────────────────────────────────────────────┘
+```
+
+### 可替换层
+
+| 层 | 当前默认 | 可替换为 |
+|----|---------|---------|
+| **Embedding** | `HashEmbedding` (128-dim, 本地) | `DashScopeEmbedding` (text-embedding-v4) |
+| **Rerank** | `LightweightReranker` (词法) | `DashScopeRerank` (qwen-rerank) |
+| **SQL 执行** | `MockExecutor` (dry-run) | `MaxComputeExecutor` (ODPS 只读) |
+| **向量库** | `ChromaDB` (本地) | `Milvus` / `FAISS` / `PGVector` |
+
+接口定义在 [app/model_clients/](app/model_clients/)，Pipeline 依赖接口而非具体实现。
+
 ## MVP Demo Query
 
 1. 昨天整体核销收入、核销GMV、核销人次、核销人数、核销客单价是多少？
@@ -110,8 +148,15 @@ Chain-AskData 是面向新氧连锁经管业务的自然语言取数（NL2SQL）
 ## 本地运行
 
 ```powershell
-# 创建 .env 文件（参考 .env.example）
-# 启动服务
+# 1. 离线构建索引与知识库（首次或资产变更后执行）
+python -m app.offline.build_indexes
+
+# 2. 查看资产质量报告
+python -m app.offline.asset_report
+
+# 3. 创建 .env 文件（参考 .env.example）
+
+# 4. 启动服务
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 

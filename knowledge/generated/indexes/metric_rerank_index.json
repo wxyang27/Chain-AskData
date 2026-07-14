@@ -7,7 +7,7 @@
     "source_tables": [
       "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
     ],
-    "rerank_text": "指标：核销gmv 指标编码：A001 指标类型：atomic 定义：统计周期内，连锁业务总核销gmv 公式：SUM(exe_amount) 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT  SUM(exe_amount) 核销gmv\nFROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE   dp = DATE_SUB(CURRENT_DATE(),1)\nAND     is_valid = 1\n 备注："
+    "rerank_text": "指标：核销gmv 指标编码：A001 指标类型：atomic 定义：统计周期内，连锁业务总核销gmv 公式：SUM(金额字段) 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT SUM(exe_amount) 核销gmv\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_valid = 1 备注："
   },
   {
     "asset_type": "metric",
@@ -17,7 +17,7 @@
     "source_tables": [
       "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
     ],
-    "rerank_text": "指标：核销收入 指标编码：A002 指标类型：atomic 定义：统计周期内，连锁业务总核销收入 公式：SUM(exe_income) 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT  SUM(exe_income) 核销收入\nFROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE   dp = DATE_SUB(CURRENT_DATE(),1)\nAND     is_valid = 1\n 备注："
+    "rerank_text": "指标：核销收入 指标编码：A002 指标类型：atomic 定义：统计周期内，连锁业务总核销收入 公式：SUM(金额字段) 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT SUM(exe_income) 核销收入\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_valid = 1 备注："
   },
   {
     "asset_type": "metric",
@@ -27,7 +27,7 @@
     "source_tables": [
       "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
     ],
-    "rerank_text": "指标：核销客单价 指标编码：A003 指标类型：atomic 定义：统计周期内，总核销收入/总核销人次 公式：SUM(exe_income) / COUNT(DISTINCT verify_date_id) 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT SUM(exe_income)/COUNT(DISTINCT verify_date_id) 核销客单价\nFROM  soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_valid = 1\n 备注：⚠ 原SQL使用verify_date_id统计人次，请确认是否等同于核销人次"
+    "rerank_text": "指标：核销客单价 指标编码：A003 指标类型：atomic 定义：统计周期内，总核销收入/总核销人次 公式：SUM(收入) / COUNT(DISTINCT 人次) 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT SUM(exe_income)/COUNT(DISTINCT verify_date_id) 核销客单价\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_valid = 1 备注：⚠ 原SQL使用verify_date_id统计人次，请确认是否等同于核销人次"
   },
   {
     "asset_type": "metric",
@@ -37,7 +37,7 @@
     "source_tables": [
       "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
     ],
-    "rerank_text": "指标：核销服务点数 指标编码：A004 指标类型：atomic 定义：统计周期内，总核销服务点数 公式：SUM(exe_cnt) 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT  SUM(exe_cnt) 核销服务点数\nFROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE   dp = DATE_SUB(CURRENT_DATE(),1)\nAND     is_valid = 1\n 备注："
+    "rerank_text": "指标：核销服务点数 指标编码：A004 指标类型：atomic 定义：统计周期内，总核销服务点数 公式：SUM(exe_cnt) 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT SUM(exe_cnt) 核销服务点数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_valid = 1 备注："
   },
   {
     "asset_type": "metric",
@@ -47,7 +47,7 @@
     "source_tables": [
       "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
     ],
-    "rerank_text": "指标：核销人数 指标编码：A005 指标类型：atomic 定义：统计周期内，总核销用户数 公式：COUNT(DISTINCT customer_id) 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT COUNT(DISTINCT customer_id) 核销人数\nFROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE   dp = DATE_SUB(CURRENT_DATE(),1)\nAND     is_valid = 1\n 备注："
+    "rerank_text": "指标：核销人数 指标编码：A005 指标类型：atomic 定义：统计周期内，总核销用户数 公式：COUNT(DISTINCT uid) 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT COUNT(DISTINCT customer_id) 核销人数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_valid = 1 备注："
   },
   {
     "asset_type": "metric",
@@ -57,7 +57,7 @@
     "source_tables": [
       "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
     ],
-    "rerank_text": "指标：核销人次 指标编码：A006 指标类型：atomic 定义：统计周期内，总核销人次 公式：COUNT(DISTINCT verify_date_id) 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT  count(DISTINCT verify_date_id) 核销人次\nFROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE   dp = DATE_SUB(CURRENT_DATE(),1)\nAND     is_valid = 1\n 备注："
+    "rerank_text": "指标：核销人次 指标编码：A006 指标类型：atomic 定义：统计周期内，总核销人次 公式：COUNT(DISTINCT verify_date_id) 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT count(DISTINCT verify_date_id) 核销人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_valid = 1 备注："
   },
   {
     "asset_type": "metric",
@@ -67,7 +67,7 @@
     "source_tables": [
       "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
     ],
-    "rerank_text": "指标：核销订单数 指标编码：A007 指标类型：atomic 定义：统计周期内，总核销订单数 公式：COUNT(DISTINCT main_order_id) 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT  count(DISTINCT main_order_id) 核销订单数\nFROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE   dp = DATE_SUB(CURRENT_DATE(),1)\nAND     is_valid = 1\n 备注："
+    "rerank_text": "指标：核销订单数 指标编码：A007 指标类型：atomic 定义：统计周期内，总核销订单数 公式：COUNT(DISTINCT order_id) 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT count(DISTINCT main_order_id) 核销订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_valid = 1 备注："
   },
   {
     "asset_type": "metric",
@@ -77,7 +77,7 @@
     "source_tables": [
       "soyoung_dw.dm_opt_qy_order_info_all_d"
     ],
-    "rerank_text": "指标：支付gmv 指标编码：A008 指标类型：atomic 定义：统计周期内，总支付gmv(剔除当日退款) 公式：SUM(pay_gmv) 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：select sum(pay_gmv) as 支付gmv\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_paydate_cash = 0\n 备注："
+    "rerank_text": "指标：支付gmv 指标编码：A008 指标类型：atomic 定义：统计周期内，总支付gmv(剔除当日退款) 公式：SUM(金额字段) 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：select sum(pay_gmv) as 支付gmv\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_paydate_cash = 0\n; 备注："
   },
   {
     "asset_type": "metric",
@@ -87,7 +87,7 @@
     "source_tables": [
       "soyoung_dw.dm_opt_qy_order_info_all_d"
     ],
-    "rerank_text": "指标：支付订单数 指标编码：A009 指标类型：atomic 定义：统计周期内，总支付订单数(剔除当日退款) 公式：COUNT(DISTINCT main_order_id) 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：select count(distinct main_order_id) as 支付订单数\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_paydate_cash = 0\n 备注："
+    "rerank_text": "指标：支付订单数 指标编码：A009 指标类型：atomic 定义：统计周期内，总支付订单数(剔除当日退款) 公式：COUNT(DISTINCT order_id) 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：select count(disticnt main_order_id) as 支付订单数\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_paydate_cash = 0\n; 备注："
   },
   {
     "asset_type": "metric",
@@ -97,7 +97,7 @@
     "source_tables": [
       "soyoung_dw.dm_opt_qy_order_info_all_d"
     ],
-    "rerank_text": "指标：支付人数 指标编码：A010 指标类型：atomic 定义：统计周期内，总支付人数(剔除当日退款) 公式：COUNT(DISTINCT uid) 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT  COUNT(DISTINCT uid) as 支付人数\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_paydate_cash = 0\n 备注："
+    "rerank_text": "指标：支付人数 指标编码：A010 指标类型：atomic 定义：统计周期内，总支付人数(剔除当日退款) 公式：COUNT(DISTINCT uid) 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT COUNT(DISTINCT uid) as 支付人数\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_paydate_cash = 0\n; 备注："
   },
   {
     "asset_type": "metric",
@@ -107,7 +107,7 @@
     "source_tables": [
       "soyoung_dw.dm_opt_qy_order_info_all_d"
     ],
-    "rerank_text": "指标：支付客单价 指标编码：A011 指标类型：atomic 定义：统计周期内，总支付GMV/总支付人次(剔除当日退款) 公式：SUM(pay_gmv) / COUNT(DISTINCT CONCAT(uid, pay_date)) 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT sum(pay_gmv)/count(distinct concat(uid,pay_date)) as 支付客单价\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_paydate_cash = 0\n 备注："
+    "rerank_text": "指标：支付客单价 指标编码：A011 指标类型：atomic 定义：统计周期内，总支付GMV/总支付人次(剔除当日退款) 公式：SUM(收入) / COUNT(DISTINCT 人次) 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT sum(pay_gmv)/count(distinct concat(uid,pay_date)) as 支付客单价\nfrom soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND is_paydate_cash = 0\n; 备注："
   },
   {
     "asset_type": "metric",
@@ -117,7 +117,7 @@
     "source_tables": [
       "soyoung_dw.dm_opt_qy_order_info_all_d"
     ],
-    "rerank_text": "指标：待核销gmv 指标编码：A012 指标类型：atomic 定义：统计周期内，总待核销gmv 公式：SUM(left_gmv) 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT sum(left_gmv) as 待核销gmv\nFROM  soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND left_num > 0\n 备注："
+    "rerank_text": "指标：待核销gmv 指标编码：A012 指标类型：atomic 定义：统计周期内，总待核销gmv 公式：SUM(金额字段) 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT\nsum(left_gmv) as 待核销gmv\nFROM soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND left_num > 0\n; 备注："
   },
   {
     "asset_type": "metric",
@@ -127,7 +127,7 @@
     "source_tables": [
       "soyoung_dw.dm_opt_qy_order_info_all_d"
     ],
-    "rerank_text": "指标：待核销服务点 指标编码：A013 指标类型：atomic 定义：统计周期内，总待核销服务点 公式：SUM(left_num) 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT sum(left_num) as 待核销服务点\nFROM  soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND left_num > 0\n 备注："
+    "rerank_text": "指标：待核销服务点 指标编码：A013 指标类型：atomic 定义：统计周期内，总待核销服务点 公式：SUM(exe_cnt) 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT\nsum(left_num) as 待核销服务点\nFROM soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND left_num > 0\n; 备注："
   },
   {
     "asset_type": "metric",
@@ -137,7 +137,7 @@
     "source_tables": [
       "soyoung_dw.dm_opt_qy_order_info_all_d"
     ],
-    "rerank_text": "指标：待核销订单数 指标编码：A014 指标类型：atomic 定义：统计周期内，总待核销订单数 公式：COUNT(DISTINCT main_order_id) 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT COUNT(DISTINCT main_order_id) as 待核销订单数\nFROM  soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND left_num > 0\n 备注："
+    "rerank_text": "指标：待核销订单数 指标编码：A014 指标类型：atomic 定义：统计周期内，总待核销订单数 公式：COUNT(DISTINCT order_id) 来源表：['soyoung_dw.dm_opt_qy_order_info_all_d'] SQL：SELECT\nCOUNT(DISTINCT main_order_id) as 待核销订单数\nFROM soyoung_dw.dm_opt_qy_order_info_all_d\nWHERE dp = DATE_SUB(CURRENT_DATE(),1)\nAND left_num > 0\n; 备注："
   },
   {
     "asset_type": "metric",
@@ -147,7 +147,7 @@
     "source_tables": [
       "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
     ],
-    "rerank_text": "指标：升单订单数 指标编码：A015 指标类型：atomic 定义：统计周期内，升单的总订单数 公式：COUNT(DISTINCT main_order_id) 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT COUNT(DISTINCT main_order_id) as 升单订单数\nFROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE   dp = DATE_SUB(current_date(),1)\nAND     is_up = 1\nAND     is_valid = 1\n 备注："
+    "rerank_text": "指标：升单订单数 指标编码：A015 指标类型：atomic 定义：统计周期内，升单的总订单数 公式：COUNT(DISTINCT order_id) 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT\nCOUNT(DISTINCT main_order_id) as 升单订单数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND is_valid = 1 备注："
   },
   {
     "asset_type": "metric",
@@ -157,7 +157,7 @@
     "source_tables": [
       "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
     ],
-    "rerank_text": "指标：升单人数 指标编码：A016 指标类型：atomic 定义：统计周期内，升单的总用户数 公式：COUNT(DISTINCT customer_id) 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT COUNT(DISTINCT customer_id) AS 升单人数\nFROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE   dp = DATE_SUB(current_date(),1)\nAND     is_up = 1\nAND     is_valid = 1\n 备注："
+    "rerank_text": "指标：升单人数 指标编码：A016 指标类型：atomic 定义：统计周期内，升单的总用户数 公式：COUNT(DISTINCT uid) 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT\nCOUNT(DISTINCT customer_id) AS 升单人数\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND is_valid = 1 备注："
   },
   {
     "asset_type": "metric",
@@ -167,7 +167,7 @@
     "source_tables": [
       "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
     ],
-    "rerank_text": "指标：升单人次 指标编码：A017 指标类型：atomic 定义：统计周期内，升单的总人次 公式：COUNT(DISTINCT verify_date_id) 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT  COUNT(DISTINCT verify_date_id) AS 升单人次\nFROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE   dp = DATE_SUB(current_date(),1)\nAND     is_up = 1\nAND     is_valid = 1\n 备注："
+    "rerank_text": "指标：升单人次 指标编码：A017 指标类型：atomic 定义：统计周期内，升单的总人次 公式：COUNT(DISTINCT verify_date_id) 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT COUNT(DISTINCT verify_date_id) AS 升单人次\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND is_up = 1\nAND is_valid = 1 备注："
   },
   {
     "asset_type": "metric",
@@ -177,7 +177,7 @@
     "source_tables": [
       "soyoung_dw.dws_qy_sc_ware_stock_stats_all_d"
     ],
-    "rerank_text": "指标：库存数 指标编码：A018 指标类型：atomic 定义：截止至今，总库存数量 公式：SUM(warehouse_stock_num_td) 来源表：['soyoung_dw.dws_qy_sc_ware_stock_stats_all_d'] SQL：SELECT ware_name,\n       ROUND(SUM(warehouse_stock_num_td), 0) AS 库存数\nFROM soyoung_dw.dws_qy_sc_ware_stock_stats_all_d\nWHERE pt = DATE_SUB(CURRENT_DATE(), 1)\nGROUP BY ware_name\n 备注："
+    "rerank_text": "指标：库存数 指标编码：A018 指标类型：atomic 定义：截止至今，总库存数量 公式： 来源表：['soyoung_dw.dws_qy_sc_ware_stock_stats_all_d'] SQL：SELECT ware_name,\nROUND(SUM(warehouse_stock_num_td), 0) AS 库存数\nFROM soyoung_dw.dws_qy_sc_ware_stock_stats_all_d\nWHERE pt = DATE_SUB(CURRENT_DATE(), 1)\nGROUP BY ware_name 备注："
   },
   {
     "asset_type": "metric",
@@ -187,7 +187,7 @@
     "source_tables": [
       "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
     ],
-    "rerank_text": "指标：相控微针升单率 指标编码：A019 指标类型：atomic 定义：统计周期内，原单为相控微针且当日发生升单的核销人次/相控微针原单核销人次 公式：升单人次 / 原单核销人次 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT a.standard_name,\n       COUNT(DISTINCT IF(b.verify_date_id IS NOT NULL,a.verify_date_id,NULL))\n       / COUNT(DISTINCT a.verify_date_id) 升单率\nFROM (\n    SELECT standard_name, verify_date_id\n    FROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\n    WHERE dp = DATE_SUB(current_date(),1)\n    AND is_valid = 1\n    AND standard_name REGEXP '相控微针'\n    AND ord_up_type_name = '原单'\n) a\nLEFT JOIN (\n    SELECT standard_name, verify_date_id\n    FROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\n    WHERE dp = DATE_SUB(current_date(),1)\n    AND ord_up_type_name = '升单'\n    AND is_valid = 1\n) b ON a.verify_date_id = b.verify_date_id\nGROUP BY a.standard_name\n 备注："
+    "rerank_text": "指标：相控微针升单率 指标编码：A019 指标类型：atomic 定义：统计周期内，原单为相控微针且当日发生升单的核销人次/相控微针原单核销人次 公式：分子指标 / 分母指标 来源表：['soyoung_dw.dm_opt_qy_user_execution_record_all_d'] SQL：SELECT a.standard_name ,COUNT(DISTINCT IF(b.verify_date_id IS NOT NULL,a.verify_date_id,NULL)) / COUNT(DISTINCT a.verify_date_id)升单率\nFROM (\nSELECT standard_name\n,verify_date_id\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nand is_valid = 1\nAND standard_name REGEXP '相控微针'\nAND ord_up_type_name = '原单'\n) a\nLEFT JOIN (\nSELECT\nstandard_name\n,verify_date_id\nFROM soyoung_dw.dm_opt_qy_user_execution_record_all_d\nWHERE dp = DATE_SUB(current_date(),1)\nAND ord_up_type_name = '升单'\nAND is_valid = 1\n) b\nON a.verify_date_id = b.verify_date_id\nGROUP BY a.standard_name\n; 备注："
   },
   {
     "asset_type": "metric",
