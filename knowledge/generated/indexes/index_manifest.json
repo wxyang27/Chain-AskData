@@ -1,0 +1,7 @@
+{
+  "embedding_provider": "LocalHashEmbeddingClient",
+  "embedding_dimension": 128,
+  "rerank_provider": "lightweight",
+  "build_time": "2026-07-14T06:35:42.458920+00:00",
+  "chunk_count": 897
+}

@@ -4,6 +4,7 @@ from app.knowledge_indexer.chroma_store import ChromaKnowledgeStore
 from app.knowledge_indexer.hybrid_retriever import HybridRetriever
 from app.knowledge_indexer.loader import load_knowledge_chunks
 from app.knowledge_indexer.retrieval_context import RetrievalContext, RetrievalContextBuilder
+from app.model_clients.factory import create_rerank_client
 from app.schema_index.loader import SchemaIndexLoader
 
 
@@ -27,6 +28,7 @@ class KnowledgeSearchService:
         self.hybrid_retriever = HybridRetriever(
             self.chunks,
             schema_indexes=self.schema_indexes,
+            rerank_client=create_rerank_client(),
         )
 
     def search(self, query_text: str, top_k: int = 5) -> list[dict[str, Any]]:

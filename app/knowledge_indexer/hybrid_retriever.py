@@ -3,6 +3,7 @@ from typing import Any
 from app.knowledge_indexer.keyword_extractor import KeywordExtractor
 from app.knowledge_indexer.reranker import LightweightReranker
 from app.knowledge_indexer.types import KnowledgeChunk
+from app.model_clients.rerank_client import RerankClient
 from app.schema_index.loader import SchemaIndexBundle
 from app.schema_retrieval.objects import RecallHit, SchemaRetrievalTrace
 
@@ -40,11 +41,13 @@ class HybridRetriever:
         keyword_extractor: KeywordExtractor | None = None,
         reranker: LightweightReranker | None = None,
         schema_indexes: SchemaIndexBundle | None = None,
+        rerank_client: RerankClient | None = None,
     ):
         self.chunks = chunks
         self.keyword_extractor = keyword_extractor or KeywordExtractor()
         self.reranker = reranker or LightweightReranker()
         self.schema_indexes = schema_indexes
+        self.rerank_client = rerank_client  # optional pluggable reranker
 
     def retrieve(
         self,
@@ -67,7 +70,7 @@ class HybridRetriever:
             }
             for item in fused
         ]
-        return self.reranker.rerank(query_text, candidates, top_k)
+        return self._apply_rerank(query_text, candidates, top_k)
 
     def retrieve_with_trace(
         self,
@@ -150,7 +153,7 @@ class HybridRetriever:
             }
             for item in fused
         ]
-        reranked = self.reranker.rerank(query_text, candidates, top_k)
+        reranked = self._apply_rerank(query_text, candidates, top_k)
         trace.rerank_hits = [
             RecallHit(
                 id=_match_id(m),
@@ -165,6 +168,31 @@ class HybridRetriever:
         ]
 
         return reranked, trace
+
+    def _apply_rerank(
+        self,
+        query_text: str,
+        candidates: list[dict[str, Any]],
+        top_k: int,
+    ) -> list[dict[str, Any]]:
+        """Apply reranker — pluggable client or local default."""
+        if self.rerank_client is not None:
+            try:
+                docs = [c.get("document", "") for c in candidates]
+                results = self.rerank_client.rerank(query_text, docs, top_k)
+                reranked = []
+                for r_item in results:
+                    idx = r_item.get("index", 0)
+                    if 0 <= idx < len(candidates):
+                        c = candidates[idx].copy()
+                        c["rerank_score"] = r_item.get("score", 0.0)
+                        c["rerank_provider"] = self.rerank_client.provider_name
+                        reranked.append(c)
+                return reranked[:top_k]
+            except Exception:
+                pass  # fall back to local reranker on any error
+        # Default: local LightweightReranker
+        return self.reranker.rerank(query_text, candidates, top_k)
 
     def _keyword_retrieve(self, query_text: str, limit: int) -> list[dict[str, Any]]:
         keywords = self.keyword_extractor.extract(query_text)

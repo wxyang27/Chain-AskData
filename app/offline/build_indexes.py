@@ -74,6 +74,23 @@ def build_indexes() -> dict[str, int]:
     print(f"  collection: {store.collection_name}")
     print(f"  chunks:     {store.count()}")
 
+    # 4. Write manifest
+    print("\n[4/4] Writing index manifest ...")
+    from datetime import datetime, timezone
+    from app.model_clients.factory import create_embedding_client, create_rerank_client
+    emb = create_embedding_client()
+    rerank = create_rerank_client()
+    manifest = {
+        "embedding_provider": emb.__class__.__name__,
+        "embedding_dimension": emb.dimension,
+        "rerank_provider": rerank.provider_name,
+        "build_time": datetime.now(timezone.utc).isoformat(),
+        "chunk_count": store.count(),
+    }
+    manifest_path = INDEXES_DIR / "index_manifest.json"
+    manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"  manifest: {json.dumps(manifest, ensure_ascii=False)}")
+
     print("\n" + "=" * 60)
     print("  Build complete.")
     print(f"  Indexes: {INDEXES_DIR.resolve()}")

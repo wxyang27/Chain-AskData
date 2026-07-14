@@ -3,9 +3,10 @@ from typing import Any
 
 import chromadb
 
-from app.knowledge_indexer.embeddings import HashEmbedding
 from app.knowledge_indexer.reranker import LightweightReranker
 from app.knowledge_indexer.types import ChromaInitResult, KnowledgeChunk
+from app.model_clients.embedding_client import EmbeddingClient
+from app.model_clients.factory import create_embedding_client
 
 
 TYPED_COLLECTIONS = {
@@ -23,12 +24,13 @@ class ChromaKnowledgeStore:
         self,
         persist_dir: str = "data/chroma",
         collection_name: str = "chain_askdata_knowledge",
-        embedding: HashEmbedding | None = None,
+        embedding: EmbeddingClient | None = None,
         reranker: LightweightReranker | None = None,
     ):
         self.persist_dir = persist_dir
         self.collection_name = collection_name
-        self.embedding = embedding or HashEmbedding()
+        self.embedding = embedding or create_embedding_client()
+        self._embedding_dimension = self.embedding.dimension
         self.reranker = reranker or LightweightReranker()
         Path(self.persist_dir).mkdir(parents=True, exist_ok=True)
         self.client = chromadb.PersistentClient(path=self.persist_dir)
@@ -49,7 +51,7 @@ class ChromaKnowledgeStore:
             ids=[chunk.chunk_id for chunk in chunks],
             documents=documents,
             metadatas=[chunk.metadata for chunk in chunks],
-            embeddings=self.embedding.embed_many(documents),
+            embeddings=self.embedding.embed_texts(documents),
         )
         self._initialize_typed_collections(chunks)
 
@@ -64,7 +66,7 @@ class ChromaKnowledgeStore:
         collection_count = collection.count()
         candidate_count = min(max(top_k * 20, 100), collection_count) if collection_count else top_k
         result = collection.query(
-            query_embeddings=[self.embedding.embed(query_text)],
+            query_embeddings=[self.embedding.embed_query(query_text)],
             n_results=candidate_count,
             include=["documents", "metadatas", "distances"],
         )
@@ -110,7 +112,7 @@ class ChromaKnowledgeStore:
                 ids=[chunk.chunk_id for chunk in typed_chunks],
                 documents=documents,
                 metadatas=[chunk.metadata for chunk in typed_chunks],
-                embeddings=self.embedding.embed_many(documents),
+                embeddings=self.embedding.embed_texts(documents),
             )
 
     def _delete_collection_if_exists(self, collection_name: str | None = None) -> None:
