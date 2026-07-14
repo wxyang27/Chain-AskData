@@ -11,6 +11,17 @@ from app.pipeline.pipeline import AskDataPipeline
 from app.schema_graph.graph import SchemaGraph
 
 
+def _execution_to_dict(result) -> dict:
+    return {
+        "success": result.success,
+        "dry_run": result.dry_run,
+        "columns": result.columns,
+        "row_count": result.row_count,
+        "error_message": result.error_message,
+        "execution_ms": result.execution_ms,
+    }
+
+
 class AnswerComposer:
     """组装自然语言取数响应。"""
 
@@ -57,6 +68,10 @@ class AnswerComposer:
             llm_sql_detail=result.llm_sql_detail or LlmSqlResultModel(),
             sql_source=result.sql_source,
             pipeline_trace=result.trace.to_dict() if result.trace else {},
+            execution_result=(
+                _execution_to_dict(result.execution_result)
+                if result.execution_result else {}
+            ),
         )
 
 

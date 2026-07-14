@@ -10,6 +10,7 @@ from time import perf_counter
 from typing import Any
 
 from app.core.config import settings
+from app.executor.mock_executor import MockExecutor
 from app.intent_router.router import IntentRouter, IntentRouteResult
 from app.knowledge_indexer.retrieval_context import RetrievalContext
 from app.knowledge_indexer.service import KnowledgeSearchService
@@ -17,6 +18,7 @@ from app.llm.local_client import LocalLLMClient
 from app.llm.sql_generator import LLMSqlGenerator, LLMSqlResult
 from app.llm.sql_repairer import StaticSqlRepairer
 from app.llm.sql_safety_gate import SqlSafetyGate
+from app.model_clients.executor_client import ExecutionResult
 from app.models.query import (
     LlmSqlResult as LlmSqlResultModel,
     LlmSqlValidation,
@@ -69,6 +71,9 @@ class AskDataPipeline:
         self.sql_safety_gate = SqlSafetyGate()
         self.sql_repairer = StaticSqlRepairer()
 
+        # --- executor (mock → maxcompute) ---
+        self.executor = MockExecutor()
+
     # ------------------------------------------------------------------
     # public entry point
     # ------------------------------------------------------------------
@@ -111,6 +116,9 @@ class AskDataPipeline:
         )
         validation = self.validator.validate(final_sql)
 
+        # Stage 9: Execute SQL (mock → dry-run, future → MaxCompute)
+        execution_result = self._stage_sql_execution(final_sql, trace)
+
         trace.final_sql_source = sql_source
         trace.final_intent = route_result.intent
         trace.final_template_id = query_plan.template_id
@@ -132,6 +140,7 @@ class AskDataPipeline:
             llm_sql_detail=llm_sql_detail,
             template_id=query_plan.template_id,
             trace=trace,
+            execution_result=execution_result,
         )
 
     # ------------------------------------------------------------------
@@ -406,6 +415,33 @@ class AskDataPipeline:
         stage.latency_ms = _now_ms() - t0
         trace.add_stage(stage)
         return final_sql, sql_source
+
+    def _stage_sql_execution(
+        self, sql: str, trace: PipelineTrace,
+    ) -> ExecutionResult:
+        t0 = _now_ms()
+        stage = PipelineStageLog(
+            name="sql_execution",
+            inputs={"executor": self.executor.provider_name},
+        )
+        result = self.executor.execute(sql)
+        stage.outputs = {
+            "success": result.success,
+            "dry_run": result.dry_run,
+            "columns": result.columns,
+            "row_count": result.row_count,
+        }
+        if result.error_message:
+            stage.errors.append(result.error_message)
+            stage.status = "warning" if result.dry_run else "error"
+
+        stage.summary = (
+            f"success={result.success} dry_run={result.dry_run} "
+            f"cols={len(result.columns)} rows={result.row_count}"
+        )
+        stage.latency_ms = _now_ms() - t0
+        trace.add_stage(stage)
+        return result
 
     # ------------------------------------------------------------------
     # helpers

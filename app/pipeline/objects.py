@@ -73,3 +73,4 @@ class PipelineRunResult:
     llm_sql_detail: Any = None
     template_id: str = ""
     trace: PipelineTrace | None = None
+    execution_result: Any = None

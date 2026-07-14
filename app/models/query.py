@@ -217,3 +217,6 @@ class QueryResponse(BaseModel):
 
     # --- Pipeline observability ---
     pipeline_trace: dict[str, Any] = Field(default_factory=dict)
+
+    # --- SQL execution (mock → maxcompute) ---
+    execution_result: dict[str, Any] = Field(default_factory=dict)
