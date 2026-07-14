@@ -17,39 +17,16 @@
       "critical_field_recall": 1.0,
       "relation_recall": 0.0,
       "missing_fields": [],
-      "unexpected_fields": [
-        "customer_id",
-        "exe_amount",
-        "verify_date_id"
-      ],
+      "unexpected_fields": [],
       "supplied_fields": [
-        "customer_id",
         "dp",
-        "exe_amount",
         "executed_date",
         "is_valid",
         "sy_hospital_name",
-        "tenant_id",
-        "verify_date_id"
+        "tenant_id"
       ],
-      "field_source": {
-        "raw_retrieval": [
-          "exe_income"
-        ],
-        "domain_closure": [
-          "customer_id",
-          "dp",
-          "exe_amount",
-          "executed_date",
-          "is_valid",
-          "sy_hospital_name",
-          "tenant_id",
-          "verify_date_id"
-        ],
-        "metric_closure": []
-      },
       "raw_field_count": 1,
-      "closure_field_count": 9,
+      "closure_field_count": 5,
       "trace_keywords": [
         "核销收入",
         "门店",
@@ -72,42 +49,17 @@
         "executed_date",
         "is_paydate_cash",
         "is_valid",
-        "main_order_id",
-        "pay_date",
-        "pay_gmv",
-        "uid"
+        "pay_date"
       ],
       "supplied_fields": [
         "dp",
         "executed_date",
         "is_paydate_cash",
         "is_valid",
-        "main_order_id",
-        "pay_date",
-        "pay_gmv",
-        "uid"
+        "pay_date"
       ],
-      "field_source": {
-        "raw_retrieval": [
-          "left_gmv",
-          "left_num",
-          "sy_hospital_name",
-          "tenant_id"
-        ],
-        "domain_closure": [
-          "dp",
-          "executed_date",
-          "is_paydate_cash",
-          "is_valid",
-          "main_order_id",
-          "pay_date",
-          "pay_gmv",
-          "uid"
-        ],
-        "metric_closure": []
-      },
       "raw_field_count": 4,
-      "closure_field_count": 12,
+      "closure_field_count": 9,
       "trace_keywords": [
         "待核销金额",
         "待核销",
@@ -133,9 +85,7 @@
         "is_new",
         "left_gmv",
         "left_num",
-        "main_order_id",
         "stat_date",
-        "tenant_id",
         "verify_date_id"
       ],
       "supplied_fields": [
@@ -147,37 +97,11 @@
         "is_paydate_cash",
         "left_gmv",
         "left_num",
-        "main_order_id",
         "pay_date",
-        "tenant_id",
         "verify_date_id"
       ],
-      "field_source": {
-        "raw_retrieval": [
-          "pay_flag",
-          "pay_gmv",
-          "stat_date",
-          "uid"
-        ],
-        "domain_closure": [
-          "dp",
-          "is_new",
-          "is_pay_new",
-          "is_paydate_cash",
-          "left_gmv",
-          "left_num",
-          "main_order_id",
-          "pay_date",
-          "tenant_id"
-        ],
-        "metric_closure": [
-          "customer_id",
-          "exe_income",
-          "verify_date_id"
-        ]
-      },
       "raw_field_count": 4,
-      "closure_field_count": 14,
+      "closure_field_count": 12,
       "trace_keywords": [
         "支付GMV",
         "支付客单价",
@@ -197,40 +121,15 @@
       "critical_field_recall": 1.0,
       "relation_recall": 1.0,
       "missing_fields": [],
-      "unexpected_fields": [
-        "customer_id",
-        "exe_amount",
-        "tenant_id",
-        "verify_date_id"
-      ],
+      "unexpected_fields": [],
       "supplied_fields": [
-        "customer_id",
         "dp",
-        "exe_amount",
         "executed_date",
         "is_valid",
-        "revenue_category",
-        "tenant_id",
-        "verify_date_id"
+        "revenue_category"
       ],
-      "field_source": {
-        "raw_retrieval": [
-          "exe_income"
-        ],
-        "domain_closure": [
-          "customer_id",
-          "dp",
-          "exe_amount",
-          "executed_date",
-          "is_valid",
-          "revenue_category",
-          "tenant_id",
-          "verify_date_id"
-        ],
-        "metric_closure": []
-      },
       "raw_field_count": 1,
-      "closure_field_count": 9,
+      "closure_field_count": 4,
       "trace_keywords": [
         "核销收入"
       ],
@@ -248,38 +147,17 @@
       "relation_recall": 1.0,
       "missing_fields": [],
       "unexpected_fields": [
-        "exe_amount",
-        "tenant_id",
         "verify_date_id"
       ],
       "supplied_fields": [
         "dp",
-        "exe_amount",
         "executed_date",
         "is_valid",
         "main_order_id",
-        "tenant_id",
         "verify_date_id"
       ],
-      "field_source": {
-        "raw_retrieval": [
-          "customer_id",
-          "exe_income"
-        ],
-        "domain_closure": [
-          "dp",
-          "exe_amount",
-          "executed_date",
-          "is_valid",
-          "tenant_id"
-        ],
-        "metric_closure": [
-          "main_order_id",
-          "verify_date_id"
-        ]
-      },
       "raw_field_count": 2,
-      "closure_field_count": 9,
+      "closure_field_count": 7,
       "trace_keywords": [
         "核销人数"
       ],
@@ -298,7 +176,6 @@
       "missing_fields": [],
       "unexpected_fields": [
         "pay_gmv",
-        "tenant_id",
         "uid"
       ],
       "supplied_fields": [
@@ -307,29 +184,10 @@
         "executed_date",
         "is_valid",
         "pay_gmv",
-        "tenant_id",
         "uid"
       ],
-      "field_source": {
-        "raw_retrieval": [
-          "customer_id",
-          "exe_income",
-          "verify_date_id"
-        ],
-        "domain_closure": [
-          "dp",
-          "executed_date",
-          "is_valid",
-          "tenant_id"
-        ],
-        "metric_closure": [
-          "exe_amount",
-          "pay_gmv",
-          "uid"
-        ]
-      },
       "raw_field_count": 3,
-      "closure_field_count": 10,
+      "closure_field_count": 9,
       "trace_keywords": [
         "核销人数",
         "核销人次",
@@ -352,42 +210,16 @@
       "relation_recall": 1.0,
       "missing_fields": [],
       "unexpected_fields": [
-        "exe_amount",
-        "exe_income",
-        "item_product_id",
-        "tenant_id",
-        "verify_date_id"
+        "item_product_id"
       ],
       "supplied_fields": [
         "customer_id",
         "dp",
-        "exe_amount",
-        "exe_income",
         "executed_date",
-        "is_valid",
-        "tenant_id",
-        "verify_date_id"
+        "is_valid"
       ],
-      "field_source": {
-        "raw_retrieval": [
-          "item_product_id",
-          "standard_name"
-        ],
-        "domain_closure": [
-          "dp",
-          "exe_amount",
-          "exe_income",
-          "executed_date",
-          "is_valid",
-          "tenant_id",
-          "verify_date_id"
-        ],
-        "metric_closure": [
-          "customer_id"
-        ]
-      },
       "raw_field_count": 2,
-      "closure_field_count": 9,
+      "closure_field_count": 5,
       "trace_keywords": [
         "品项"
       ],
@@ -405,41 +237,18 @@
       "relation_recall": 1.0,
       "missing_fields": [],
       "unexpected_fields": [
-        "customer_id",
-        "exe_amount",
-        "tenant_id",
-        "verify_date_id"
+        "customer_id"
       ],
       "supplied_fields": [
         "customer_id",
         "cx_first_channel",
         "dp",
-        "exe_amount",
         "executed_date",
         "is_new",
-        "is_valid",
-        "tenant_id",
-        "verify_date_id"
+        "is_valid"
       ],
-      "field_source": {
-        "raw_retrieval": [
-          "exe_income"
-        ],
-        "domain_closure": [
-          "customer_id",
-          "cx_first_channel",
-          "dp",
-          "exe_amount",
-          "executed_date",
-          "is_new",
-          "is_valid",
-          "tenant_id",
-          "verify_date_id"
-        ],
-        "metric_closure": []
-      },
       "raw_field_count": 1,
-      "closure_field_count": 10,
+      "closure_field_count": 6,
       "trace_keywords": [
         "核销收入",
         "新客"
@@ -458,41 +267,18 @@
       "relation_recall": 1.0,
       "missing_fields": [],
       "unexpected_fields": [
-        "exe_amount",
         "exe_user_cnt",
-        "tenant_id",
         "up_user_cnt"
       ],
       "supplied_fields": [
         "customer_id",
         "dp",
-        "exe_amount",
         "executed_date",
         "is_up",
-        "is_valid",
-        "tenant_id"
+        "is_valid"
       ],
-      "field_source": {
-        "raw_retrieval": [
-          "exe_income",
-          "exe_user_cnt",
-          "up_user_cnt",
-          "verify_date_id"
-        ],
-        "domain_closure": [
-          "dp",
-          "exe_amount",
-          "executed_date",
-          "is_valid",
-          "tenant_id"
-        ],
-        "metric_closure": [
-          "customer_id",
-          "is_up"
-        ]
-      },
       "raw_field_count": 4,
-      "closure_field_count": 9,
+      "closure_field_count": 7,
       "trace_keywords": [
         "核销人次",
         "核销收入"
@@ -511,18 +297,11 @@
       "relation_recall": 0.0,
       "missing_fields": [],
       "unexpected_fields": [
-        "customer_id",
-        "exe_amount",
         "left_gmv",
-        "left_num",
-        "tenant_id",
-        "uid",
-        "verify_date_id"
+        "left_num"
       ],
       "supplied_fields": [
-        "customer_id",
         "dp",
-        "exe_amount",
         "exe_income",
         "executed_date",
         "is_paydate_cash",
@@ -531,35 +310,10 @@
         "left_num",
         "main_order_id",
         "pay_date",
-        "pay_gmv",
-        "tenant_id",
-        "uid",
-        "verify_date_id"
+        "pay_gmv"
       ],
-      "field_source": {
-        "raw_retrieval": [],
-        "domain_closure": [
-          "customer_id",
-          "dp",
-          "exe_amount",
-          "is_paydate_cash",
-          "is_valid",
-          "left_gmv",
-          "left_num",
-          "tenant_id",
-          "uid",
-          "verify_date_id"
-        ],
-        "metric_closure": [
-          "exe_income",
-          "executed_date",
-          "main_order_id",
-          "pay_date",
-          "pay_gmv"
-        ]
-      },
       "raw_field_count": 0,
-      "closure_field_count": 15,
+      "closure_field_count": 10,
       "trace_keywords": [],
       "trace_keyword_hits": 0,
       "trace_vector_hits": 20,
@@ -575,44 +329,22 @@
       "relation_recall": 1.0,
       "missing_fields": [],
       "unexpected_fields": [
-        "exe_amount",
         "pay_gmv",
-        "tenant_id",
         "uid"
       ],
       "supplied_fields": [
         "customer_id",
         "dp",
-        "exe_amount",
         "exe_income",
         "executed_date",
         "is_new",
         "is_valid",
         "pay_gmv",
-        "tenant_id",
         "uid",
         "verify_date_id"
       ],
-      "field_source": {
-        "raw_retrieval": [],
-        "domain_closure": [
-          "dp",
-          "exe_amount",
-          "executed_date",
-          "is_new",
-          "is_valid",
-          "tenant_id"
-        ],
-        "metric_closure": [
-          "customer_id",
-          "exe_income",
-          "pay_gmv",
-          "uid",
-          "verify_date_id"
-        ]
-      },
       "raw_field_count": 0,
-      "closure_field_count": 11,
+      "closure_field_count": 9,
       "trace_keywords": [
         "核销收入",
         "新客",
@@ -632,42 +364,19 @@
       "relation_recall": 1.0,
       "missing_fields": [],
       "unexpected_fields": [
-        "customer_id",
-        "exe_amount",
         "sy_hospital_name",
-        "tenant_id",
-        "verify_date_id"
+        "tenant_id"
       ],
       "supplied_fields": [
-        "customer_id",
         "dp",
-        "exe_amount",
         "executed_date",
         "is_valid",
         "standard_name",
         "sy_hospital_name",
-        "tenant_id",
-        "verify_date_id"
+        "tenant_id"
       ],
-      "field_source": {
-        "raw_retrieval": [
-          "exe_income"
-        ],
-        "domain_closure": [
-          "customer_id",
-          "dp",
-          "exe_amount",
-          "executed_date",
-          "is_valid",
-          "standard_name",
-          "sy_hospital_name",
-          "tenant_id",
-          "verify_date_id"
-        ],
-        "metric_closure": []
-      },
       "raw_field_count": 1,
-      "closure_field_count": 10,
+      "closure_field_count": 6,
       "trace_keywords": [
         "核销收入",
         "品项",
@@ -687,44 +396,21 @@
       "relation_recall": 1.0,
       "missing_fields": [],
       "unexpected_fields": [
-        "exe_amount",
         "pay_gmv",
-        "tenant_id",
         "uid"
       ],
       "supplied_fields": [
         "customer_id",
         "dp",
-        "exe_amount",
         "exe_income",
         "executed_date",
         "is_valid",
         "pay_gmv",
-        "tenant_id",
         "uid",
         "verify_date_id"
       ],
-      "field_source": {
-        "raw_retrieval": [
-          "cx_first_channel"
-        ],
-        "domain_closure": [
-          "dp",
-          "exe_amount",
-          "executed_date",
-          "is_valid",
-          "tenant_id"
-        ],
-        "metric_closure": [
-          "customer_id",
-          "exe_income",
-          "pay_gmv",
-          "uid",
-          "verify_date_id"
-        ]
-      },
       "raw_field_count": 1,
-      "closure_field_count": 11,
+      "closure_field_count": 9,
       "trace_keywords": [
         "核销收入"
       ],
@@ -741,39 +427,14 @@
       "critical_field_recall": 1.0,
       "relation_recall": 1.0,
       "missing_fields": [],
-      "unexpected_fields": [
-        "customer_id",
-        "exe_amount",
-        "tenant_id",
-        "verify_date_id"
-      ],
+      "unexpected_fields": [],
       "supplied_fields": [
-        "customer_id",
         "dp",
-        "exe_amount",
         "executed_date",
-        "is_valid",
-        "tenant_id",
-        "verify_date_id"
+        "is_valid"
       ],
-      "field_source": {
-        "raw_retrieval": [
-          "exe_income",
-          "revenue_category"
-        ],
-        "domain_closure": [
-          "customer_id",
-          "dp",
-          "exe_amount",
-          "executed_date",
-          "is_valid",
-          "tenant_id",
-          "verify_date_id"
-        ],
-        "metric_closure": []
-      },
       "raw_field_count": 2,
-      "closure_field_count": 9,
+      "closure_field_count": 4,
       "trace_keywords": [
         "核销收入"
       ],
@@ -801,26 +462,6 @@
         "pay_date",
         "pay_gmv"
       ],
-      "field_source": {
-        "raw_retrieval": [
-          "pay_flag",
-          "stat_date",
-          "uid",
-          "verify_date_id"
-        ],
-        "domain_closure": [
-          "dp",
-          "executed_date",
-          "is_paydate_cash",
-          "is_valid",
-          "pay_date"
-        ],
-        "metric_closure": [
-          "customer_id",
-          "exe_income",
-          "pay_gmv"
-        ]
-      },
       "raw_field_count": 4,
       "closure_field_count": 10,
       "trace_keywords": [

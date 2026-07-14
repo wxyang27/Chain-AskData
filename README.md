@@ -188,6 +188,9 @@ python eval/run_eval.py --api http://localhost:8000 --output eval/eval_result_YY
 | [eval/run_eval.py](eval/run_eval.py) | 评测 runner，调用 `/api/query` 并输出通过率、失败归因、质量门槛 |
 | [eval/README.md](eval/README.md) | 评测集设计、字段说明、质量门槛和运行方式 |
 | [eval/eval_result_20260710_after_fix.json](eval/eval_result_20260710_after_fix.json) | 2026-07-10 第二次全量评测结果 |
+| [eval/run_schema_retrieval_eval.py](eval/run_schema_retrieval_eval.py) | Schema 检索评测 runner |
+| [eval/schema_retrieval_eval.json](eval/schema_retrieval_eval.json) | Schema 检索评测集（15 条） |
+| [eval/schema_retrieval_eval_result.json](eval/schema_retrieval_eval_result.json) | Schema 检索最新评测结果 |
 
 ### Critical Rules
 
@@ -200,6 +203,31 @@ python eval/run_eval.py --api http://localhost:8000 --output eval/eval_result_YY
 | CR005 | 品项维度/过滤必须使用 `standard_name` |
 | CR006 | 渠道维度/过滤必须使用 `cx_first_channel` |
 | CR007 | 核销新老客使用 `is_new`，支付新老客使用 `is_pay_new` |
+
+### Schema Retrieval v2：三层召回架构
+
+检索不是黑盒，每个字段的来源可追溯：
+
+```
+raw_retrieval   → 关键词/向量/RRF/rerank 命中的字段（模型召回）
+domain_closure  → 业务域自动补全的字段（dp/is_valid/pay_date/tenant_id 等）
+metric_closure  → 指标级自动补全的字段（main_order_id/customer_id 等）
+───────────────────────────────────────────────────
+final_fields    → 最终进入 SchemaGraph 的字段
+```
+
+| 指标 | v1 (纯检索) | v2 (检索+闭包) |
+|------|-----------|--------------|
+| table_recall | 0.0% | **93.3%** |
+| field_recall | 25.0% | **93.3%** |
+| critical_field_recall | 53.9% | **100.0%** |
+| relation_recall | 80.0% | 80.0% |
+
+回归保护（CI 可执行）：
+```
+PYTHONPATH=. python eval/run_schema_retrieval_eval.py
+# Guards: critical>=95%  field>=85%  table>=85%  passed>=14/15
+```
 
 ### 2026-07-10 基线
 
