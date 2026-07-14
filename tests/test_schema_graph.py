@@ -1,8 +1,8 @@
-import unittest
+﻿import unittest
 
 from app.knowledge_indexer.retrieval_context import RetrievalContext, RetrievalHit
 from app.schema_graph.builder import SchemaGraphBuilder, format_schema_graph
-from app.schema_index.loader import SchemaIndexLoader
+from app.schema_indexing.loader import SchemaIndexLoader
 
 
 class SchemaGraphBuilderTestCase(unittest.TestCase):

@@ -22,3 +22,11 @@ class LocalHashEmbeddingClient(EmbeddingClient):
     @property
     def dimension(self) -> int:
         return self._hash.dimension
+
+    @property
+    def provider_name(self) -> str:
+        return "local"
+
+    @property
+    def model_name(self) -> str:
+        return f"hash-{self.dimension}"

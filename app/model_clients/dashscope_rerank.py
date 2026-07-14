@@ -24,11 +24,15 @@ class DashScopeRerankClient(RerankClient):
         model: str = "qwen3-rerank",
         top_n: int = 20,
         workspace_id: str = "",
+        base_url: str = "",
+        endpoint_mode: str = "auto",
     ):
         self._api_key = api_key
         self._model = model
         self._top_n = top_n
         self._workspace_id = workspace_id
+        self._endpoint_mode = endpoint_mode
+        self._url = base_url or self._default_url()
 
     def rerank(
         self,
@@ -41,24 +45,13 @@ class DashScopeRerankClient(RerankClient):
 
         n = top_n or self._top_n
 
-        # DashScope rerank endpoint
-        url = "https://dashscope.aliyuncs.com/api/v1/services/rerank/text-rerank/text-rerank"
-        payload = {
-            "model": self._model,
-            "input": {
-                "query": query,
-                "documents": documents,
-            },
-            "parameters": {
-                "top_n": min(n, len(documents)),
-                "return_documents": False,
-            },
-        }
+        url = self._url
+        payload = self._payload(query, documents, min(n, len(documents)))
         headers = {
             "Authorization": f"Bearer {self._api_key}",
             "Content-Type": "application/json; charset=utf-8",
         }
-        if self._workspace_id:
+        if self._workspace_id and not self._is_compatible_endpoint():
             headers["X-DashScope-WorkSpace"] = self._workspace_id
 
         data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
@@ -74,16 +67,56 @@ class DashScopeRerankClient(RerankClient):
         except urllib.error.URLError as exc:
             raise RuntimeError(f"DashScope rerank unreachable: {exc.reason}") from exc
 
-        results = body.get("output", {}).get("results", [])
+        results = self._extract_results(body)
         return [
             {
                 "document": documents[item.get("index", 0)],
                 "score": item.get("relevance_score", 0.0),
                 "index": item.get("index", 0),
             }
-            for item in sorted(results, key=lambda r: r.get("index", 0))
+            for item in sorted(results, key=lambda r: r.get("relevance_score", 0.0), reverse=True)
         ]
 
     @property
     def provider_name(self) -> str:
         return f"dashscope/{self._model}"
+
+    def _default_url(self) -> str:
+        if self._workspace_id:
+            return (
+                f"https://{self._workspace_id}.cn-beijing.maas.aliyuncs.com"
+                "/compatible-api/v1/reranks"
+            )
+        return "https://dashscope.aliyuncs.com/api/v1/services/rerank/text-rerank/text-rerank"
+
+    def _is_compatible_endpoint(self) -> bool:
+        if self._endpoint_mode == "compatible":
+            return True
+        if self._endpoint_mode == "dashscope":
+            return False
+        return "compatible-api/v1/reranks" in self._url
+
+    def _payload(self, query: str, documents: list[str], top_n: int) -> dict[str, Any]:
+        if self._is_compatible_endpoint():
+            return {
+                "model": self._model,
+                "query": query,
+                "documents": documents,
+                "top_n": top_n,
+            }
+        return {
+            "model": self._model,
+            "input": {
+                "query": query,
+                "documents": documents,
+            },
+            "parameters": {
+                "top_n": top_n,
+                "return_documents": False,
+            },
+        }
+
+    def _extract_results(self, body: dict[str, Any]) -> list[dict[str, Any]]:
+        if self._is_compatible_endpoint():
+            return body.get("results", [])
+        return body.get("output", {}).get("results", [])

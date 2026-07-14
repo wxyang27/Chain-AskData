@@ -4,7 +4,7 @@
   "passed": 14,
   "metrics": {
     "table_recall": 0.933,
-    "field_recall": 0.924,
+    "field_recall": 0.933,
     "critical_field_recall": 1.0,
     "relation_recall": 0.8
   },
@@ -20,12 +20,12 @@
       "unexpected_fields": [
         "customer_id",
         "exe_amount",
-        "pay_gmv",
         "verify_date_id"
       ],
       "supplied_fields": [
         "customer_id",
         "dp",
+        "exe_amount",
         "exe_income",
         "executed_date",
         "is_valid",
@@ -33,14 +33,13 @@
       ],
       "field_source": {
         "raw_retrieval": [
-          "exe_amount",
-          "pay_gmv",
           "sy_hospital_name",
           "tenant_id"
         ],
         "domain_closure": [
           "customer_id",
           "dp",
+          "exe_amount",
           "exe_income",
           "executed_date",
           "is_valid",
@@ -48,7 +47,7 @@
         ],
         "metric_closure": []
       },
-      "raw_field_count": 4,
+      "raw_field_count": 2,
       "closure_field_count": 9,
       "trace_keywords": [
         "核销收入",
@@ -58,7 +57,29 @@
       "trace_keyword_hits": 20,
       "trace_vector_hits": 20,
       "trace_rrf_hits": 30,
-      "trace_rerank_hits": 10
+      "trace_rerank_hits": 20,
+      "trace_vector_fields": [
+        "exe_income",
+        "income"
+      ],
+      "trace_vector_only_fields": [
+        "income"
+      ],
+      "trace_rrf_fields": [
+        "exe_amount",
+        "exe_income",
+        "income",
+        "pay_gmv",
+        "sy_hospital_name",
+        "tenant_id"
+      ],
+      "trace_rerank_fields": [
+        "sy_hospital_name",
+        "tenant_id"
+      ],
+      "rerank_provider": "dashscope/qwen3-rerank",
+      "rerank_fallback": false,
+      "rerank_fallback_reason": ""
     },
     {
       "id": "SCHEMA_002",
@@ -69,7 +90,6 @@
       "relation_recall": 0.0,
       "missing_fields": [],
       "unexpected_fields": [
-        "area_name",
         "executed_date",
         "is_paydate_cash",
         "is_valid",
@@ -81,7 +101,9 @@
       "supplied_fields": [
         "dp",
         "executed_date",
+        "is_paydate_cash",
         "is_valid",
+        "left_num",
         "main_order_id",
         "pay_date",
         "pay_gmv",
@@ -89,17 +111,16 @@
       ],
       "field_source": {
         "raw_retrieval": [
-          "area_name",
-          "is_paydate_cash",
           "left_gmv",
-          "left_num",
           "sy_hospital_name",
           "tenant_id"
         ],
         "domain_closure": [
           "dp",
           "executed_date",
+          "is_paydate_cash",
           "is_valid",
+          "left_num",
           "main_order_id",
           "pay_date",
           "pay_gmv",
@@ -107,7 +128,7 @@
         ],
         "metric_closure": []
       },
-      "raw_field_count": 6,
+      "raw_field_count": 3,
       "closure_field_count": 12,
       "trace_keywords": [
         "待核销金额",
@@ -118,18 +139,39 @@
       "trace_keyword_hits": 20,
       "trace_vector_hits": 20,
       "trace_rrf_hits": 30,
-      "trace_rerank_hits": 10
+      "trace_rerank_hits": 20,
+      "trace_vector_fields": [
+        "left_gmv",
+        "left_num"
+      ],
+      "trace_vector_only_fields": [],
+      "trace_rrf_fields": [
+        "area_name",
+        "city_name",
+        "exe_amount",
+        "is_paydate_cash",
+        "left_gmv",
+        "left_num",
+        "sy_hospital_name",
+        "tenant_id"
+      ],
+      "trace_rerank_fields": [
+        "left_gmv",
+        "sy_hospital_name",
+        "tenant_id"
+      ],
+      "rerank_provider": "dashscope/qwen3-rerank",
+      "rerank_fallback": false,
+      "rerank_fallback_reason": ""
     },
     {
       "id": "SCHEMA_003",
       "passed": true,
       "table_recall": 1.0,
-      "field_recall": 0.857,
+      "field_recall": 1.0,
       "critical_field_recall": 1.0,
       "relation_recall": 1.0,
-      "missing_fields": [
-        "pay_flag"
-      ],
+      "missing_fields": [],
       "unexpected_fields": [
         "customer_id",
         "exe_income",
@@ -137,8 +179,8 @@
         "left_gmv",
         "left_num",
         "main_order_id",
+        "stat_date",
         "tenant_id",
-        "total_order_gmv_qy",
         "verify_date_id"
       ],
       "supplied_fields": [
@@ -147,39 +189,36 @@
         "exe_income",
         "is_new",
         "is_pay_new",
-        "is_paydate_cash",
         "left_gmv",
         "left_num",
         "main_order_id",
-        "pay_date",
         "tenant_id",
-        "uid",
         "verify_date_id"
       ],
       "field_source": {
         "raw_retrieval": [
+          "is_paydate_cash",
+          "pay_date",
           "pay_gmv",
-          "total_order_gmv_qy"
+          "stat_date",
+          "uid"
         ],
         "domain_closure": [
           "dp",
           "is_new",
           "is_pay_new",
-          "is_paydate_cash",
           "left_gmv",
           "left_num",
           "main_order_id",
-          "pay_date",
           "tenant_id"
         ],
         "metric_closure": [
           "customer_id",
           "exe_income",
-          "uid",
           "verify_date_id"
         ]
       },
-      "raw_field_count": 2,
+      "raw_field_count": 5,
       "closure_field_count": 14,
       "trace_keywords": [
         "支付GMV",
@@ -190,7 +229,31 @@
       "trace_keyword_hits": 20,
       "trace_vector_hits": 20,
       "trace_rrf_hits": 30,
-      "trace_rerank_hits": 10
+      "trace_rerank_hits": 20,
+      "trace_vector_fields": [
+        "is_pay_new",
+        "pay_gmv"
+      ],
+      "trace_vector_only_fields": [
+        "is_pay_new"
+      ],
+      "trace_rrf_fields": [
+        "is_pay_new",
+        "pay_date",
+        "pay_gmv",
+        "stat_date",
+        "uid"
+      ],
+      "trace_rerank_fields": [
+        "is_paydate_cash",
+        "pay_date",
+        "pay_gmv",
+        "stat_date",
+        "uid"
+      ],
+      "rerank_provider": "dashscope/qwen3-rerank",
+      "rerank_fallback": false,
+      "rerank_fallback_reason": ""
     },
     {
       "id": "SCHEMA_004",
@@ -203,13 +266,13 @@
       "unexpected_fields": [
         "customer_id",
         "exe_amount",
-        "pay_gmv",
         "tenant_id",
         "verify_date_id"
       ],
       "supplied_fields": [
         "customer_id",
         "dp",
+        "exe_amount",
         "executed_date",
         "is_valid",
         "revenue_category",
@@ -218,13 +281,12 @@
       ],
       "field_source": {
         "raw_retrieval": [
-          "exe_amount",
-          "exe_income",
-          "pay_gmv"
+          "exe_income"
         ],
         "domain_closure": [
           "customer_id",
           "dp",
+          "exe_amount",
           "executed_date",
           "is_valid",
           "revenue_category",
@@ -233,15 +295,34 @@
         ],
         "metric_closure": []
       },
-      "raw_field_count": 3,
+      "raw_field_count": 1,
       "closure_field_count": 9,
       "trace_keywords": [
-        "核销收入"
+        "核销收入",
+        "品类"
       ],
       "trace_keyword_hits": 20,
       "trace_vector_hits": 20,
       "trace_rrf_hits": 30,
-      "trace_rerank_hits": 10
+      "trace_rerank_hits": 20,
+      "trace_vector_fields": [
+        "exe_amount",
+        "exe_income"
+      ],
+      "trace_vector_only_fields": [],
+      "trace_rrf_fields": [
+        "exe_amount",
+        "exe_income",
+        "is_ds",
+        "left_gmv",
+        "pay_gmv"
+      ],
+      "trace_rerank_fields": [
+        "exe_income"
+      ],
+      "rerank_provider": "dashscope/qwen3-rerank",
+      "rerank_fallback": false,
+      "rerank_fallback_reason": ""
     },
     {
       "id": "SCHEMA_005",
@@ -252,7 +333,6 @@
       "relation_recall": 1.0,
       "missing_fields": [],
       "unexpected_fields": [
-        "device_id",
         "exe_amount",
         "tenant_id",
         "uid",
@@ -262,6 +342,7 @@
       "supplied_fields": [
         "dp",
         "exe_amount",
+        "exe_income",
         "executed_date",
         "is_valid",
         "main_order_id",
@@ -271,8 +352,6 @@
       "field_source": {
         "raw_retrieval": [
           "customer_id",
-          "device_id",
-          "exe_income",
           "uid",
           "up_user_cnt"
         ],
@@ -284,11 +363,12 @@
           "tenant_id"
         ],
         "metric_closure": [
+          "exe_income",
           "main_order_id",
           "verify_date_id"
         ]
       },
-      "raw_field_count": 5,
+      "raw_field_count": 3,
       "closure_field_count": 9,
       "trace_keywords": [
         "核销人数"
@@ -296,7 +376,24 @@
       "trace_keyword_hits": 19,
       "trace_vector_hits": 20,
       "trace_rrf_hits": 30,
-      "trace_rerank_hits": 10
+      "trace_rerank_hits": 20,
+      "trace_vector_fields": [],
+      "trace_vector_only_fields": [],
+      "trace_rrf_fields": [
+        "customer_id",
+        "device_id",
+        "exe_income",
+        "uid",
+        "up_user_cnt"
+      ],
+      "trace_rerank_fields": [
+        "customer_id",
+        "uid",
+        "up_user_cnt"
+      ],
+      "rerank_provider": "dashscope/qwen3-rerank",
+      "rerank_fallback": false,
+      "rerank_fallback_reason": ""
     },
     {
       "id": "SCHEMA_006",
@@ -314,6 +411,7 @@
       "supplied_fields": [
         "customer_id",
         "dp",
+        "exe_amount",
         "executed_date",
         "is_valid",
         "pay_gmv",
@@ -322,7 +420,6 @@
       ],
       "field_source": {
         "raw_retrieval": [
-          "exe_amount",
           "exe_income",
           "verify_date_id"
         ],
@@ -334,11 +431,12 @@
         ],
         "metric_closure": [
           "customer_id",
+          "exe_amount",
           "pay_gmv",
           "uid"
         ]
       },
-      "raw_field_count": 3,
+      "raw_field_count": 2,
       "closure_field_count": 10,
       "trace_keywords": [
         "核销人数",
@@ -351,7 +449,26 @@
       "trace_keyword_hits": 20,
       "trace_vector_hits": 20,
       "trace_rrf_hits": 30,
-      "trace_rerank_hits": 10
+      "trace_rerank_hits": 20,
+      "trace_vector_fields": [
+        "exe_amount",
+        "exe_income"
+      ],
+      "trace_vector_only_fields": [],
+      "trace_rrf_fields": [
+        "customer_id",
+        "exe_amount",
+        "exe_income",
+        "left_gmv",
+        "verify_date_id"
+      ],
+      "trace_rerank_fields": [
+        "exe_income",
+        "verify_date_id"
+      ],
+      "rerank_provider": "dashscope/qwen3-rerank",
+      "rerank_fallback": false,
+      "rerank_fallback_reason": ""
     },
     {
       "id": "SCHEMA_007",
@@ -364,11 +481,7 @@
       "unexpected_fields": [
         "exe_amount",
         "exe_income",
-        "exe_total_cost",
-        "item_product_id",
-        "product_id",
         "product_standard_name",
-        "revenue_category",
         "tenant_id",
         "verify_date_id"
       ],
@@ -384,11 +497,7 @@
       ],
       "field_source": {
         "raw_retrieval": [
-          "exe_total_cost",
-          "item_product_id",
-          "product_id",
           "product_standard_name",
-          "revenue_category",
           "standard_name"
         ],
         "domain_closure": [
@@ -404,7 +513,7 @@
           "customer_id"
         ]
       },
-      "raw_field_count": 6,
+      "raw_field_count": 2,
       "closure_field_count": 9,
       "trace_keywords": [
         "品项"
@@ -412,7 +521,30 @@
       "trace_keyword_hits": 20,
       "trace_vector_hits": 20,
       "trace_rrf_hits": 30,
-      "trace_rerank_hits": 10
+      "trace_rerank_hits": 20,
+      "trace_vector_fields": [
+        "product_standard_name",
+        "standard_name"
+      ],
+      "trace_vector_only_fields": [
+        "product_standard_name"
+      ],
+      "trace_rrf_fields": [
+        "exe_total_cost",
+        "item_product_id",
+        "product_id",
+        "product_standard_name",
+        "revenue_category",
+        "standard_name",
+        "ware_cost"
+      ],
+      "trace_rerank_fields": [
+        "product_standard_name",
+        "standard_name"
+      ],
+      "rerank_provider": "dashscope/qwen3-rerank",
+      "rerank_fallback": false,
+      "rerank_fallback_reason": ""
     },
     {
       "id": "SCHEMA_008",
@@ -425,40 +557,40 @@
       "unexpected_fields": [
         "customer_id",
         "exe_amount",
-        "is_pay_new",
-        "pay_gmv",
+        "new_income",
         "tenant_id",
         "verify_date_id"
       ],
       "supplied_fields": [
         "customer_id",
         "cx_first_channel",
+        "dp",
         "exe_amount",
         "executed_date",
+        "is_new",
         "is_valid",
         "tenant_id",
         "verify_date_id"
       ],
       "field_source": {
         "raw_retrieval": [
-          "dp",
           "exe_income",
-          "is_new",
-          "is_pay_new",
-          "pay_gmv"
+          "new_income"
         ],
         "domain_closure": [
           "customer_id",
           "cx_first_channel",
+          "dp",
           "exe_amount",
           "executed_date",
+          "is_new",
           "is_valid",
           "tenant_id",
           "verify_date_id"
         ],
         "metric_closure": []
       },
-      "raw_field_count": 5,
+      "raw_field_count": 2,
       "closure_field_count": 10,
       "trace_keywords": [
         "核销收入",
@@ -467,7 +599,25 @@
       "trace_keyword_hits": 20,
       "trace_vector_hits": 20,
       "trace_rrf_hits": 30,
-      "trace_rerank_hits": 10
+      "trace_rerank_hits": 20,
+      "trace_vector_fields": [
+        "is_new"
+      ],
+      "trace_vector_only_fields": [
+        "is_new"
+      ],
+      "trace_rrf_fields": [
+        "exe_amount",
+        "exe_income",
+        "is_new"
+      ],
+      "trace_rerank_fields": [
+        "exe_income",
+        "new_income"
+      ],
+      "rerank_provider": "dashscope/qwen3-rerank",
+      "rerank_fallback": false,
+      "rerank_fallback_reason": ""
     },
     {
       "id": "SCHEMA_009",
@@ -479,21 +629,23 @@
       "missing_fields": [],
       "unexpected_fields": [
         "exe_amount",
-        "tenant_id"
+        "tenant_id",
+        "up_user_cnt"
       ],
       "supplied_fields": [
         "customer_id",
         "dp",
         "exe_amount",
+        "exe_income",
         "executed_date",
         "is_up",
         "is_valid",
-        "tenant_id"
+        "tenant_id",
+        "verify_date_id"
       ],
       "field_source": {
         "raw_retrieval": [
-          "exe_income",
-          "verify_date_id"
+          "up_user_cnt"
         ],
         "domain_closure": [
           "dp",
@@ -504,10 +656,12 @@
         ],
         "metric_closure": [
           "customer_id",
-          "is_up"
+          "exe_income",
+          "is_up",
+          "verify_date_id"
         ]
       },
-      "raw_field_count": 2,
+      "raw_field_count": 1,
       "closure_field_count": 9,
       "trace_keywords": [
         "核销人次",
@@ -516,7 +670,25 @@
       "trace_keyword_hits": 20,
       "trace_vector_hits": 20,
       "trace_rrf_hits": 30,
-      "trace_rerank_hits": 10
+      "trace_rerank_hits": 20,
+      "trace_vector_fields": [
+        "exe_total_income",
+        "is_up"
+      ],
+      "trace_vector_only_fields": [
+        "exe_total_income",
+        "is_up"
+      ],
+      "trace_rrf_fields": [
+        "exe_income",
+        "is_up"
+      ],
+      "trace_rerank_fields": [
+        "up_user_cnt"
+      ],
+      "rerank_provider": "dashscope/qwen3-rerank",
+      "rerank_fallback": false,
+      "rerank_fallback_reason": ""
     },
     {
       "id": "SCHEMA_010",
@@ -579,8 +751,32 @@
       "trace_keywords": [],
       "trace_keyword_hits": 0,
       "trace_vector_hits": 20,
-      "trace_rrf_hits": 20,
-      "trace_rerank_hits": 10
+      "trace_rrf_hits": 30,
+      "trace_rerank_hits": 20,
+      "trace_vector_fields": [
+        "first_use_date",
+        "left_num"
+      ],
+      "trace_vector_only_fields": [
+        "first_use_date",
+        "left_num"
+      ],
+      "trace_rrf_fields": [
+        "customer_id",
+        "exe_amount",
+        "exe_cnt",
+        "exe_income",
+        "executed_date",
+        "first_use_date",
+        "is_new",
+        "is_paydate_cash",
+        "left_gmv",
+        "left_num"
+      ],
+      "trace_rerank_fields": [],
+      "rerank_provider": "dashscope/qwen3-rerank",
+      "rerank_fallback": false,
+      "rerank_fallback_reason": ""
     },
     {
       "id": "SCHEMA_011",
@@ -591,10 +787,7 @@
       "relation_recall": 1.0,
       "missing_fields": [],
       "unexpected_fields": [
-        "customer_is_new",
         "exe_amount",
-        "first_order_date_qy",
-        "first_use_date",
         "pay_gmv",
         "tenant_id",
         "uid"
@@ -605,6 +798,7 @@
         "exe_amount",
         "exe_income",
         "executed_date",
+        "is_new",
         "is_valid",
         "pay_gmv",
         "tenant_id",
@@ -612,16 +806,12 @@
         "verify_date_id"
       ],
       "field_source": {
-        "raw_retrieval": [
-          "customer_is_new",
-          "first_order_date_qy",
-          "first_use_date",
-          "is_new"
-        ],
+        "raw_retrieval": [],
         "domain_closure": [
           "dp",
           "exe_amount",
           "executed_date",
+          "is_new",
           "is_valid",
           "tenant_id"
         ],
@@ -633,7 +823,7 @@
           "verify_date_id"
         ]
       },
-      "raw_field_count": 4,
+      "raw_field_count": 0,
       "closure_field_count": 11,
       "trace_keywords": [
         "核销收入",
@@ -643,7 +833,17 @@
       "trace_keyword_hits": 20,
       "trace_vector_hits": 20,
       "trace_rrf_hits": 30,
-      "trace_rerank_hits": 10
+      "trace_rerank_hits": 20,
+      "trace_vector_fields": [],
+      "trace_vector_only_fields": [],
+      "trace_rrf_fields": [
+        "exe_income",
+        "is_new"
+      ],
+      "trace_rerank_fields": [],
+      "rerank_provider": "dashscope/qwen3-rerank",
+      "rerank_fallback": false,
+      "rerank_fallback_reason": ""
     },
     {
       "id": "SCHEMA_012",
@@ -656,9 +856,6 @@
       "unexpected_fields": [
         "customer_id",
         "exe_amount",
-        "item_product_id",
-        "pay_gmv",
-        "revenue_category",
         "sy_hospital_name",
         "tenant_id",
         "verify_date_id"
@@ -669,17 +866,14 @@
         "exe_amount",
         "executed_date",
         "is_valid",
+        "standard_name",
         "sy_hospital_name",
         "tenant_id",
         "verify_date_id"
       ],
       "field_source": {
         "raw_retrieval": [
-          "exe_income",
-          "item_product_id",
-          "pay_gmv",
-          "revenue_category",
-          "standard_name"
+          "exe_income"
         ],
         "domain_closure": [
           "customer_id",
@@ -687,13 +881,14 @@
           "exe_amount",
           "executed_date",
           "is_valid",
+          "standard_name",
           "sy_hospital_name",
           "tenant_id",
           "verify_date_id"
         ],
         "metric_closure": []
       },
-      "raw_field_count": 5,
+      "raw_field_count": 1,
       "closure_field_count": 10,
       "trace_keywords": [
         "核销收入",
@@ -703,7 +898,22 @@
       "trace_keyword_hits": 20,
       "trace_vector_hits": 20,
       "trace_rrf_hits": 30,
-      "trace_rerank_hits": 10
+      "trace_rerank_hits": 20,
+      "trace_vector_fields": [],
+      "trace_vector_only_fields": [],
+      "trace_rrf_fields": [
+        "exe_amount",
+        "exe_income",
+        "item_product_id",
+        "revenue_category",
+        "standard_name"
+      ],
+      "trace_rerank_fields": [
+        "exe_income"
+      ],
+      "rerank_provider": "dashscope/qwen3-rerank",
+      "rerank_fallback": false,
+      "rerank_fallback_reason": ""
     },
     {
       "id": "SCHEMA_013",
@@ -723,32 +933,34 @@
         "customer_id",
         "cx_first_channel",
         "dp",
+        "exe_amount",
         "executed_date",
         "is_valid",
+        "pay_gmv",
         "tenant_id",
         "uid",
         "verify_date_id"
       ],
       "field_source": {
         "raw_retrieval": [
-          "exe_amount",
-          "exe_income",
-          "pay_gmv"
+          "exe_income"
         ],
         "domain_closure": [
           "cx_first_channel",
           "dp",
+          "exe_amount",
           "executed_date",
           "is_valid",
           "tenant_id"
         ],
         "metric_closure": [
           "customer_id",
+          "pay_gmv",
           "uid",
           "verify_date_id"
         ]
       },
-      "raw_field_count": 3,
+      "raw_field_count": 1,
       "closure_field_count": 11,
       "trace_keywords": [
         "核销收入"
@@ -756,7 +968,21 @@
       "trace_keyword_hits": 20,
       "trace_vector_hits": 20,
       "trace_rrf_hits": 30,
-      "trace_rerank_hits": 10
+      "trace_rerank_hits": 20,
+      "trace_vector_fields": [],
+      "trace_vector_only_fields": [],
+      "trace_rrf_fields": [
+        "exe_amount",
+        "exe_income",
+        "is_new",
+        "pay_gmv"
+      ],
+      "trace_rerank_fields": [
+        "exe_income"
+      ],
+      "rerank_provider": "dashscope/qwen3-rerank",
+      "rerank_fallback": false,
+      "rerank_fallback_reason": ""
     },
     {
       "id": "SCHEMA_014",
@@ -769,13 +995,14 @@
       "unexpected_fields": [
         "customer_id",
         "exe_amount",
-        "pay_gmv",
         "tenant_id",
         "verify_date_id"
       ],
       "supplied_fields": [
         "customer_id",
         "dp",
+        "exe_amount",
+        "exe_income",
         "executed_date",
         "is_valid",
         "tenant_id",
@@ -783,14 +1010,13 @@
       ],
       "field_source": {
         "raw_retrieval": [
-          "exe_amount",
-          "exe_income",
-          "pay_gmv",
           "revenue_category"
         ],
         "domain_closure": [
           "customer_id",
           "dp",
+          "exe_amount",
+          "exe_income",
           "executed_date",
           "is_valid",
           "tenant_id",
@@ -798,15 +1024,31 @@
         ],
         "metric_closure": []
       },
-      "raw_field_count": 4,
+      "raw_field_count": 1,
       "closure_field_count": 9,
       "trace_keywords": [
-        "核销收入"
+        "核销收入",
+        "大单品",
+        "常规品",
+        "大师团"
       ],
       "trace_keyword_hits": 20,
       "trace_vector_hits": 20,
       "trace_rrf_hits": 30,
-      "trace_rerank_hits": 10
+      "trace_rerank_hits": 20,
+      "trace_vector_fields": [],
+      "trace_vector_only_fields": [],
+      "trace_rrf_fields": [
+        "exe_amount",
+        "exe_income",
+        "revenue_category"
+      ],
+      "trace_rerank_fields": [
+        "revenue_category"
+      ],
+      "rerank_provider": "dashscope/qwen3-rerank",
+      "rerank_fallback": false,
+      "rerank_fallback_reason": ""
     },
     {
       "id": "SCHEMA_015",
@@ -825,13 +1067,11 @@
         "is_paydate_cash",
         "is_valid",
         "pay_date",
-        "pay_gmv"
+        "pay_gmv",
+        "uid"
       ],
       "field_source": {
         "raw_retrieval": [
-          "pay_flag",
-          "stat_date",
-          "uid",
           "verify_date_id"
         ],
         "domain_closure": [
@@ -844,10 +1084,11 @@
         "metric_closure": [
           "customer_id",
           "exe_income",
-          "pay_gmv"
+          "pay_gmv",
+          "uid"
         ]
       },
-      "raw_field_count": 4,
+      "raw_field_count": 1,
       "closure_field_count": 10,
       "trace_keywords": [
         "核销客单价",
@@ -856,7 +1097,32 @@
       "trace_keyword_hits": 20,
       "trace_vector_hits": 20,
       "trace_rrf_hits": 30,
-      "trace_rerank_hits": 10
+      "trace_rerank_hits": 20,
+      "trace_vector_fields": [
+        "exe_amount",
+        "exe_income"
+      ],
+      "trace_vector_only_fields": [
+        "exe_amount",
+        "exe_income"
+      ],
+      "trace_rrf_fields": [
+        "customer_id",
+        "exe_amount",
+        "exe_cnt",
+        "exe_income",
+        "executed_date",
+        "is_new",
+        "stat_date",
+        "uid",
+        "verify_date_id"
+      ],
+      "trace_rerank_fields": [
+        "verify_date_id"
+      ],
+      "rerank_provider": "dashscope/qwen3-rerank",
+      "rerank_fallback": false,
+      "rerank_fallback_reason": ""
     }
   ]
 }

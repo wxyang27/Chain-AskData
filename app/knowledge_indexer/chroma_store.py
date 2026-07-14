@@ -22,16 +22,16 @@ class ChromaKnowledgeStore:
 
     def __init__(
         self,
-        persist_dir: str = "data/chroma",
+        persist_dir: str | None = None,
         collection_name: str = "chain_askdata_knowledge",
         embedding: EmbeddingClient | None = None,
         reranker: LightweightReranker | None = None,
     ):
-        self.persist_dir = persist_dir
         self.collection_name = collection_name
         self.embedding = embedding or create_embedding_client()
         self._embedding_dimension = self.embedding.dimension
         self.reranker = reranker or LightweightReranker()
+        self.persist_dir = persist_dir or self._default_persist_dir()
         Path(self.persist_dir).mkdir(parents=True, exist_ok=True)
         self.client = chromadb.PersistentClient(path=self.persist_dir)
 
@@ -65,6 +65,14 @@ class ChromaKnowledgeStore:
         collection = self.client.get_or_create_collection(name=self.collection_name)
         collection_count = collection.count()
         candidate_count = min(max(top_k * 20, 100), collection_count) if collection_count else top_k
+        matches = self.query_vector_raw(query_text, top_k=candidate_count)
+        return self.reranker.rerank(query_text, matches, top_k)
+
+    def query_vector_raw(self, query_text: str, top_k: int = 50) -> list[dict[str, Any]]:
+        """Return raw vector hits without local lexical rerank."""
+        collection = self.client.get_or_create_collection(name=self.collection_name)
+        collection_count = collection.count()
+        candidate_count = min(top_k, collection_count) if collection_count else top_k
         result = collection.query(
             query_embeddings=[self.embedding.embed_query(query_text)],
             n_results=candidate_count,
@@ -82,8 +90,7 @@ class ChromaKnowledgeStore:
             }
             for document, metadata, distance in zip(documents, metadatas, distances)
         ]
-
-        return self.reranker.rerank(query_text, matches, top_k)
+        return matches
 
     def count(self) -> int:
         collection = self.client.get_or_create_collection(name=self.collection_name)
@@ -120,3 +127,16 @@ class ChromaKnowledgeStore:
             self.client.delete_collection(collection_name or self.collection_name)
         except Exception:
             return
+
+    def _default_persist_dir(self) -> str:
+        provider = getattr(self.embedding, "provider_name", self.embedding.__class__.__name__)
+        model = getattr(self.embedding, "model_name", "embedding")
+        dimension = getattr(self.embedding, "dimension", "unknown")
+        suffix = f"{provider}_{model}"
+        if not str(model).endswith(str(dimension)):
+            suffix = f"{suffix}_{dimension}"
+        safe = self._safe_name(suffix)
+        return f"data/chroma/{safe}"
+
+    def _safe_name(self, value: str) -> str:
+        return "".join(ch.lower() if ch.isalnum() else "_" for ch in value).strip("_")

@@ -58,6 +58,21 @@ Chain-AskData 是面向新氧连锁经管业务的自然语言取数（NL2SQL）
 }
 ```
 
+执行层字段：
+
+```json
+{
+  "execution_enabled": false,
+  "execution_mode": "disabled",
+  "execution_status": "skipped",
+  "sample_rows": [],
+  "row_count": 0,
+  "execution_error": "execution_disabled",
+  "result_validation": {},
+  "repair_attempt": {}
+}
+```
+
 ## 总体架构
 
 项目按**离线 / 在线**分层，各层通过抽象接口解耦，可独立替换。
@@ -67,12 +82,12 @@ Chain-AskData 是面向新氧连锁经管业务的自然语言取数（NL2SQL）
 │  离线层（Offline）                                       │
 │  Raw Word/Excel/YAML                                     │
 │    → knowledge_importer → generated assets               │
-│    → app.offline.build_indexes → schema indexes (8 JSON) │
+│    → app.schema_indexing.build_indexes → schema indexes (8 JSON) │
 │    → ChromaDB (897 chunks)                               │
 │                                                          │
 │  在线层（Online）                                        │
 │  User Question                                           │
-│    → Pipeline (8 stages)                                 │
+│    → Pipeline (13 observable stages)                     │
 │      1. knowledge_retrieval  (keyword + vector + RRF)    │
 │      2. semantic_contract    (业务语义归一)              │
 │      3. schema_retrieval     (SchemaGraph 构建)          │
@@ -81,6 +96,11 @@ Chain-AskData 是面向新氧连锁经管业务的自然语言取数（NL2SQL）
 │      6. template_sql         (模板 SQL)                  │
 │      7. llm_sql              (Qwen SQL 生成 + 门禁)      │
 │      8. sql_selection        (受控切换)                  │
+│      9. sql_generation       (最终 SQL 归档)             │
+│     10. sql_safety_gate      (静态安全门禁)              │
+│     11. execution            (disabled/mock/sqlite)      │
+│     12. result_validation    (结果形态校验)              │
+│     13. repair_attempt       (修复 / 模板回退)           │
 │    → QueryResponse (SQL + caliber + trace)               │
 └─────────────────────────────────────────────────────────┘
 ```
@@ -89,9 +109,9 @@ Chain-AskData 是面向新氧连锁经管业务的自然语言取数（NL2SQL）
 
 | 层 | 当前默认 | 可替换为 |
 |----|---------|---------|
-| **Embedding** | `HashEmbedding` (128-dim, 本地) | `DashScopeEmbedding` (text-embedding-v4) |
-| **Rerank** | `LightweightReranker` (词法) | `DashScopeRerank` (qwen-rerank) |
-| **SQL 执行** | `MockExecutor` (dry-run) | `MaxComputeExecutor` (ODPS 只读) |
+| **Embedding** | `HashEmbedding` (128-dim, 本地) | `DashScopeEmbedding` (text-embedding-v4, 1024-dim) |
+| **Rerank** | `LightweightReranker` (词法) | `DashScopeRerank` (qwen-rerank / qwen3-rerank) |
+| **SQL 执行** | `disabled`（默认不执行） | `mock` / `sqlite` / `MaxComputeExecutor` (ODPS 只读骨架) |
 | **向量库** | `ChromaDB` (本地) | `Milvus` / `FAISS` / `PGVector` |
 
 接口定义在 [app/model_clients/](app/model_clients/)，Pipeline 依赖接口而非具体实现。
@@ -149,10 +169,10 @@ Chain-AskData 是面向新氧连锁经管业务的自然语言取数（NL2SQL）
 
 ```powershell
 # 1. 离线构建索引与知识库（首次或资产变更后执行）
-python -m app.offline.build_indexes
+python -m app.schema_indexing.build_indexes
 
 # 2. 查看资产质量报告
-python -m app.offline.asset_report
+python -m app.schema_indexing.asset_report
 
 # 3. 创建 .env 文件（参考 .env.example）
 
@@ -161,6 +181,44 @@ python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
 打开 `http://127.0.0.1:8000`
+
+### SQL 执行层
+
+默认不执行真实 SQL，保证 Demo 稳定：
+
+```powershell
+EXECUTION_MODE=disabled
+```
+
+需要展示闭环 Demo 时可切到 mock：
+
+```powershell
+EXECUTION_MODE=mock
+```
+
+API 会返回 `execution_enabled`、`execution_mode`、`execution_status`、`sample_rows`、`row_count`、`execution_error`。`sqlite` 模式预留给本地 demo DB，`maxcompute` 目前只保留只读执行骨架。
+
+### 结果校验与修复闭环
+
+执行层之后会进入轻量反馈闭环：
+
+```text
+SQL Safety Gate
+  -> Execution
+  -> Result Validation
+  -> Repair Attempt
+  -> Static Repair / Template Fallback
+```
+
+当前校验维度：
+
+- SQL 是否执行失败
+- 返回是否为空
+- 返回列是否覆盖预期指标/维度
+- 金额/人数类结果是否全为 NULL
+- TOP 类问题是否同时具备 `ORDER BY + LIMIT`
+
+如果执行反馈失败，系统会先根据 `RepairPolicy` 归因，再尝试 `StaticSqlRepairer`，修复后重新过 `SqlSafetyGate`；仍不可用时回退模板 SQL。Pipeline trace 中会记录 `sql_generation`、`sql_safety_gate`、`execution`、`result_validation`、`repair_attempt`。
 
 ## 测试
 
@@ -248,33 +306,32 @@ PYTHONPATH=. python eval/run_schema_retrieval_eval.py
 - **本周支付**：MaxCompute `WEEKDAY` 本周一到昨天，不写 `DATE_TRUNC`
 - **新客核销人次占比**：`is_new = 1` 核销域，与支付域 `is_pay_new` 不混淆
 
-## 目录说明
+## app 层目录导览
+
+`app/` 是项目的在线问答主链路。当前整理方向是参考 `askdata_agent`：把“规划、检索、生成、校验、执行、反馈”拆成清晰模块，方便调试，也方便面试时按链路讲述。
 
 ```text
 app/
-  api/                  API 路由
-  answer/               响应组装（AnswerComposer 编排全流程）
-  assets/               本地知识资产加载（YAML/JSON）
-  core/                 环境变量配置
-  intent_router/        意图路由（nl2sql / schema_explain / caliber_explain / unknown）
-  knowledge_importer/   原始知识批量导入（Excel/Word → JSON 资产）
-  knowledge_indexer/    ChromaDB 知识库、混合检索、Rerank、RetrievalContext
-  llm/                  Qwen 适配层
-    local_client.py       OpenAI 兼容客户端（SSL + 错误诊断）
-    prompts.py            QueryPlanCoT 系统提示词
-    query_plan_cot_generator.py  CoT 四元组生成 + 解析 + 修复闭环
-    query_plan_cot_validator.py  本地 SchemaGraph 约束校验（字段/关系/跨表/输出接地）
-    sql_generator.py      LLM SQL 生成器（影子模式）
-    sql_safety_gate.py    SQL 安全门禁（9 项检查 + MaxCompute 语法约束）
-  metric_registry/      指标注册
-  models/               数据模型
-  query_planner/        QueryPlan 规划（模板匹配 + RAG 增强 + CoT）
-  schema_graph/         SchemaGraph 构建 + 字段补全（依赖矩阵）
-  schema_index/         三级索引构建与加载
-  schema_retrieval/     Schema 检索（AskData 风格）
-  sql_generator/        SQL 模板生成（13 个确定性模板）
-  sql_validator/        SQL 安全与口径校验
-  web/                  页面路由
+  askdata_pipeline/     主编排层：串起 RAG、规划、SQL、执行、反馈，记录 Pipeline Trace
+  cot_planning/         规划层：意图路由、语义契约、QueryPlan、QueryPlanCoT 生成与校验
+  schema_indexing/      离线索引层：构建/加载 schema indexes，生成资产报告
+  schema_retrieval/     在线检索层：根据问题召回字段/表/关系，组织 SchemaGraph 输入
+  schema_graph/         Schema 图层：构建表字段关系图，做依赖字段闭包补全
+  sql_generation/       SQL 生成层：模板 SQL + LLM SQL
+  sql/                  SQL 治理层：validator、safety gate、static repairer
+  execution/            SQL 执行层：disabled/mock/sqlite/maxcompute 执行路由
+  feedback/             反馈层：结果校验、失败归因、修复/回退策略
+  api/                  API 层：FastAPI 路由，核心入口 `/api/query`
+  web/                  Web 层：轻量调试页面
+  answer/               响应组装层：把 PipelineRunResult 组装成 API 返回
+  core/                 配置层：环境变量、模型开关、执行模式
+  models/               数据模型层：Pydantic / dataclass 请求响应结构
+  metric_registry/      指标注册层：维护指标口径和模板映射
+  model_clients/        模型客户端层：Embedding / Rerank provider 抽象与切换
+  assets/               资产加载层：YAML/JSON 本地知识资产读取
+  knowledge_importer/   知识导入底层：从 Word/Excel/reviewed yaml 生成结构化资产
+  knowledge_indexer/    RAG 底层：ChromaDB、关键词检索、RRF、rerank
+  llm/                  LLM 底层：OpenAI-compatible/Qwen client 与 prompt 基础设施
 knowledge/
   examples/             Demo Query 资产
   metrics/              核心指标口径资产
@@ -293,9 +350,31 @@ docs/
   superpowers/plans/    实施计划文档
 ```
 
+### app 主链路讲法
+
+```text
+API / Web
+  -> AnswerComposer
+  -> AskDataPipeline
+  -> knowledge_retrieval      召回指标、字段、表、样例、风险提示
+  -> semantic_contract        业务语义归一，锁定口径和必要字段
+  -> schema_retrieval         构建本次问题需要的 SchemaGraph
+  -> intent_route             区分取数、口径解释、字段解释、拒答
+  -> query_plan               生成 QueryPlan / QueryPlanCoT
+  -> template_sql + llm_sql   模板 SQL 保底，LLM SQL 影子生成
+  -> sql_selection            LLM SQL 通过门禁才采用
+  -> sql_safety_gate          静态校验 MaxCompute 语法、字段、口径、分区
+  -> execution                默认 disabled，Demo 可切 mock/sqlite
+  -> result_validation        校验执行失败、空结果、列缺失、全 NULL、TOP 形态
+  -> repair_attempt           静态修复；仍失败则模板回退
+  -> QueryResponse
+```
+
+面试时可以概括为：这个项目不是“让大模型直接写 SQL”，而是把自然语言取数拆成一条可观测的 RAG + Planning + SQL Governance Pipeline。RAG 负责找证据，Planning 负责约束业务理解，SQL Gate 负责守住口径和语法，Execution/Feedback 负责把生成结果变成可闭环 Demo。
+
 ## 重要约束
 
-- 首版只生成 SQL，不真实执行。
+- 默认只生成 SQL 和口径说明；设置 `EXECUTION_MODE=mock/sqlite` 后可进入执行层闭环。
 - SQL 只允许 `SELECT` 或 `WITH`。
 - 使用 `soyoung_dw` 库名前缀。
 - 查询 `_d` / `_all_d` 快照表必须带 `dp = DATE_SUB(CURRENT_DATE(),1)`，禁止把 `dp` 当业务日期区间。
@@ -323,8 +402,8 @@ docs/
 | Phase 4.5 | SchemaGraph 依赖矩阵补全 + 校验器强化 | ✅ 完成 |
 | Phase 5 | LLM SQL 影子模式 + 安全门禁 + 核心 6 问受控切换 | ✅ 完成 |
 | Phase 5.5 | 黄金评测集 v1.2 + critical rules + 红榜归因基线 | ✅ 完成 |
-| Phase 6 | 语义 Embedding + DataWorks/MaxCompute 只读执行 | ⬜ 待开始 |
-| Phase 7 | SQL 修复闭环 + 结果校验与回调修正 | ⬜ 待开始 |
+| Phase 6 | DashScope Embedding/Rerank provider + 索引隔离 | ✅ 完成 |
+| Phase 7 | SQL 执行层 + 结果校验 + 修复/回退闭环 | ✅ 完成 |
 | Phase 8 | 长短期记忆（滑动窗口 + 向量检索引擎） | ⬜ 待开始 |
 
 > 工作记录按日期追加，历史记录不覆盖。`2026-07-09` 保留为 LLM SQL 影子模式阶段基线，`2026-07-10` 记录评测集与硬规则治理的增量进展。
@@ -335,7 +414,7 @@ docs/
 - **SchemaGraph 字段补全**：`app/schema_graph/enricher.py` 模板级依赖矩阵自动补入 `dp`/`is_valid`/`tenant_id`/维度字段/表关联，13 模板全覆盖
 - **RetrievalContext 去重**：`top_*()` 方法防止重复字段/指标/样例噪声
 - **无关问题过滤**：`has_meaningful_evidence()` + IntentRouter 白名单双重判断
-- **LLM SQL 影子模式**：`app/llm/sql_generator.py` + `app/llm/sql_safety_gate.py`，Qwen 根据 CoT + SchemaGraph 生成 SQL，经 9 项门禁检查
+- **LLM SQL 影子模式**：`app/sql_generation/llm_generator.py` + `app/sql/safety_gate.py`，Qwen 根据 CoT + SchemaGraph 生成 SQL，经门禁检查
 - **MaxCompute 语法约束**：Prompt + 门禁禁止 `DATE_TRUNC`/`INTERVAL`/`NOW()` 等非 MC 函数
 - **受控切换**：核心 6 问（Q001-Q006）门禁通过时 `sql_source="llm"`，其余模板兜底
 - **前端升级**：双 SQL 模块 + 结构对比表（表/JOIN/WHERE/GROUP BY/ORDER BY/LIMIT 六维对比）

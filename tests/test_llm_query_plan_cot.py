@@ -1,7 +1,7 @@
-from app.llm.query_plan_cot_generator import LLMQueryPlanCoTGenerator
+﻿from app.cot_planning.query_plan_cot_generator import LLMQueryPlanCoTGenerator
 from app.llm.prompts import build_query_plan_cot_messages
 from app.models.query import QueryPlanCoT
-from app.query_planner.planner import QueryPlanner
+from app.cot_planning.planner import QueryPlanner
 from app.schema_graph.graph import SchemaGraph
 
 

@@ -1,11 +1,11 @@
-"""Unit tests for LLM SQL generator and safety gate."""
+﻿"""Unit tests for LLM SQL generator and safety gate."""
 
 from dataclasses import replace
 
 import pytest
 
-from app.llm.sql_generator import LLMSqlGenerator, LLMSqlResult
-from app.llm.sql_safety_gate import SqlSafetyGate, SqlSafetyResult
+from app.sql_generation.llm_generator import LLMSqlGenerator, LLMSqlResult
+from app.sql.safety_gate import SqlSafetyGate, SqlSafetyResult
 from app.models.query import QueryPlanCoT
 from app.schema_graph.graph import SchemaGraph
 

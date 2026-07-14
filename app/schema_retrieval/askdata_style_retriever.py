@@ -1,9 +1,9 @@
-from pathlib import Path
+﻿from pathlib import Path
 from typing import Any
 
 from app.knowledge_indexer.retrieval_context import RetrievalContext
 from app.schema_graph.builder import SchemaGraphBuilder
-from app.schema_index.loader import SchemaIndexBundle, SchemaIndexLoader
+from app.schema_indexing.loader import SchemaIndexBundle, SchemaIndexLoader
 
 
 class AskDataStyleSchemaRetriever:

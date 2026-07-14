@@ -954,34 +954,6 @@
     "source_file": "knowledge\\schema\\core_fields.yaml"
   },
   {
-    "asset_id": "field:dm_opt_qy_order_info_all_d:pay_flag",
-    "asset_type": "field",
-    "table_name": "dm_opt_qy_order_info_all_d",
-    "full_table_name": "soyoung_dw.dm_opt_qy_order_info_all_d",
-    "field_name": "pay_flag",
-    "field_type": "filter",
-    "business_name": "支付成功标记",
-    "description": "支付成功标记",
-    "used_by_metrics": [
-      "pay_aov_per_user_day"
-    ],
-    "caliber": "支付客单价分母仅统计 pay_flag = 1 的支付用户日。",
-    "sample_values": [],
-    "enum_values": [],
-    "is_join_key": false,
-    "is_metric_field": false,
-    "is_dimension_field": false,
-    "filters": [
-      "pay_flag = 1"
-    ],
-    "risk_notes": [
-      "支付客单价口径需要与剔除当日退款一起说明"
-    ],
-    "review_status": "core",
-    "source_kind": "core_fields_yaml",
-    "source_file": "knowledge\\schema\\core_fields.yaml"
-  },
-  {
     "asset_id": "field:dm_opt_qy_order_info_all_d:pay_gmv",
     "asset_type": "field",
     "table_name": "dm_opt_qy_order_info_all_d",
@@ -1031,7 +1003,7 @@
     "is_dimension_field": false,
     "filters": [
       "dp = DATE_SUB(CURRENT_DATE(),1)",
-      "pay_flag = 1"
+      "is_paydate_cash = 0"
     ],
     "risk_notes": [
       "若真实表无 stat_date，可切换为 pay_date 并在口径说明中标注"

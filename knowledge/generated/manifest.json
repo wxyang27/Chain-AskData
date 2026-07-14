@@ -2,7 +2,7 @@
   "schema_version": 1,
   "assets": {
     "metrics": 151,
-    "fields": 135,
+    "fields": 134,
     "tables": 49,
     "dimensions": 10,
     "data_sources": 7,
@@ -11,11 +11,11 @@
     "user_profile_fields": 112
   },
   "indexes": {
-    "schema_field_keyword_index": 135,
-    "schema_field_vector_index": 135,
-    "schema_field_rerank_index": 135,
+    "schema_field_keyword_index": 134,
+    "schema_field_vector_index": 134,
+    "schema_field_rerank_index": 134,
     "schema_table_index": 49,
-    "schema_field_detail_index": 135,
+    "schema_field_detail_index": 134,
     "schema_relation_index": 2,
     "metric_keyword_index": 151,
     "metric_rerank_index": 151

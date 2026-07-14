@@ -1,11 +1,11 @@
-from typing import Any
+﻿from typing import Any
 
 from app.knowledge_indexer.chroma_store import ChromaKnowledgeStore
 from app.knowledge_indexer.hybrid_retriever import HybridRetriever
 from app.knowledge_indexer.loader import load_knowledge_chunks
 from app.knowledge_indexer.retrieval_context import RetrievalContext, RetrievalContextBuilder
-from app.model_clients.factory import create_rerank_client
-from app.schema_index.loader import SchemaIndexLoader
+from app.model_clients.factory import create_embedding_client, create_rerank_client
+from app.schema_indexing.loader import SchemaIndexLoader
 
 
 class KnowledgeSearchService:
@@ -18,7 +18,8 @@ class KnowledgeSearchService:
         generated_dir: str = "knowledge/generated",
         indexes_dir: str = "knowledge/generated/indexes",
     ):
-        self.store = store or ChromaKnowledgeStore()
+        self.embedding_client = create_embedding_client()
+        self.store = store or ChromaKnowledgeStore(embedding=self.embedding_client)
         self.context_builder = RetrievalContextBuilder()
         self.chunks = load_knowledge_chunks(
             include_generated=include_generated,
@@ -33,7 +34,7 @@ class KnowledgeSearchService:
 
     def search(self, query_text: str, top_k: int = 5) -> list[dict[str, Any]]:
         self._ensure_initialized()
-        vector_matches = self.store.query(query_text, top_k=max(top_k, 10))
+        vector_matches = self.store.query_vector_raw(query_text, top_k=max(top_k * 5, 50))
         return self.hybrid_retriever.retrieve(
             query_text=query_text,
             vector_matches=vector_matches,
@@ -56,7 +57,7 @@ class KnowledgeSearchService:
         """
 
         self._ensure_initialized()
-        vector_matches = self.store.query(query_text, top_k=max(top_k, 10))
+        vector_matches = self.store.query_vector_raw(query_text, top_k=max(top_k * 5, 50))
 
         if hasattr(self.hybrid_retriever, "retrieve_with_trace"):
             matches, trace = self.hybrid_retriever.retrieve_with_trace(

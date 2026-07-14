@@ -24,15 +24,15 @@ class LocalRerankClient(RerankClient):
         # Convert document strings to match dict format expected by reranker
         # The reranker expects items with "document" key
         matches = [
-            {"document": doc, "distance": 0.5, "metadata": {}}
-            for doc in documents
+            {"document": doc, "distance": 0.5, "metadata": {"candidate_index": idx}}
+            for idx, doc in enumerate(documents)
         ]
         reranked = self._reranker.rerank(query, matches, top_n)
         return [
             {
                 "document": item.get("document", ""),
                 "score": item.get("rerank_score", 0.0),
-                "index": idx,
+                "index": item.get("metadata", {}).get("candidate_index", idx),
             }
             for idx, item in enumerate(reranked)
         ]

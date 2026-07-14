@@ -1,6 +1,6 @@
-import unittest
+﻿import unittest
 
-from app.sql_validator.validator import SqlValidator
+from app.sql.validator import SqlValidator
 
 
 class SqlValidatorTestCase(unittest.TestCase):

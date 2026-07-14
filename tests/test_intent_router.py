@@ -1,6 +1,6 @@
-import unittest
+﻿import unittest
 
-from app.intent_router.router import IntentRouter
+from app.cot_planning.intent_router import IntentRouter
 from app.knowledge_indexer.retrieval_context import RetrievalContext, RetrievalHit
 
 

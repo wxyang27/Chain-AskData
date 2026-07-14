@@ -1,4 +1,4 @@
-from app.intent_router.router import IntentRouteResult
+from app.cot_planning.intent_router import IntentRouteResult
 from app.knowledge_indexer.retrieval_context import RetrievalContext
 from app.models.query import (
     LlmSqlResult as LlmSqlResultModel,
@@ -7,19 +7,16 @@ from app.models.query import (
     QueryResponse,
     ValidationResult,
 )
-from app.pipeline.pipeline import AskDataPipeline
+from app.askdata_pipeline.pipeline import AskDataPipeline
 from app.schema_graph.graph import SchemaGraph
 
 
 def _execution_to_dict(result) -> dict:
-    return {
-        "success": result.success,
-        "dry_run": result.dry_run,
-        "columns": result.columns,
-        "row_count": result.row_count,
-        "error_message": result.error_message,
-        "execution_ms": result.execution_ms,
-    }
+    if not result:
+        return {}
+    if hasattr(result, "to_dict"):
+        return result.to_dict()
+    return {}
 
 
 class AnswerComposer:
@@ -51,7 +48,7 @@ class AnswerComposer:
             sql=result.final_sql,
             validation=result.validation,
             caliber_notes=[
-                "本版本只生成 SQL 与口径说明，不真实执行查询。",
+                "默认模式只生成 SQL 与口径说明；如设置 EXECUTION_MODE=mock/sqlite，可返回执行层样例结果。",
                 "核销发生类问题默认使用 executed_date；支付发生类问题默认使用 pay_date。",
                 "核销收入使用 exe_income，核销 GMV 使用 exe_amount。",
                 "核销客单价默认分母为核销人次 verify_date_id；支付客单价默认分母为支付日期+用户。",
@@ -63,15 +60,24 @@ class AnswerComposer:
             # shadow mode
             template_sql=result.template_sql,
             llm_sql=result.llm_sql,
-            llm_sql_adopted=result.sql_source == "llm",
+            llm_sql_adopted=result.sql_source.startswith("llm"),
             llm_sql_validation=result.llm_sql_validation or LlmSqlValidation(),
             llm_sql_detail=result.llm_sql_detail or LlmSqlResultModel(),
             sql_source=result.sql_source,
             pipeline_trace=result.trace.to_dict() if result.trace else {},
-            execution_result=(
-                _execution_to_dict(result.execution_result)
-                if result.execution_result else {}
+            execution_enabled=bool(result.execution_result and result.execution_result.enabled),
+            execution_mode=(result.execution_result.mode if result.execution_result else "disabled"),
+            execution_status=(result.execution_result.status if result.execution_result else "skipped"),
+            sample_rows=(result.execution_result.sample_rows if result.execution_result else []),
+            row_count=(result.execution_result.row_count if result.execution_result else 0),
+            execution_error=(result.execution_result.error if result.execution_result else ""),
+            result_validation=(
+                result.result_validation.to_dict()
+                if result.result_validation and hasattr(result.result_validation, "to_dict")
+                else {}
             ),
+            repair_attempt=result.repair_attempt or {},
+            execution_result=_execution_to_dict(result.execution_result),
         )
 
 
@@ -177,6 +183,14 @@ class AnswerComposer:
             retrieval_context=retrieval_context.to_dict(),
             schema_graph=self._schema_graph_payload(schema_result),
             pipeline_trace=pipeline_trace or {},
+            execution_enabled=False,
+            execution_mode="disabled",
+            execution_status="skipped",
+            sample_rows=[],
+            row_count=0,
+            execution_error="non_nl2sql_no_execution",
+            result_validation={},
+            repair_attempt={},
         )
 
     def _schema_graph_payload(self, schema_result: dict) -> dict:

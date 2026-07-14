@@ -385,17 +385,6 @@
     "source_kind": "core_fields_yaml"
   },
   {
-    "field_id": "dm_opt_qy_order_info_all_d.pay_flag",
-    "database_name": "soyoung_dw",
-    "table_name": "dm_opt_qy_order_info_all_d",
-    "field_name": "pay_flag",
-    "field_type": "filter",
-    "field_description": "支付成功标记",
-    "table_description": "",
-    "rerank_text": "字段：pay_flag 业务含义：支付成功标记 来源表：soyoung_dw.dm_opt_qy_order_info_all_d 字段类型：filter 字段说明：支付成功标记 口径：支付客单价分母仅统计 pay_flag = 1 的支付用户日。 过滤：['pay_flag = 1'] 易错提醒：['支付客单价口径需要与剔除当日退款一起说明']",
-    "source_kind": "core_fields_yaml"
-  },
-  {
     "field_id": "dm_opt_qy_order_info_all_d.pay_gmv",
     "database_name": "soyoung_dw",
     "table_name": "dm_opt_qy_order_info_all_d",
@@ -414,7 +403,7 @@
     "field_type": "date",
     "field_description": "支付统计日期",
     "table_description": "",
-    "rerank_text": "字段：stat_date 业务含义：支付统计日期 来源表：soyoung_dw.dm_opt_qy_order_info_all_d 字段类型：date 字段说明：支付统计日期 口径：支付客单价人次版可按 CONCAT(CAST(stat_date AS STRING), '_', CAST(uid AS STRING)) 去重。 过滤：['dp = DATE_SUB(CURRENT_DATE(),1)', 'pay_flag = 1'] 易错提醒：['若真实表无 stat_date，可切换为 pay_date 并在口径说明中标注']",
+    "rerank_text": "字段：stat_date 业务含义：支付统计日期 来源表：soyoung_dw.dm_opt_qy_order_info_all_d 字段类型：date 字段说明：支付统计日期 口径：支付客单价人次版可按 CONCAT(CAST(stat_date AS STRING), '_', CAST(uid AS STRING)) 去重。 过滤：['dp = DATE_SUB(CURRENT_DATE(),1)', 'is_paydate_cash = 0'] 易错提醒：['若真实表无 stat_date，可切换为 pay_date 并在口径说明中标注']",
     "source_kind": "core_fields_yaml"
   },
   {

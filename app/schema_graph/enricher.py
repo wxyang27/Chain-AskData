@@ -1,4 +1,4 @@
-"""SchemaGraph field enricher using a template-level dependency matrix.
+﻿"""SchemaGraph field enricher using a template-level dependency matrix.
 
 Keyword-based retrieval can miss essential fields (dp, is_valid, tenant_id)
 because they are never semantically matched by query text.  This module
@@ -9,7 +9,7 @@ contains the minimum fields needed to produce a valid CoT / SQL.
 from typing import Any
 
 from app.schema_graph.graph import SchemaGraph
-from app.schema_index.loader import SchemaIndexBundle
+from app.schema_indexing.loader import SchemaIndexBundle
 
 _CITY_TERMS = (
     "\u57ce\u5e02",

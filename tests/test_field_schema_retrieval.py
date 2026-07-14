@@ -1,10 +1,10 @@
-import tempfile
+﻿import tempfile
 import unittest
 
 from app.knowledge_indexer.chroma_store import ChromaKnowledgeStore
 from app.knowledge_indexer.loader import load_knowledge_chunks
 from app.knowledge_indexer.retrieval_context import RetrievalContextBuilder
-from app.query_planner.planner import QueryPlanner
+from app.cot_planning.planner import QueryPlanner
 
 
 class FieldSchemaRetrievalTestCase(unittest.TestCase):

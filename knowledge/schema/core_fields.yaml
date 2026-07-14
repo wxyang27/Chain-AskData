@@ -201,20 +201,8 @@
       "canonical_name": "pay_stat_date",
       "used_by_metrics": ["pay_aov_per_user_day"],
       "caliber": "支付客单价人次版可按 CONCAT(CAST(stat_date AS STRING), '_', CAST(uid AS STRING)) 去重。",
-      "filters": ["dp = DATE_SUB(CURRENT_DATE(),1)", "pay_flag = 1"],
+      "filters": ["dp = DATE_SUB(CURRENT_DATE(),1)", "is_paydate_cash = 0"],
       "risk_notes": ["若真实表无 stat_date，可切换为 pay_date 并在口径说明中标注"]
-    },
-    {
-      "field_name": "pay_flag",
-      "business_name": "支付成功标记",
-      "table_name": "dm_opt_qy_order_info_all_d",
-      "full_table_name": "soyoung_dw.dm_opt_qy_order_info_all_d",
-      "field_type": "filter",
-      "canonical_name": "pay_flag",
-      "used_by_metrics": ["pay_aov_per_user_day"],
-      "caliber": "支付客单价分母仅统计 pay_flag = 1 的支付用户日。",
-      "filters": ["pay_flag = 1"],
-      "risk_notes": ["支付客单价口径需要与剔除当日退款一起说明"]
     },
     {
       "field_name": "is_paydate_cash",

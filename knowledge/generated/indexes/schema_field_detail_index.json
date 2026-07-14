@@ -746,27 +746,6 @@
     "is_dimension_field": false
   },
   {
-    "field_id": "dm_opt_qy_order_info_all_d.pay_flag",
-    "database_name": "soyoung_dw",
-    "table_name": "dm_opt_qy_order_info_all_d",
-    "field_name": "pay_flag",
-    "field_type": "filter",
-    "field_description": "支付成功标记",
-    "business_name": "支付成功标记",
-    "caliber": "支付客单价分母仅统计 pay_flag = 1 的支付用户日。",
-    "sample_values": [],
-    "value_range": [],
-    "filters": [
-      "pay_flag = 1"
-    ],
-    "risk_notes": [
-      "支付客单价口径需要与剔除当日退款一起说明"
-    ],
-    "is_join_key": false,
-    "is_metric_field": false,
-    "is_dimension_field": false
-  },
-  {
     "field_id": "dm_opt_qy_order_info_all_d.pay_gmv",
     "database_name": "soyoung_dw",
     "table_name": "dm_opt_qy_order_info_all_d",
@@ -801,7 +780,7 @@
     "value_range": [],
     "filters": [
       "dp = DATE_SUB(CURRENT_DATE(),1)",
-      "pay_flag = 1"
+      "is_paydate_cash = 0"
     ],
     "risk_notes": [
       "若真实表无 stat_date，可切换为 pay_date 并在口径说明中标注"

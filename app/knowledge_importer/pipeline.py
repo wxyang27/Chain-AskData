@@ -1,4 +1,4 @@
-import json
+﻿import json
 from pathlib import Path
 from typing import Any
 
@@ -6,7 +6,7 @@ from app.knowledge_importer.docx_loader import AnalysisDocxLoader, DatabaseDocxL
 from app.knowledge_importer.excel_loader import IndicatorWorkbookLoader
 from app.knowledge_importer.models import ImportResult
 from app.knowledge_importer.reviewed_yaml_loader import ReviewedYamlAssetLoader
-from app.schema_index.builder import SchemaIndexBuilder
+from app.schema_indexing.builder import SchemaIndexBuilder
 
 
 DEFAULT_SOURCE_DIR = Path("docs/primary_knowledge")

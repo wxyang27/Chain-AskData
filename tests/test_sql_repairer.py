@@ -1,4 +1,4 @@
-from app.llm.sql_repairer import StaticSqlRepairer
+﻿from app.sql.repairer import StaticSqlRepairer
 from app.models.query import SemanticContract
 from app.schema_graph.graph import SchemaGraph
 

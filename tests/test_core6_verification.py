@@ -1,4 +1,4 @@
-"""Core-6 verification suite for Chain-AskData (Q001-Q006).
+﻿"""Core-6 verification suite for Chain-AskData (Q001-Q006).
 
 Validates:
 1. SchemaGraph completeness -- all required fields present
@@ -14,7 +14,7 @@ import pytest
 
 from app.answer.composer import AnswerComposer
 from app.schema_graph.enricher import REQUIRED_FIELDS_BY_TEMPLATE
-from app.schema_index.loader import SchemaIndexLoader
+from app.schema_indexing.loader import SchemaIndexLoader
 
 # ---------------------------------------------------------------------------
 # Core 6 queries

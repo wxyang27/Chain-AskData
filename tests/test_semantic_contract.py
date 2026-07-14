@@ -1,4 +1,4 @@
-from app.semantic.contract import SemanticContractBuilder
+﻿from app.cot_planning.semantic_contract import SemanticContractBuilder
 
 
 def test_contract_maps_unverified_synonym_to_inventory_metric():

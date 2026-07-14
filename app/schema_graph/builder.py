@@ -1,9 +1,9 @@
-from typing import Any
+﻿from typing import Any
 
 from app.knowledge_indexer.retrieval_context import RetrievalContext
 from app.schema_graph.enricher import SchemaGraphEnricher
 from app.schema_graph.graph import SchemaGraph
-from app.schema_index.loader import SchemaIndexBundle
+from app.schema_indexing.loader import SchemaIndexBundle
 
 
 class SchemaGraphBuilder:

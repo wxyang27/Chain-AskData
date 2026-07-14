@@ -3,7 +3,7 @@ from fastapi import APIRouter, Query
 from app.answer.composer import AnswerComposer
 from app.knowledge_indexer.service import KnowledgeSearchService
 from app.models.query import QueryRequest, QueryResponse
-from app.query_planner.planner import QueryPlanner
+from app.cot_planning.planner import QueryPlanner
 
 router = APIRouter()
 

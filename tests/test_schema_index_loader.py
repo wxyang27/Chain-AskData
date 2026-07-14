@@ -1,9 +1,9 @@
-from pathlib import Path
+﻿from pathlib import Path
 
 import pytest
 
 from app.knowledge_importer.pipeline import PrimaryKnowledgeImporter
-from app.schema_index.loader import SchemaIndexLoader
+from app.schema_indexing.loader import SchemaIndexLoader
 
 
 def test_schema_index_loader_loads_all_askdata_style_indexes(tmp_path):
@@ -14,10 +14,10 @@ def test_schema_index_loader_loads_all_askdata_style_indexes(tmp_path):
 
     bundle = SchemaIndexLoader().load(tmp_path / "indexes")
 
-    assert len(bundle.schema_field_keyword_index) == 135
-    assert len(bundle.schema_field_vector_index) == 135
-    assert len(bundle.schema_field_rerank_index) == 135
-    assert len(bundle.schema_field_detail_index) == 135
+    assert len(bundle.schema_field_keyword_index) == 134
+    assert len(bundle.schema_field_vector_index) == 134
+    assert len(bundle.schema_field_rerank_index) == 134
+    assert len(bundle.schema_field_detail_index) == 134
     assert len(bundle.schema_table_index) == 49
     assert len(bundle.schema_relation_index) >= 2
     assert len(bundle.metric_keyword_index) == 151

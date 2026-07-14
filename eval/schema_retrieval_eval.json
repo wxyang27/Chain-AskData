@@ -21,7 +21,7 @@
     "id": "SCHEMA_003",
     "question": "最近30天新客支付GMV、支付人数、支付客单价是多少？",
     "expected_tables": ["dm_opt_qy_order_info_all_d"],
-    "expected_fields": ["pay_gmv", "uid", "pay_date", "is_paydate_cash", "is_pay_new", "dp", "pay_flag"],
+    "expected_fields": ["pay_gmv", "uid", "pay_date", "is_paydate_cash", "is_pay_new", "dp"],
     "critical_fields": ["pay_gmv", "uid", "is_paydate_cash", "is_pay_new"],
     "expected_relations": [],
     "difficulty": "medium"

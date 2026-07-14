@@ -1,7 +1,10 @@
 {
-  "embedding_provider": "LocalHashEmbeddingClient",
-  "embedding_dimension": 128,
-  "rerank_provider": "lightweight",
-  "build_time": "2026-07-14T06:35:42.458920+00:00",
-  "chunk_count": 897
+  "embedding_provider": "dashscope",
+  "embedding_model": "text-embedding-v4",
+  "embedding_dimension": 1024,
+  "rerank_provider": "dashscope/qwen3-rerank",
+  "chroma_persist_dir": "data/chroma/dashscope_text_embedding_v4_1024",
+  "chroma_collection": "chain_askdata_knowledge",
+  "build_time": "2026-07-14T08:32:27.344454+00:00",
+  "chunk_count": 895
 }

@@ -1,10 +1,10 @@
-from typing import Any
+﻿from typing import Any
 
 from app.knowledge_indexer.keyword_extractor import KeywordExtractor
 from app.knowledge_indexer.reranker import LightweightReranker
 from app.knowledge_indexer.types import KnowledgeChunk
 from app.model_clients.rerank_client import RerankClient
-from app.schema_index.loader import SchemaIndexBundle
+from app.schema_indexing.loader import SchemaIndexBundle
 from app.schema_retrieval.objects import RecallHit, SchemaRetrievalTrace
 
 
@@ -48,6 +48,9 @@ class HybridRetriever:
         self.reranker = reranker or LightweightReranker()
         self.schema_indexes = schema_indexes
         self.rerank_client = rerank_client  # optional pluggable reranker
+        self.last_rerank_provider = "lightweight"
+        self.last_rerank_fallback = False
+        self.last_rerank_fallback_reason = ""
 
     def retrieve(
         self,
@@ -154,6 +157,9 @@ class HybridRetriever:
             for item in fused
         ]
         reranked = self._apply_rerank(query_text, candidates, top_k)
+        trace.rerank_provider = self.last_rerank_provider
+        trace.rerank_fallback = self.last_rerank_fallback
+        trace.rerank_fallback_reason = self.last_rerank_fallback_reason
         trace.rerank_hits = [
             RecallHit(
                 id=_match_id(m),
@@ -176,23 +182,37 @@ class HybridRetriever:
         top_k: int,
     ) -> list[dict[str, Any]]:
         """Apply reranker — pluggable client or local default."""
-        if self.rerank_client is not None:
+        self.last_rerank_provider = (
+            self.rerank_client.provider_name if self.rerank_client is not None else "lightweight"
+        )
+        self.last_rerank_fallback = False
+        self.last_rerank_fallback_reason = ""
+
+        if self.rerank_client is not None and self.rerank_client.provider_name != "lightweight":
             try:
                 docs = [c.get("document", "") for c in candidates]
                 results = self.rerank_client.rerank(query_text, docs, top_k)
                 reranked = []
                 for r_item in results:
-                    idx = r_item.get("index", 0)
+                    idx = int(r_item.get("index", 0))
                     if 0 <= idx < len(candidates):
                         c = candidates[idx].copy()
                         c["rerank_score"] = r_item.get("score", 0.0)
                         c["rerank_provider"] = self.rerank_client.provider_name
                         reranked.append(c)
                 return reranked[:top_k]
-            except Exception:
-                pass  # fall back to local reranker on any error
+            except Exception as exc:
+                self.last_rerank_fallback = True
+                self.last_rerank_fallback_reason = str(exc)
         # Default: local LightweightReranker
-        return self.reranker.rerank(query_text, candidates, top_k)
+        self.last_rerank_provider = "lightweight"
+        reranked = self.reranker.rerank(query_text, candidates, top_k)
+        for item in reranked:
+            item["rerank_provider"] = "lightweight"
+            item["rerank_fallback"] = self.last_rerank_fallback
+            if self.last_rerank_fallback_reason:
+                item["rerank_fallback_reason"] = self.last_rerank_fallback_reason
+        return reranked
 
     def _keyword_retrieve(self, query_text: str, limit: int) -> list[dict[str, Any]]:
         keywords = self.keyword_extractor.extract(query_text)

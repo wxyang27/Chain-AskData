@@ -1,9 +1,9 @@
-import unittest
+﻿import unittest
 
 from app.knowledge_indexer.retrieval_context import RetrievalContext, RetrievalHit
-from app.llm.query_plan_cot_generator import LLMQueryPlanCoTResult
+from app.cot_planning.query_plan_cot_generator import LLMQueryPlanCoTResult
 from app.models.query import CoTSemantics, QueryPlanCoT
-from app.query_planner.planner import QueryPlanner
+from app.cot_planning.planner import QueryPlanner
 from app.schema_graph.builder import SchemaGraphBuilder
 
 

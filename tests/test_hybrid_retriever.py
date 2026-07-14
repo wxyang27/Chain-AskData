@@ -1,10 +1,10 @@
-import unittest
+﻿import unittest
 
 from app.knowledge_indexer.hybrid_retriever import HybridRetriever, reciprocal_rank_fusion
 from app.knowledge_indexer.keyword_extractor import KeywordExtractor
 from app.knowledge_indexer.loader import load_knowledge_chunks
 from app.knowledge_indexer.service import KnowledgeSearchService
-from app.schema_index.loader import SchemaIndexLoader
+from app.schema_indexing.loader import SchemaIndexLoader
 
 
 class HybridRetrieverTestCase(unittest.TestCase):

@@ -16,7 +16,6 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from app.knowledge_indexer.service import KnowledgeSearchService
-from app.schema_retrieval.objects import RecallHit, SchemaRetrievalTrace
 
 
 def load_eval_cases(path: str) -> list[dict[str, Any]]:
@@ -139,16 +138,7 @@ def run_single(
     critical_fields = set(case.get("critical_fields", []))
     expected_relations = set(case.get("expected_relations", []))
 
-    ctx = service.search_structured(question, top_k=20)
-
-    # Use hybrid retriever trace if available
-    trace: SchemaRetrievalTrace | None = None
-    if hasattr(service.hybrid_retriever, "retrieve_with_trace"):
-        _, trace = service.hybrid_retriever.retrieve_with_trace(
-            query_text=question,
-            vector_matches=ctx.raw_matches,
-            top_k=10,
-        )
+    ctx, trace = service.search_structured_with_trace(question, top_k=20)
 
     # --- Extract tables from fields metadata (ctx.tables is often empty) ---
     actual_tables = set()
@@ -224,11 +214,18 @@ def run_single(
         "field_source": field_source,
         "raw_field_count": len(raw_fields),
         "closure_field_count": len(closure_all),
-        "trace_keywords": trace.keywords if trace else [],
-        "trace_keyword_hits": len(trace.keyword_hits) if trace else 0,
-        "trace_vector_hits": len(trace.vector_hits) if trace else 0,
-        "trace_rrf_hits": len(trace.rrf_hits) if trace else 0,
-        "trace_rerank_hits": len(trace.rerank_hits) if trace else 0,
+        "trace_keywords": trace.get("keywords", []),
+        "trace_keyword_hits": trace.get("keyword_hit_count", 0),
+        "trace_vector_hits": trace.get("vector_hit_count", 0),
+        "trace_rrf_hits": trace.get("rrf_hit_count", 0),
+        "trace_rerank_hits": trace.get("rerank_hit_count", 0),
+        "trace_vector_fields": trace.get("vector_fields", []),
+        "trace_vector_only_fields": trace.get("vector_only_fields", []),
+        "trace_rrf_fields": trace.get("rrf_fields", []),
+        "trace_rerank_fields": trace.get("rerank_fields", []),
+        "rerank_provider": trace.get("rerank_provider", ""),
+        "rerank_fallback": trace.get("rerank_fallback", False),
+        "rerank_fallback_reason": trace.get("rerank_fallback_reason", ""),
     }
 
 

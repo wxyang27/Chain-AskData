@@ -1,4 +1,4 @@
-from app.llm.query_plan_cot_validator import QueryPlanCoTValidator
+﻿from app.cot_planning.query_plan_cot_validator import QueryPlanCoTValidator
 from app.models.query import QueryPlanCoT
 from app.schema_graph.graph import SchemaGraph
 

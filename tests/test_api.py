@@ -73,6 +73,16 @@ class ApiTestCase(unittest.TestCase):
         self.assertGreater(body["schema_graph"]["field_count"], 0)
         self.assertIn("llm_enabled", body["query_plan"])
         self.assertIn("llm_validation_passed", body["query_plan"])
+        self.assertIn("execution_enabled", body)
+        self.assertIn("execution_mode", body)
+        self.assertIn("execution_status", body)
+        self.assertIn("sample_rows", body)
+        self.assertIn("row_count", body)
+        self.assertIn("execution_error", body)
+        self.assertIn("result_validation", body)
+        self.assertIn("repair_attempt", body)
+        self.assertEqual(body["execution_mode"], "disabled")
+        self.assertEqual(body["execution_status"], "skipped")
 
 
 if __name__ == "__main__":

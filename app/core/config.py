@@ -14,6 +14,18 @@ def _env_bool(name: str, default: bool = False) -> bool:
     return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
+def _env_int(name: str, default: int) -> int:
+    value = os.getenv(name)
+    if value is None or not value.strip():
+        return default
+    return int(value)
+
+
+def _default_embedding_dimension() -> int:
+    provider = os.getenv("EMBEDDING_PROVIDER", "local").strip().lower()
+    return 1024 if provider == "dashscope" else 128
+
+
 @dataclass(frozen=True)
 class Settings:
     """Application settings loaded from environment variables."""
@@ -36,11 +48,11 @@ class Settings:
     embedding_model: str = os.getenv("EMBEDDING_MODEL", "qwen-embedding")
 
     rerank_enabled: bool = _env_bool("RERANK_ENABLED", False)
-    rerank_url: str = os.getenv("RERANK_URL", "http://localhost:8001/rerank")
+    rerank_url: str = os.getenv("RERANK_URL", "")
 
     # --- Pluggable model clients (local / dashscope) ---
     embedding_provider: str = os.getenv("EMBEDDING_PROVIDER", "local")
-    embedding_dimension: int = int(os.getenv("EMBEDDING_DIMENSION", "128"))
+    embedding_dimension: int = _env_int("EMBEDDING_DIMENSION", _default_embedding_dimension())
     embedding_url: str = os.getenv(
         "EMBEDDING_URL",
         "https://dashscope.aliyuncs.com/compatible-mode/v1/embeddings",
@@ -48,10 +60,20 @@ class Settings:
 
     rerank_provider: str = os.getenv("RERANK_PROVIDER", "local")
     rerank_model: str = os.getenv("RERANK_MODEL", "lightweight")
-    rerank_top_n: int = int(os.getenv("RERANK_TOP_N", "20"))
+    rerank_top_n: int = _env_int("RERANK_TOP_N", 20)
+    rerank_endpoint_mode: str = os.getenv("RERANK_ENDPOINT_MODE", "auto")
 
     dashscope_api_key: str = os.getenv("DASHSCOPE_API_KEY", "")
     dashscope_workspace_id: str = os.getenv("DASHSCOPE_WORKSPACE_ID", "")
+
+    # --- SQL execution layer ---
+    # disabled: default, stable for demos/tests; no SQL is executed.
+    # mock: dry-run executor returns deterministic sample rows.
+    # sqlite: executes against a local SQLite demo database.
+    execution_mode: str = os.getenv("EXECUTION_MODE", "disabled")
+    execution_timeout_seconds: int = _env_int("EXECUTION_TIMEOUT_SECONDS", 30)
+    execution_max_rows: int = _env_int("EXECUTION_MAX_ROWS", 100)
+    execution_sqlite_path: str = os.getenv("EXECUTION_SQLITE_PATH", "runtime_data/trade_demo.db")
 
 
 settings = Settings()

@@ -218,5 +218,15 @@ class QueryResponse(BaseModel):
     # --- Pipeline observability ---
     pipeline_trace: dict[str, Any] = Field(default_factory=dict)
 
-    # --- SQL execution (mock → maxcompute) ---
+    # --- SQL execution (disabled by default; mock/sqlite for closed-loop demo) ---
+    execution_enabled: bool = False
+    execution_mode: str = "disabled"
+    execution_status: str = "skipped"
+    sample_rows: list[dict[str, Any]] = Field(default_factory=list)
+    row_count: int = 0
+    execution_error: str = ""
+    result_validation: dict[str, Any] = Field(default_factory=dict)
+    repair_attempt: dict[str, Any] = Field(default_factory=dict)
+
+    # Backward-compatible detailed payload.
     execution_result: dict[str, Any] = Field(default_factory=dict)

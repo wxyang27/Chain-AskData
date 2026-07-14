@@ -70,7 +70,7 @@ class LightweightReranker:
             ("\u6838\u9500\u4eba\u6570", {"customer_id"}, 12.0),
             ("\u6838\u9500\u4eba\u6b21", {"verify_date_id"}, 12.0),
             ("\u6838\u9500\u5ba2\u5355\u4ef7", {"exe_income", "verify_date_id"}, 10.0),
-            ("\u652f\u4ed8\u5ba2\u5355\u4ef7", {"pay_gmv", "uid", "stat_date", "pay_flag"}, 10.0),
+            ("\u652f\u4ed8\u5ba2\u5355\u4ef7", {"pay_gmv", "uid", "pay_date", "is_paydate_cash"}, 10.0),
             ("\u5f85\u6838\u9500", {"left_gmv", "left_num"}, 12.0),
             ("0\u5143", {"exe_income"}, 10.0),
             ("0 \u5143", {"exe_income"}, 10.0),
