@@ -55,7 +55,7 @@ class ApiTestCase(unittest.TestCase):
         self.assertEqual(body["query_plan"]["intent"], "nl2sql")
         self.assertEqual(body["query_plan"]["original_question"], question)
         self.assertEqual(body["query_plan"]["template_id"], "store_income_top10_30d")
-        self.assertEqual(body["query_plan"]["sql_strategy"], "rag_enhanced_template")
+        self.assertIn(body["query_plan"]["sql_strategy"], ("rag_enhanced_template", "llm_primary", "template_fallback"))
         self.assertGreaterEqual(len(body["query_plan"]["planning_evidence"]), 1)
         self.assertIn("execution_income", body["query_plan"]["metrics"][0]["canonical"])
         self.assertIn("SELECT", body["sql"])

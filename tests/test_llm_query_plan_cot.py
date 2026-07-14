@@ -219,16 +219,14 @@ def test_query_planner_adopts_llm_cot_when_valid():
     assert plan.llm_validation_passed is True
     assert plan.llm_validation_errors == []
     assert plan.llm_repair_count == 0
-    assert plan.query_plan_cot == [
-        QueryPlanCoT(
-            step=1,
-            database="soyoung_dw",
-            processing_objects=["llm_table.llm_field"],
-            operation_instructions=["先按 SchemaGraph 规划"],
-            output_target="LLM 输出目标",
-            evidence=["LLM generated from SchemaGraph"],
-        )
-    ]
+    assert len(plan.query_plan_cot) == 1
+    step = plan.query_plan_cot[0]
+    assert step.step == 1
+    assert step.database == "soyoung_dw"
+    assert step.processing_objects == ["llm_table.llm_field"]
+    assert step.operation_instructions == ["先按 SchemaGraph 规划"]
+    assert step.output_target == "LLM 输出目标"
+    assert step.evidence == ["LLM generated from SchemaGraph"]
 
 
 # ---------------------------------------------------------------------------
