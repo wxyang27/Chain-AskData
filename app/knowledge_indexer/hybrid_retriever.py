@@ -1,5 +1,6 @@
 ﻿from typing import Any
 
+from app.knowledge_indexer.bm25 import BM25Document, BM25LexicalRetriever
 from app.knowledge_indexer.keyword_extractor import KeywordExtractor
 from app.knowledge_indexer.reranker import LightweightReranker
 from app.knowledge_indexer.types import KnowledgeChunk
@@ -33,7 +34,7 @@ def reciprocal_rank_fusion(
 
 
 class HybridRetriever:
-    """Keyword + vector retrieval over the current unified knowledge assets."""
+    """Keyword + BM25 + vector retrieval over the current unified knowledge assets."""
 
     def __init__(
         self,
@@ -51,6 +52,7 @@ class HybridRetriever:
         self.last_rerank_provider = "lightweight"
         self.last_rerank_fallback = False
         self.last_rerank_fallback_reason = ""
+        self.bm25_retriever = BM25LexicalRetriever(self._build_bm25_documents())
 
     def retrieve(
         self,
@@ -59,12 +61,15 @@ class HybridRetriever:
         top_k: int,
     ) -> list[dict[str, Any]]:
         keyword_matches = self._keyword_retrieve(query_text, limit=max(top_k * 4, 20))
+        bm25_matches = self._bm25_retrieve(query_text, limit=max(top_k * 4, 20))
         schema_index_matches = self._schema_index_retrieve(query_text, limit=max(top_k * 4, 20))
         normalized_vector_matches = [
             self._normalize_vector_match(match)
             for match in vector_matches
         ]
-        fused = reciprocal_rank_fusion([keyword_matches, schema_index_matches, normalized_vector_matches])
+        fused = reciprocal_rank_fusion(
+            [keyword_matches, bm25_matches, schema_index_matches, normalized_vector_matches],
+        )
         candidates = [
             {
                 "document": item.get("document", ""),
@@ -84,7 +89,7 @@ class HybridRetriever:
         """Retrieve with full observability trace.
 
         Returns (final_matches, trace) so callers can inspect
-        keyword / vector / RRF / rerank stages independently.
+        keyword / BM25 / vector / RRF / rerank stages independently.
         """
         trace = SchemaRetrievalTrace(query=query_text)
         keywords = self.keyword_extractor.extract(query_text)
@@ -104,6 +109,22 @@ class HybridRetriever:
                 metadata=m.get("metadata", {}),
             )
             for m in keyword_matches[:20]
+        ]
+
+        # --- BM25 lexical recall ---
+        bm25_matches = self._bm25_retrieve(query_text, limit=max(top_k * 4, 20))
+        trace.bm25_hits = [
+            RecallHit(
+                id=m.get("id", ""),
+                asset_type=(m.get("metadata") or {}).get("asset_type", ""),
+                name=(m.get("metadata") or {}).get("field_name")
+                     or (m.get("metadata") or {}).get("metric_name")
+                     or (m.get("metadata") or {}).get("table_name", ""),
+                score=float(m.get("bm25_score", 0)),
+                source="bm25",
+                metadata=m.get("metadata", {}),
+            )
+            for m in bm25_matches[:20]
         ]
 
         # --- vector recall ---
@@ -132,7 +153,7 @@ class HybridRetriever:
 
         # --- RRF fusion ---
         fused = reciprocal_rank_fusion(
-            [keyword_matches, schema_index_matches, normalized_vector_matches],
+            [keyword_matches, bm25_matches, schema_index_matches, normalized_vector_matches],
         )
         trace.rrf_hits = [
             RecallHit(
@@ -235,6 +256,9 @@ class HybridRetriever:
         matches.sort(key=lambda item: (-item["keyword_score"], item["distance"]))
         return matches[:limit]
 
+    def _bm25_retrieve(self, query_text: str, limit: int) -> list[dict[str, Any]]:
+        return self.bm25_retriever.search(query_text, top_k=limit)
+
     def _schema_index_retrieve(self, query_text: str, limit: int) -> list[dict[str, Any]]:
         if not self.schema_indexes:
             return []
@@ -326,6 +350,88 @@ class HybridRetriever:
     def _keyword_score(self, keywords: list[str], row: dict[str, Any]) -> int:
         searchable = "\n".join(str(value) for value in row.values())
         return sum(1 for keyword in keywords if keyword and keyword in searchable)
+
+    def _build_bm25_documents(self) -> list[BM25Document]:
+        documents: list[BM25Document] = []
+
+        for chunk in self.chunks:
+            searchable = chunk.document + "\n" + " ".join(
+                str(value) for value in chunk.metadata.values()
+            )
+            documents.append(
+                BM25Document(
+                    id=chunk.chunk_id,
+                    text=searchable,
+                    payload={
+                        "document": chunk.document,
+                        "metadata": chunk.metadata,
+                    },
+                )
+            )
+
+        if not self.schema_indexes:
+            return documents
+
+        for row in self.schema_indexes.schema_field_keyword_index:
+            field_id = row["field_id"]
+            detail = self.schema_indexes.field_detail_by_id.get(field_id, {})
+            rerank = self.schema_indexes.field_rerank_by_id.get(field_id, {})
+            metadata = {
+                **row,
+                **detail,
+                "asset_type": "field",
+                "full_name": self._field_full_name(detail or row),
+            }
+            document = rerank.get("rerank_text") or row.get("keyword_text", "")
+            documents.append(
+                BM25Document(
+                    id=f"field:{field_id}",
+                    text="\n".join([document, row.get("keyword_text", ""), str(metadata)]),
+                    payload={
+                        "document": document,
+                        "metadata": metadata,
+                    },
+                )
+            )
+
+        for row in self.schema_indexes.metric_keyword_index:
+            metric_id = row["metric_id"]
+            rerank = self.schema_indexes.metric_rerank_by_id.get(metric_id, {})
+            metadata = {
+                **row,
+                **rerank,
+                "asset_type": "metric",
+                "metric_id": metric_id,
+                "canonical": metric_id,
+                "display_name": row.get("metric_name", ""),
+            }
+            document = rerank.get("rerank_text") or row.get("keyword_text", "")
+            documents.append(
+                BM25Document(
+                    id=f"metric:{metric_id}",
+                    text="\n".join([document, row.get("keyword_text", ""), str(metadata)]),
+                    payload={
+                        "document": document,
+                        "metadata": metadata,
+                    },
+                )
+            )
+
+        for row in self.schema_indexes.schema_table_index:
+            metadata = {**row, "asset_type": "table"}
+            document = row.get("table_summary") or row.get("full_name", "")
+            documents.append(
+                BM25Document(
+                    id=f"table:{row['table_name']}",
+                    text="\n".join([document, str(metadata)]),
+                    payload={
+                        "document": document,
+                        "metadata": metadata,
+                    },
+                )
+            )
+
+        return documents
 
     def _field_full_name(self, row: dict[str, Any]) -> str:
         database_name = row.get("database_name") or "soyoung_dw"

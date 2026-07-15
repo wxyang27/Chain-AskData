@@ -55,9 +55,25 @@
         "TOP10"
       ],
       "trace_keyword_hits": 20,
+      "trace_bm25_hits": 20,
       "trace_vector_hits": 20,
       "trace_rrf_hits": 30,
       "trace_rerank_hits": 20,
+      "trace_keyword_fields": [
+        "exe_amount",
+        "exe_income",
+        "pay_gmv",
+        "sy_hospital_name",
+        "tenant_id"
+      ],
+      "trace_bm25_fields": [
+        "exe_cnt",
+        "exe_user_cnt"
+      ],
+      "trace_bm25_only_fields": [
+        "exe_cnt",
+        "exe_user_cnt"
+      ],
       "trace_vector_fields": [
         "exe_income",
         "income"
@@ -66,12 +82,9 @@
         "income"
       ],
       "trace_rrf_fields": [
-        "exe_amount",
+        "exe_cnt",
         "exe_income",
-        "income",
-        "pay_gmv",
-        "sy_hospital_name",
-        "tenant_id"
+        "exe_user_cnt"
       ],
       "trace_rerank_fields": [
         "sy_hospital_name",
@@ -137,23 +150,33 @@
         "TOP10"
       ],
       "trace_keyword_hits": 20,
+      "trace_bm25_hits": 20,
       "trace_vector_hits": 20,
       "trace_rrf_hits": 30,
       "trace_rerank_hits": 20,
+      "trace_keyword_fields": [
+        "is_paydate_cash",
+        "left_gmv",
+        "left_num",
+        "sy_hospital_name",
+        "tenant_id"
+      ],
+      "trace_bm25_fields": [
+        "left_gmv"
+      ],
+      "trace_bm25_only_fields": [],
       "trace_vector_fields": [
         "left_gmv",
         "left_num"
       ],
       "trace_vector_only_fields": [],
       "trace_rrf_fields": [
-        "area_name",
-        "city_name",
-        "exe_amount",
         "is_paydate_cash",
         "left_gmv",
         "left_num",
         "sy_hospital_name",
-        "tenant_id"
+        "tenant_id",
+        "total_actual_no_use_gmv"
       ],
       "trace_rerank_fields": [
         "left_gmv",
@@ -227,9 +250,20 @@
         "GMV"
       ],
       "trace_keyword_hits": 20,
+      "trace_bm25_hits": 20,
       "trace_vector_hits": 20,
       "trace_rrf_hits": 30,
       "trace_rerank_hits": 20,
+      "trace_keyword_fields": [
+        "pay_gmv",
+        "total_order_gmv_qy"
+      ],
+      "trace_bm25_fields": [
+        "uid"
+      ],
+      "trace_bm25_only_fields": [
+        "uid"
+      ],
       "trace_vector_fields": [
         "is_pay_new",
         "pay_gmv"
@@ -239,7 +273,6 @@
       ],
       "trace_rrf_fields": [
         "is_pay_new",
-        "pay_date",
         "pay_gmv",
         "stat_date",
         "uid"
@@ -302,9 +335,19 @@
         "品类"
       ],
       "trace_keyword_hits": 20,
+      "trace_bm25_hits": 20,
       "trace_vector_hits": 20,
       "trace_rrf_hits": 30,
       "trace_rerank_hits": 20,
+      "trace_keyword_fields": [
+        "exe_amount",
+        "exe_income",
+        "pay_gmv"
+      ],
+      "trace_bm25_fields": [
+        "exe_income"
+      ],
+      "trace_bm25_only_fields": [],
       "trace_vector_fields": [
         "exe_amount",
         "exe_income"
@@ -312,10 +355,7 @@
       "trace_vector_only_fields": [],
       "trace_rrf_fields": [
         "exe_amount",
-        "exe_income",
-        "is_ds",
-        "left_gmv",
-        "pay_gmv"
+        "exe_income"
       ],
       "trace_rerank_fields": [
         "exe_income"
@@ -336,7 +376,6 @@
         "exe_amount",
         "tenant_id",
         "uid",
-        "up_user_cnt",
         "verify_date_id"
       ],
       "supplied_fields": [
@@ -352,8 +391,7 @@
       "field_source": {
         "raw_retrieval": [
           "customer_id",
-          "uid",
-          "up_user_cnt"
+          "uid"
         ],
         "domain_closure": [
           "dp",
@@ -368,15 +406,26 @@
           "verify_date_id"
         ]
       },
-      "raw_field_count": 3,
+      "raw_field_count": 2,
       "closure_field_count": 9,
       "trace_keywords": [
         "核销人数"
       ],
       "trace_keyword_hits": 19,
+      "trace_bm25_hits": 20,
       "trace_vector_hits": 20,
       "trace_rrf_hits": 30,
       "trace_rerank_hits": 20,
+      "trace_keyword_fields": [
+        "customer_id",
+        "device_id",
+        "uid",
+        "up_user_cnt"
+      ],
+      "trace_bm25_fields": [
+        "customer_id"
+      ],
+      "trace_bm25_only_fields": [],
       "trace_vector_fields": [],
       "trace_vector_only_fields": [],
       "trace_rrf_fields": [
@@ -388,8 +437,7 @@
       ],
       "trace_rerank_fields": [
         "customer_id",
-        "uid",
-        "up_user_cnt"
+        "uid"
       ],
       "rerank_provider": "dashscope/qwen3-rerank",
       "rerank_fallback": false,
@@ -447,9 +495,16 @@
         "GMV"
       ],
       "trace_keyword_hits": 20,
+      "trace_bm25_hits": 20,
       "trace_vector_hits": 20,
       "trace_rrf_hits": 30,
       "trace_rerank_hits": 20,
+      "trace_keyword_fields": [
+        "exe_amount",
+        "exe_income"
+      ],
+      "trace_bm25_fields": [],
+      "trace_bm25_only_fields": [],
       "trace_vector_fields": [
         "exe_amount",
         "exe_income"
@@ -459,7 +514,6 @@
         "customer_id",
         "exe_amount",
         "exe_income",
-        "left_gmv",
         "verify_date_id"
       ],
       "trace_rerank_fields": [
@@ -519,9 +573,19 @@
         "品项"
       ],
       "trace_keyword_hits": 20,
+      "trace_bm25_hits": 20,
       "trace_vector_hits": 20,
       "trace_rrf_hits": 30,
       "trace_rerank_hits": 20,
+      "trace_keyword_fields": [
+        "item_product_id",
+        "revenue_category",
+        "standard_name"
+      ],
+      "trace_bm25_fields": [
+        "standard_name"
+      ],
+      "trace_bm25_only_fields": [],
       "trace_vector_fields": [
         "product_standard_name",
         "standard_name"
@@ -535,8 +599,7 @@
         "product_id",
         "product_standard_name",
         "revenue_category",
-        "standard_name",
-        "ware_cost"
+        "standard_name"
       ],
       "trace_rerank_fields": [
         "product_standard_name",
@@ -597,9 +660,13 @@
         "新客"
       ],
       "trace_keyword_hits": 20,
+      "trace_bm25_hits": 20,
       "trace_vector_hits": 20,
       "trace_rrf_hits": 30,
       "trace_rerank_hits": 20,
+      "trace_keyword_fields": [],
+      "trace_bm25_fields": [],
+      "trace_bm25_only_fields": [],
       "trace_vector_fields": [
         "is_new"
       ],
@@ -668,9 +735,17 @@
         "核销收入"
       ],
       "trace_keyword_hits": 20,
+      "trace_bm25_hits": 20,
       "trace_vector_hits": 20,
       "trace_rrf_hits": 30,
       "trace_rerank_hits": 20,
+      "trace_keyword_fields": [],
+      "trace_bm25_fields": [
+        "up_user_cnt"
+      ],
+      "trace_bm25_only_fields": [
+        "up_user_cnt"
+      ],
       "trace_vector_fields": [
         "exe_total_income",
         "is_up"
@@ -718,14 +793,15 @@
         "left_gmv",
         "left_num",
         "main_order_id",
-        "pay_date",
         "pay_gmv",
         "tenant_id",
         "uid",
         "verify_date_id"
       ],
       "field_source": {
-        "raw_retrieval": [],
+        "raw_retrieval": [
+          "pay_date"
+        ],
         "domain_closure": [
           "customer_id",
           "dp",
@@ -742,17 +818,20 @@
           "exe_income",
           "executed_date",
           "main_order_id",
-          "pay_date",
           "pay_gmv"
         ]
       },
-      "raw_field_count": 0,
+      "raw_field_count": 1,
       "closure_field_count": 15,
       "trace_keywords": [],
       "trace_keyword_hits": 0,
+      "trace_bm25_hits": 20,
       "trace_vector_hits": 20,
       "trace_rrf_hits": 30,
       "trace_rerank_hits": 20,
+      "trace_keyword_fields": [],
+      "trace_bm25_fields": [],
+      "trace_bm25_only_fields": [],
       "trace_vector_fields": [
         "first_use_date",
         "left_num"
@@ -773,7 +852,9 @@
         "left_gmv",
         "left_num"
       ],
-      "trace_rerank_fields": [],
+      "trace_rerank_fields": [
+        "pay_date"
+      ],
       "rerank_provider": "dashscope/qwen3-rerank",
       "rerank_fallback": false,
       "rerank_fallback_reason": ""
@@ -831,13 +912,21 @@
         "老客"
       ],
       "trace_keyword_hits": 20,
+      "trace_bm25_hits": 20,
       "trace_vector_hits": 20,
       "trace_rrf_hits": 30,
       "trace_rerank_hits": 20,
+      "trace_keyword_fields": [
+        "customer_is_new",
+        "first_order_date_qy",
+        "first_use_date",
+        "is_new"
+      ],
+      "trace_bm25_fields": [],
+      "trace_bm25_only_fields": [],
       "trace_vector_fields": [],
       "trace_vector_only_fields": [],
       "trace_rrf_fields": [
-        "exe_income",
         "is_new"
       ],
       "trace_rerank_fields": [],
@@ -896,17 +985,17 @@
         "TOP20"
       ],
       "trace_keyword_hits": 20,
+      "trace_bm25_hits": 20,
       "trace_vector_hits": 20,
       "trace_rrf_hits": 30,
       "trace_rerank_hits": 20,
+      "trace_keyword_fields": [],
+      "trace_bm25_fields": [],
+      "trace_bm25_only_fields": [],
       "trace_vector_fields": [],
       "trace_vector_only_fields": [],
       "trace_rrf_fields": [
-        "exe_amount",
-        "exe_income",
-        "item_product_id",
-        "revenue_category",
-        "standard_name"
+        "exe_income"
       ],
       "trace_rerank_fields": [
         "exe_income"
@@ -966,16 +1055,21 @@
         "核销收入"
       ],
       "trace_keyword_hits": 20,
+      "trace_bm25_hits": 20,
       "trace_vector_hits": 20,
       "trace_rrf_hits": 30,
       "trace_rerank_hits": 20,
+      "trace_keyword_fields": [
+        "exe_amount",
+        "exe_income",
+        "pay_gmv"
+      ],
+      "trace_bm25_fields": [],
+      "trace_bm25_only_fields": [],
       "trace_vector_fields": [],
       "trace_vector_only_fields": [],
       "trace_rrf_fields": [
-        "exe_amount",
-        "exe_income",
-        "is_new",
-        "pay_gmv"
+        "exe_income"
       ],
       "trace_rerank_fields": [
         "exe_income"
@@ -1033,13 +1127,20 @@
         "大师团"
       ],
       "trace_keyword_hits": 20,
+      "trace_bm25_hits": 20,
       "trace_vector_hits": 20,
       "trace_rrf_hits": 30,
       "trace_rerank_hits": 20,
+      "trace_keyword_fields": [
+        "revenue_category"
+      ],
+      "trace_bm25_fields": [
+        "revenue_category"
+      ],
+      "trace_bm25_only_fields": [],
       "trace_vector_fields": [],
       "trace_vector_only_fields": [],
       "trace_rrf_fields": [
-        "exe_amount",
         "exe_income",
         "revenue_category"
       ],
@@ -1095,9 +1196,17 @@
         "支付客单价"
       ],
       "trace_keyword_hits": 20,
+      "trace_bm25_hits": 20,
       "trace_vector_hits": 20,
       "trace_rrf_hits": 30,
       "trace_rerank_hits": 20,
+      "trace_keyword_fields": [
+        "stat_date",
+        "uid",
+        "verify_date_id"
+      ],
+      "trace_bm25_fields": [],
+      "trace_bm25_only_fields": [],
       "trace_vector_fields": [
         "exe_amount",
         "exe_income"
@@ -1107,12 +1216,8 @@
         "exe_income"
       ],
       "trace_rrf_fields": [
-        "customer_id",
         "exe_amount",
-        "exe_cnt",
         "exe_income",
-        "executed_date",
-        "is_new",
         "stat_date",
         "uid",
         "verify_date_id"

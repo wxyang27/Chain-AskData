@@ -34,6 +34,23 @@ class HybridRetrieverTestCase(unittest.TestCase):
 
         self.assertIn("customer_id", field_names)
 
+    def test_bm25_route_recalls_schema_fields_and_trace(self):
+        schema_indexes = SchemaIndexLoader().load()
+        retriever = HybridRetriever(chunks=[], schema_indexes=schema_indexes)
+
+        matches, trace = retriever.retrieve_with_trace(
+            "最近30天新客支付GMV是多少",
+            vector_matches=[],
+            top_k=8,
+        )
+
+        field_names = [match["metadata"].get("field_name") for match in matches]
+        trace_dict = trace.to_dict()
+
+        self.assertGreater(trace_dict["bm25_hit_count"], 0)
+        self.assertIn("pay_gmv", trace_dict["bm25_fields"])
+        self.assertIn("pay_gmv", field_names)
+
     def test_knowledge_search_service_uses_hybrid_retrieval(self):
         context = KnowledgeSearchService().search_structured("核销人数应该用哪个字段", top_k=8)
 

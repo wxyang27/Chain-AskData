@@ -83,6 +83,16 @@ class ApiTestCase(unittest.TestCase):
         self.assertIn("repair_attempt", body)
         self.assertEqual(body["execution_mode"], "disabled")
         self.assertEqual(body["execution_status"], "skipped")
+        retrieval_stage = next(
+            stage
+            for stage in body["pipeline_trace"]["stages"]
+            if stage["name"] == "knowledge_retrieval"
+        )
+        self.assertIn("keyword_hits", retrieval_stage["outputs"])
+        self.assertIn("bm25_hits", retrieval_stage["outputs"])
+        self.assertIn("vector_hits", retrieval_stage["outputs"])
+        self.assertIn("rrf_hits", retrieval_stage["outputs"])
+        self.assertIn("rerank_hits", retrieval_stage["outputs"])
 
 
 if __name__ == "__main__":

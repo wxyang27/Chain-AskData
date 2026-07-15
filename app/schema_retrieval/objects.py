@@ -15,7 +15,7 @@ class RecallHit:
     asset_type: str  # metric / field / table / relation / demo_query
     name: str = ""
     score: float = 0.0
-    source: str = ""  # keyword / vector / rrf / rerank
+    source: str = ""  # keyword / bm25 / vector / rrf / rerank
     metadata: dict[str, Any] = field(default_factory=dict)
 
 
@@ -26,6 +26,7 @@ class SchemaRetrievalTrace:
     query: str
     keywords: list[str] = field(default_factory=list)
     keyword_hits: list[RecallHit] = field(default_factory=list)
+    bm25_hits: list[RecallHit] = field(default_factory=list)
     vector_hits: list[RecallHit] = field(default_factory=list)
     rrf_hits: list[RecallHit] = field(default_factory=list)
     rerank_hits: list[RecallHit] = field(default_factory=list)
@@ -37,6 +38,8 @@ class SchemaRetrievalTrace:
     rerank_fallback_reason: str = ""
 
     def to_dict(self) -> dict[str, Any]:
+        keyword_fields = self._field_names(self.keyword_hits)
+        bm25_fields = self._field_names(self.bm25_hits)
         vector_fields = self._field_names(self.vector_hits)
         rrf_fields = self._field_names(self.rrf_hits)
         rerank_fields = self._field_names(self.rerank_hits)
@@ -44,13 +47,17 @@ class SchemaRetrievalTrace:
             "query": self.query,
             "keywords": self.keywords,
             "keyword_hit_count": len(self.keyword_hits),
+            "bm25_hit_count": len(self.bm25_hits),
             "vector_hit_count": len(self.vector_hits),
             "rrf_hit_count": len(self.rrf_hits),
             "rerank_hit_count": len(self.rerank_hits),
+            "keyword_fields": keyword_fields,
+            "bm25_fields": bm25_fields,
             "vector_fields": vector_fields,
             "rrf_fields": rrf_fields,
             "rerank_fields": rerank_fields,
-            "vector_only_fields": sorted(set(vector_fields) - set(self._field_names(self.keyword_hits))),
+            "bm25_only_fields": sorted(set(bm25_fields) - set(keyword_fields)),
+            "vector_only_fields": sorted(set(vector_fields) - set(keyword_fields)),
             "rerank_provider": self.rerank_provider,
             "rerank_fallback": self.rerank_fallback,
             "rerank_fallback_reason": self.rerank_fallback_reason,

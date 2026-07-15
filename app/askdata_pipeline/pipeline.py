@@ -196,6 +196,7 @@ class AskDataPipeline:
                 "table_count": len(ctx.tables),
                 "example_count": len(ctx.examples),
                 "keyword_hits": retrieval_trace_dict.get("keyword_hit_count", 0),
+                "bm25_hits": retrieval_trace_dict.get("bm25_hit_count", 0),
                 "vector_hits": retrieval_trace_dict.get("vector_hit_count", 0),
                 "rrf_hits": retrieval_trace_dict.get("rrf_hit_count", 0),
                 "rerank_hits": retrieval_trace_dict.get("rerank_hit_count", 0),
@@ -205,6 +206,7 @@ class AskDataPipeline:
                 f"metrics={len(ctx.metrics)} fields={len(ctx.fields)} "
                 f"tables={len(ctx.tables)} "
                 f"recall=kw:{retrieval_trace_dict.get('keyword_hit_count','?')}/"
+                f"bm25:{retrieval_trace_dict.get('bm25_hit_count','?')}/"
                 f"vec:{retrieval_trace_dict.get('vector_hit_count','?')}/"
                 f"rrf:{retrieval_trace_dict.get('rrf_hit_count','?')}"
             )

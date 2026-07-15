@@ -41,6 +41,8 @@ class PipelineTrace:
                     "name": s.name,
                     "status": s.status,
                     "summary": s.summary,
+                    "inputs": s.inputs,
+                    "outputs": s.outputs,
                     "errors": s.errors,
                     "latency_ms": s.latency_ms,
                 }

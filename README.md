@@ -9,7 +9,7 @@ Chain-AskData 是面向新氧连锁经管业务的自然语言取数（NL2SQL）
 ### 核心管道
 
 - **意图路由**：自动分类问题为 nl2sql / schema_explain / caliber_explain / unknown，非取数问题不强制生成 SQL；`has_meaningful_evidence()` 防止仅指标噪音命中误判
-- **Schema 检索**：三级索引（关键词/向量/Rerank）→ 混合检索 → SchemaGraph 构建
+- **Schema 检索**：三级索引（关键词/BM25/向量/Rerank）→ 混合检索 → SchemaGraph 构建
 - **SchemaGraph 字段补全**：模板级依赖矩阵自动补入 `dp`/`is_valid`/`tenant_id`/维度字段/表关联关系，13 个模板全覆盖
 - **QueryPlanCoT 四元组生成**：Qwen（百炼 `qwen-plus`）根据用户问题 + SchemaGraph 生成结构化四元组（数据库、处理对象、操作指令、输出目标），含本地校验 + 一次修复闭环 + 规则回退
 - **SQL 生成**：
@@ -88,7 +88,7 @@ Chain-AskData 是面向新氧连锁经管业务的自然语言取数（NL2SQL）
 │  在线层（Online）                                        │
 │  User Question                                           │
 │    → Pipeline (13 observable stages)                     │
-│      1. knowledge_retrieval  (keyword + vector + RRF)    │
+│      1. knowledge_retrieval  (keyword + BM25 + vector + RRF + rerank) │
 │      2. semantic_contract    (业务语义归一)              │
 │      3. schema_retrieval     (SchemaGraph 构建)          │
 │      4. intent_route         (意图路由)                  │
@@ -163,7 +163,7 @@ Chain-AskData 是面向新氧连锁经管业务的自然语言取数（NL2SQL）
 - **知识块总数**：762 chunks（核心 64 + 批量导入 698）
 - **持久化目录**：`data/chroma`
 - **Embedding**：MVP 阶段使用本地确定性 HashEmbedding（128 维），不依赖外部 Embedding 服务
-- **检索策略**：HybridRetriever（关键词 + 向量 RRF 融合） + LightweightReranker
+- **检索策略**：HybridRetriever（关键词规则 + BM25 词法检索 + 向量召回 + RRF 融合 + Rerank）
 
 ## 本地运行
 
@@ -267,7 +267,7 @@ python eval/run_eval.py --api http://localhost:8000 --output eval/eval_result_YY
 检索不是黑盒，每个字段的来源可追溯：
 
 ```
-raw_retrieval   → 关键词/向量/RRF/rerank 命中的字段（模型召回）
+raw_retrieval   → keyword/BM25/vector/RRF/rerank 命中的字段（模型召回）
 domain_closure  → 业务域自动补全的字段（dp/is_valid/pay_date/tenant_id 等）
 metric_closure  → 指标级自动补全的字段（main_order_id/customer_id 等）
 ───────────────────────────────────────────────────
@@ -286,6 +286,67 @@ final_fields    → 最终进入 SchemaGraph 的字段
 PYTHONPATH=. python eval/run_schema_retrieval_eval.py
 # Guards: critical>=95%  field>=85%  table>=85%  passed>=14/15
 ```
+
+### Hybrid Retrieval 面试讲法：为什么不是只用向量
+
+Text2SQL 的 Schema RAG 和普通文档 RAG 不完全一样。普通文档 RAG 更关注语义相似，但 Schema RAG 必须精确召回字段、表和口径。例如：
+
+- “支付 GMV”必须命中 `pay_gmv`
+- “核销收入”必须命中 `exe_income`
+- “支付发生日期”必须命中 `pay_date`
+- “核销有效记录”必须补齐 `is_valid`
+
+因此当前检索链路采用混合检索：
+
+```text
+用户问题
+  -> Keyword Retrieval       业务词典、字段名、别名 exact/contains match
+  -> BM25 Lexical Retrieval  标准词法检索，考虑词频、逆文档频率、文档长度
+  -> Vector Retrieval        Embedding 语义召回，支持自然语言同义表达
+  -> RRF Fusion              多路召回结果做 Reciprocal Rank Fusion
+  -> Rerank                  轻量 rerank 或 DashScope qwen-rerank
+  -> Closure                 domain_closure / metric_closure 补齐低语义但必需字段
+  -> SchemaGraph
+```
+
+当前融合策略采用**等权 RRF**，没有手工给不同召回路线设置业务权重：
+
+```text
+RRF score(d) = Σ 1 / (k + rank_i(d))
+```
+
+这样做的原因是 BM25 分数、向量距离、关键词命中分数不在同一量纲上，早期直接比较原始分数会让链路不稳定。RRF 只看排名：一个字段如果在多路召回里都排得靠前，它的融合分就会自然变高。
+
+后续可升级为 Weighted RRF：
+
+```text
+score(d) = Σ weight_i / (k + rank_i(d))
+```
+
+在 Schema RAG 场景里，推荐权重方向是：
+
+| 召回路线 | 建议权重 | 原因 |
+|---|---:|---|
+| Schema Index | 1.5 | 结构化字段/指标资产，可信度最高 |
+| Keyword / Alias | 1.3 | 字段名、业务术语精确命中，可靠 |
+| BM25 | 1.1 | 标准词法召回，比简单关键词更泛化 |
+| Vector | 0.8 | 补自然语言语义改写，但字段精确性略不稳定 |
+
+面试表达：
+
+> 当前版本使用等权 RRF，主要是为了保持链路稳定和可解释。因为各召回器分数尺度不同，我先基于排名融合；后续可以基于 Recall@K、Precision@K、MRR 等检索评估指标调 Weighted RRF，让 schema index 和 keyword 这类精确字段召回权重更高，vector 作为语义补充保留。
+
+三种检索方式的取舍：
+
+| 方案 | 优点 | 缺点 | 在本项目中的角色 |
+|---|---|---|---|
+| 纯关键词 | 精确、稳定、适合字段名和业务术语 | 同义表达弱，复杂短语容易漏召回 | 作为确定性基础召回 |
+| 纯向量 | 能理解自然语言相似表达 | 字段名精确性不稳定，可能召回语义近但口径错的字段 | 作为语义补充召回 |
+| BM25 + Vector + RRF + Rerank | 同时保留精确匹配和语义泛化 | 链路更长，需要 trace 和评测保护 | 当前主链路 |
+
+面试表达：
+
+> 我没有只用向量检索，因为 Text2SQL 对字段召回的精确性要求很高。我的做法是让 keyword/exact match 负责业务术语和字段名，BM25 负责标准词法召回，Embedding 负责语义召回，再用 RRF 融合候选并交给 Rerank 排序。最后通过业务闭包补齐 `dp`、`is_valid`、`pay_date` 这类低语义但 SQL 必需字段。这样既能解释 RAG 链路，也能控制 LLM-SQL 的业务风险。
 
 ### 2026-07-10 基线
 
@@ -330,7 +391,7 @@ app/
   model_clients/        模型客户端层：Embedding / Rerank provider 抽象与切换
   assets/               资产加载层：YAML/JSON 本地知识资产读取
   knowledge_importer/   知识导入底层：从 Word/Excel/reviewed yaml 生成结构化资产
-  knowledge_indexer/    RAG 底层：ChromaDB、关键词检索、RRF、rerank
+  knowledge_indexer/    RAG 底层：ChromaDB、关键词检索、BM25、RRF、rerank
   llm/                  LLM 底层：OpenAI-compatible/Qwen client 与 prompt 基础设施
 knowledge/
   examples/             Demo Query 资产
