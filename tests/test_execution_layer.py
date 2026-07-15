@@ -1,4 +1,5 @@
 from app.execution.factory import create_sql_executor
+from app.execution.maxcompute_executor import MaxComputeSqlExecutor
 from app.execution.objects import SqlExecutionRequest
 from app.execution.sqlite_executor import SQLiteSqlExecutor
 
@@ -52,3 +53,34 @@ def test_sqlite_executor_executes_local_select(tmp_path):
     assert result.columns == ["id", "name"]
     assert result.sample_rows == [{"id": 1, "name": "alpha"}]
     assert result.row_count == 1
+
+
+def test_maxcompute_executor_without_credentials_fails_as_dry_run():
+    executor = MaxComputeSqlExecutor(access_id="", secret_access_key="")
+
+    result = executor.execute(SqlExecutionRequest(sql="SELECT 1", max_rows=10))
+
+    assert result.enabled is True
+    assert result.mode == "maxcompute"
+    assert result.status == "failed"
+    assert result.dry_run is True
+    assert "maxcompute_not_configured" in result.error
+
+
+def test_maxcompute_executor_rejects_write_sql_before_network():
+    executor = MaxComputeSqlExecutor(access_id="ak", secret_access_key="sk")
+
+    result = executor.execute(SqlExecutionRequest(sql="DROP TABLE demo_table", max_rows=10))
+
+    assert result.status == "failed"
+    assert result.dry_run is False
+    assert "maxcompute_readonly_violation" in result.error
+
+
+def test_maxcompute_executor_appends_sample_limit_without_wrapping_cte():
+    executor = MaxComputeSqlExecutor(access_id="ak", secret_access_key="sk")
+
+    sql = "WITH base AS (SELECT 1 AS id) SELECT id FROM base"
+
+    assert executor._limit_sql(sql, 10).endswith("LIMIT 10")
+    assert "SELECT * FROM (" not in executor._limit_sql(sql, 10)

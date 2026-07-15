@@ -35,11 +35,18 @@ class Settings:
     llm_enabled: bool = _env_bool("LLM_ENABLED", False)
     llm_base_url: str = os.getenv("LLM_BASE_URL", "http://localhost:8000/v1")
     llm_api_key: str = os.getenv("LLM_API_KEY", "EMPTY")
-    llm_cot_model: str = os.getenv("LLM_COT_MODEL", "qwen3.7-plus")
+    # Model role split: planning can use a thinking model, SQL generation can use a coder model.
+    llm_cot_model: str = os.getenv(
+        "LLM_THINKING_MODEL",
+        os.getenv("LLM_COT_MODEL", "qwen-plus"),
+    )
     llm_timeout_seconds: int = int(os.getenv("LLM_TIMEOUT_SECONDS", "60"))
 
     llm_keyword_model: str = os.getenv("LLM_KEYWORD_MODEL", "qwen")
-    llm_sql_model: str = os.getenv("LLM_SQL_MODEL", "qwen-coder")
+    llm_sql_model: str = os.getenv(
+        "LLM_CODER_MODEL",
+        os.getenv("LLM_SQL_MODEL", "qwen-plus"),
+    )
     llm_router_model: str = os.getenv("LLM_ROUTER_MODEL", "qwen-router")
     llm_validator_model: str = os.getenv("LLM_VALIDATOR_MODEL", "qwen-validator")
     llm_summary_model: str = os.getenv("LLM_SUMMARY_MODEL", "qwen-summary")
@@ -74,6 +81,17 @@ class Settings:
     execution_timeout_seconds: int = _env_int("EXECUTION_TIMEOUT_SECONDS", 30)
     execution_max_rows: int = _env_int("EXECUTION_MAX_ROWS", 100)
     execution_sqlite_path: str = os.getenv("EXECUTION_SQLITE_PATH", "runtime_data/trade_demo.db")
+    odps_access_id: str = os.getenv("ODPS_ACCESS_ID", os.getenv("MAXCOMPUTE_ACCESS_ID", ""))
+    odps_secret_access_key: str = os.getenv(
+        "ODPS_SECRET_ACCESS_KEY",
+        os.getenv("MAXCOMPUTE_SECRET_ACCESS_KEY", ""),
+    )
+    odps_project_name: str = os.getenv("ODPS_PROJECT_NAME", os.getenv("MAXCOMPUTE_PROJECT", "soyoung_dw"))
+    odps_endpoint: str = os.getenv(
+        "ODPS_ENDPOINT",
+        os.getenv("MAXCOMPUTE_ENDPOINT", "http://service.cn-beijing.maxcompute.aliyun.com/api"),
+    )
+    odps_logview_host: str = os.getenv("ODPS_LOGVIEW_HOST", "")
 
 
 settings = Settings()

@@ -82,6 +82,7 @@
         "income"
       ],
       "trace_rrf_fields": [
+        "exe_amount",
         "exe_cnt",
         "exe_income",
         "exe_user_cnt"
@@ -212,6 +213,7 @@
         "exe_income",
         "is_new",
         "is_pay_new",
+        "is_paydate_cash",
         "left_gmv",
         "left_num",
         "main_order_id",
@@ -220,7 +222,6 @@
       ],
       "field_source": {
         "raw_retrieval": [
-          "is_paydate_cash",
           "pay_date",
           "pay_gmv",
           "stat_date",
@@ -230,6 +231,7 @@
           "dp",
           "is_new",
           "is_pay_new",
+          "is_paydate_cash",
           "left_gmv",
           "left_num",
           "main_order_id",
@@ -241,7 +243,7 @@
           "verify_date_id"
         ]
       },
-      "raw_field_count": 5,
+      "raw_field_count": 4,
       "closure_field_count": 14,
       "trace_keywords": [
         "支付GMV",
@@ -278,7 +280,6 @@
         "uid"
       ],
       "trace_rerank_fields": [
-        "is_paydate_cash",
         "pay_date",
         "pay_gmv",
         "stat_date",

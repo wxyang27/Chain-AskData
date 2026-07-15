@@ -63,7 +63,7 @@ class AskDataPipeline:
         # --- LLM-dependent services ---
         self.llm_sql_generator = LLMSqlGenerator(
             enabled=settings.llm_enabled,
-            model=settings.llm_cot_model,
+            model=settings.llm_sql_model,
             timeout_seconds=settings.llm_timeout_seconds,
             client=LocalLLMClient(
                 base_url=settings.llm_base_url,
@@ -326,6 +326,7 @@ class AskDataPipeline:
             "sql_strategy": plan.sql_strategy,
             "metrics": [m.canonical for m in plan.metrics],
             "llm_adopted": plan.llm_adopted,
+            "llm_model": plan.llm_model,
         }
         stage.summary = f"strategy={plan.sql_strategy} metrics={stage.outputs['metrics']}"
         stage.latency_ms = _now_ms() - t0
@@ -372,7 +373,10 @@ class AskDataPipeline:
         t0 = _now_ms()
         stage = PipelineStageLog(
             name="llm_sql",
-            inputs={"llm_enabled": self.llm_sql_generator.enabled},
+            inputs={
+                "llm_enabled": self.llm_sql_generator.enabled,
+                "model": self.llm_sql_generator.model,
+            },
         )
         result = self.llm_sql_generator.generate(
             cot_steps=query_plan.query_plan_cot,
@@ -410,6 +414,7 @@ class AskDataPipeline:
                 "generated": True,
                 "gate_passed": validation.passed,
                 "length": len(result.sql),
+                "model": self.llm_sql_generator.model,
             }
             stage.summary = f"generated={result.generated} gate_passed={validation.passed}"
         else:

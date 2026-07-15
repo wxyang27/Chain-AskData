@@ -2,7 +2,7 @@
 from app.execution.base import SqlExecutor
 from app.feedback.repair_policy import RepairPolicy
 from app.feedback.result_validator import ResultValidator
-from app.models.query import MetricPlan, QueryPlan
+from app.models.query import DimensionPlan, MetricPlan, QueryPlan
 from app.askdata_pipeline.pipeline import AskDataPipeline
 
 
@@ -121,6 +121,93 @@ def test_result_validator_detects_all_null_metric_column():
 
     assert validation.passed is False
     assert "all_null_metric_columns:核销收入" in validation.errors
+
+
+def test_result_validator_accepts_semantic_equivalent_llm_aliases():
+    query_plan = QueryPlan(
+        intent="nl2sql",
+        business_domain="连锁经管",
+        original_question="最近30天北京奇迹胶原核销收入 TOP5门店",
+        template_id="store_income_top10_30d",
+        metrics=[
+            MetricPlan(
+                canonical="execution_income",
+                display_name="核销收入",
+                formula="SUM(exe_income)",
+            )
+        ],
+        dimensions=[
+            DimensionPlan(
+                field="sy_hospital_name",
+                alias="门店",
+                source_table="dim_qy_tenant_info_all_d",
+            )
+        ],
+    )
+    execution = SqlExecutionResult(
+        enabled=True,
+        mode="maxcompute",
+        status="success",
+        columns=["sy_hospital_name", "total_income"],
+        sample_rows=[
+            {"sy_hospital_name": "新氧青春诊所(北京保利总部店) No.001", "total_income": "123.45"}
+        ],
+        row_count=1,
+        dry_run=False,
+    )
+
+    validation = ResultValidator().validate(
+        sql=(
+            "SELECT t2.sy_hospital_name, SUM(t1.exe_income) AS total_income "
+            "FROM demo t1 JOIN dim_tenant t2 ON t1.tenant_id = t2.tenant_id "
+            "WHERE t2.city_name = '北京市' AND t1.standard_name = '奇迹胶原' "
+            "GROUP BY t2.sy_hospital_name ORDER BY total_income DESC LIMIT 5"
+        ),
+        query_plan=query_plan,
+        execution_result=execution,
+    )
+
+    assert validation.passed is True
+    assert validation.errors == []
+
+
+def test_result_validator_rejects_llm_sql_that_drops_question_constraints():
+    query_plan = QueryPlan(
+        intent="nl2sql",
+        business_domain="连锁经管",
+        original_question="最近30天北京奇迹胶原核销收入 TOP5门店",
+        template_id="store_income_top10_30d",
+        metrics=[
+            MetricPlan(
+                canonical="execution_income",
+                display_name="核销收入",
+                formula="SUM(exe_income)",
+            )
+        ],
+    )
+    execution = SqlExecutionResult(
+        enabled=True,
+        mode="maxcompute",
+        status="success",
+        columns=["total_exe_income"],
+        sample_rows=[{"total_exe_income": "114061019.9554"}],
+        row_count=1,
+        dry_run=False,
+    )
+
+    validation = ResultValidator().validate(
+        sql=(
+            "SELECT SUM(exe_income) AS total_exe_income FROM demo "
+            "WHERE is_valid = 1 ORDER BY total_exe_income DESC LIMIT 5"
+        ),
+        query_plan=query_plan,
+        execution_result=execution,
+    )
+
+    assert validation.passed is False
+    assert "missing_question_dimension:store:sy_hospital_name" in validation.errors
+    assert "missing_question_filter:city_name" in validation.errors
+    assert "missing_question_filter:standard_name" in validation.errors
 
 
 class FailingExecutor(SqlExecutor):

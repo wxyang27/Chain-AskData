@@ -8,10 +8,12 @@ const llmSqlBlock = document.querySelector("#llm-sql");
 const llmMetaBlock = document.querySelector("#llm-meta");
 const sqlSourceBadge = document.querySelector("#sql-source-badge");
 const traceBlock = document.querySelector("#retrieval-trace");
+const pipelineTraceBlock = document.querySelector("#pipeline-trace");
 const schemaGraphBlock = document.querySelector("#schema-graph");
 const notesList = document.querySelector("#notes");
 const copyButton = document.querySelector("#copy-template");
 const demoList = document.querySelector("#demo-list");
+const executionResultBlock = document.querySelector("#execution-result");
 
 async function loadDemoQueries() {
   const response = await fetch("/api/demo-queries");
@@ -156,6 +158,152 @@ function renderLlmStatus(queryPlan) {
   llmStatusBlock.textContent = JSON.stringify(status, null, 2);
 }
 
+function renderPipelineTrace(trace) {
+  if (!pipelineTraceBlock) return;
+  if (!trace || !Array.isArray(trace.stages)) {
+    pipelineTraceBlock.textContent = "No pipeline trace";
+    return;
+  }
+
+  pipelineTraceBlock.innerHTML = "";
+
+  const summary = document.createElement("div");
+  summary.className = "pipeline-summary";
+  summary.innerHTML = `
+    <span>intent: <strong>${escapeHtml(trace.final_intent || "N/A")}</strong></span>
+    <span>sql_source: <strong>${escapeHtml(trace.final_sql_source || "N/A")}</strong></span>
+    <span>template: <strong>${escapeHtml(trace.final_template_id || "N/A")}</strong></span>
+  `;
+  pipelineTraceBlock.appendChild(summary);
+
+  trace.stages.forEach((stage, index) => {
+    const card = document.createElement("details");
+    card.className = `pipeline-stage pipeline-stage-${stage.status || "ok"}`;
+    if (["query_plan", "llm_sql", "execution"].includes(stage.name)) {
+      card.open = true;
+    }
+
+    const title = document.createElement("summary");
+    const modelLabel = stage.outputs?.llm_model || stage.outputs?.model || stage.inputs?.model || "";
+    title.innerHTML = `
+      <span class="stage-index">${index + 1}</span>
+      <span class="stage-name">${escapeHtml(stage.name || "stage")}</span>
+      <span class="stage-status">${escapeHtml(stage.status || "ok")}</span>
+      ${modelLabel ? `<span class="stage-model">${escapeHtml(modelLabel)}</span>` : ""}
+      <span class="stage-latency">${stage.latency_ms ?? 0}ms</span>
+    `;
+    card.appendChild(title);
+
+    const body = document.createElement("div");
+    body.className = "pipeline-stage-body";
+    body.appendChild(renderMiniJson("inputs", stage.inputs || {}));
+    body.appendChild(renderMiniJson("outputs", stage.outputs || {}));
+    if (stage.summary) {
+      const summaryText = document.createElement("p");
+      summaryText.className = "stage-summary";
+      summaryText.textContent = stage.summary;
+      body.appendChild(summaryText);
+    }
+    if (stage.errors && stage.errors.length) {
+      body.appendChild(renderMiniJson("errors", stage.errors));
+    }
+    card.appendChild(body);
+    pipelineTraceBlock.appendChild(card);
+  });
+}
+
+function renderExecutionResult(data) {
+  if (!executionResultBlock) return;
+
+  const result = data.execution_result || {};
+  const rows = data.sample_rows || result.sample_rows || [];
+  const columns = result.columns || (rows[0] ? Object.keys(rows[0]) : []);
+  const status = data.execution_status || result.status || "skipped";
+  const mode = data.execution_mode || result.mode || "disabled";
+  const enabled = data.execution_enabled ?? result.enabled ?? false;
+  const error = data.execution_error || result.error || "";
+
+  executionResultBlock.innerHTML = "";
+
+  const summary = document.createElement("div");
+  summary.className = "execution-summary";
+  summary.innerHTML = `
+    <span class="exec-pill ${status === "success" ? "exec-ok" : "exec-warn"}">${escapeHtml(status)}</span>
+    <span>mode: <strong>${escapeHtml(mode)}</strong></span>
+    <span>enabled: <strong>${enabled}</strong></span>
+    <span>rows: <strong>${data.row_count ?? result.row_count ?? 0}</strong></span>
+    <span>ms: <strong>${result.execution_ms ?? "N/A"}</strong></span>
+  `;
+  executionResultBlock.appendChild(summary);
+
+  if (error) {
+    const errorBlock = document.createElement("pre");
+    errorBlock.className = "execution-error";
+    errorBlock.textContent = error;
+    executionResultBlock.appendChild(errorBlock);
+  }
+
+  if (rows.length) {
+    const tableWrap = document.createElement("div");
+    tableWrap.className = "execution-table-wrap";
+    const table = document.createElement("table");
+    table.className = "execution-table";
+
+    const thead = document.createElement("thead");
+    const headRow = document.createElement("tr");
+    columns.forEach((column) => {
+      const th = document.createElement("th");
+      th.textContent = column;
+      headRow.appendChild(th);
+    });
+    thead.appendChild(headRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement("tbody");
+    rows.forEach((row) => {
+      const tr = document.createElement("tr");
+      columns.forEach((column) => {
+        const td = document.createElement("td");
+        td.textContent = row[column] ?? "";
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    tableWrap.appendChild(table);
+    executionResultBlock.appendChild(tableWrap);
+  } else {
+    const empty = document.createElement("p");
+    empty.className = "trace-empty";
+    empty.textContent = "No sample rows";
+    executionResultBlock.appendChild(empty);
+  }
+
+  executionResultBlock.appendChild(renderMiniJson("raw execution_result", result));
+}
+
+function renderMiniJson(title, value) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "mini-json";
+  const heading = document.createElement("div");
+  heading.className = "mini-json-title";
+  heading.textContent = title;
+  const pre = document.createElement("pre");
+  pre.textContent = JSON.stringify(value, null, 2);
+  wrapper.appendChild(heading);
+  wrapper.appendChild(pre);
+  return wrapper;
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 function formatSql(sql) {
   if (!sql) return "";
   return sql
@@ -296,6 +444,8 @@ generateButton.addEventListener("click", async () => {
   sqlBlock.textContent = "generating SQL...";
   validationBlock.textContent = "validating...";
   traceBlock.textContent = "retrieving...";
+  if (pipelineTraceBlock) pipelineTraceBlock.textContent = "running pipeline...";
+  if (executionResultBlock) executionResultBlock.textContent = "waiting execution...";
   schemaGraphBlock.textContent = "building SchemaGraph...";
   if (llmSqlBlock) llmSqlBlock.textContent = "generating LLM SQL...";
   notesList.innerHTML = "";
@@ -316,6 +466,8 @@ generateButton.addEventListener("click", async () => {
     sqlBlock.textContent = data.template_sql || data.sql;
     validationBlock.textContent = JSON.stringify(data.validation, null, 2);
     renderLlmSql(data);
+    renderPipelineTrace(data.pipeline_trace);
+    renderExecutionResult(data);
     renderRetrievalContext(data.retrieval_context);
     renderSchemaGraph(data.schema_graph);
 
@@ -331,6 +483,8 @@ generateButton.addEventListener("click", async () => {
     sqlBlock.textContent = "";
     validationBlock.textContent = message;
     if (llmSqlBlock) llmSqlBlock.textContent = message;
+    if (pipelineTraceBlock) pipelineTraceBlock.textContent = message;
+    if (executionResultBlock) executionResultBlock.textContent = message;
     traceBlock.textContent = message;
     schemaGraphBlock.textContent = message;
   }
