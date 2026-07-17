@@ -1,0 +1,3399 @@
+{
+  "meta": {
+    "name": "Chain-AskData P0正式评测集 v1",
+    "version": "1.0.0",
+    "created": "2026-07-17",
+    "source_doc": "C:\\Users\\Soyoung\\Desktop\\my\\soyoung\\demo\\【AI】AskData\\PRD与方案\\26_P0补充评测集v1.md",
+    "total": 50,
+    "description": "P0正式Golden评测集，覆盖核销、支付、待核销、门店、城市、品项、渠道、新老客、0元单和升单基础链路；Exploratory问题暂不进入本文件。",
+    "quality_gates": {
+      "overall": 80,
+      "hard": 75,
+      "critical_rule": 95
+    },
+    "difficulty_dist": {
+      "easy": 4,
+      "medium": 28,
+      "hard": 18
+    },
+    "notes": "固定使用2026年7月相关问题；runner对具体日期写法采用 expected_sql_any_of 兼容。"
+  },
+  "cases": [
+    {
+      "id": "P0V1_001",
+      "question": "昨天整体核销收入、核销GMV、核销人次、核销人数、核销客单价分别是多少？",
+      "category": "standard",
+      "difficulty": "easy",
+      "source_demo_id": "Q001",
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "execution_income",
+        "execution_gmv",
+        "execution_visit_count",
+        "execution_user_count",
+        "execution_aov_by_visit"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+      ],
+      "expected_fields": [
+        "exe_income",
+        "exe_amount",
+        "verify_date_id",
+        "customer_id",
+        "executed_date",
+        "is_valid",
+        "dp"
+      ],
+      "expected_dimensions": [],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)",
+        "is_valid = 1",
+        "executed_date = DATE_SUB(CURRENT_DATE(),1)"
+      ],
+      "expected_sql_must_contain": [
+        "SUM(exe_income)",
+        "SUM(exe_amount)",
+        "COUNT(DISTINCT verify_date_id)",
+        "COUNT(DISTINCT customer_id)",
+        "NULLIF",
+        "is_valid = 1",
+        "executed_date"
+      ],
+      "expected_sql_any_of": [],
+      "forbidden_sql_patterns": [
+        "pay_gmv",
+        "pay_date",
+        "is_paydate_cash"
+      ],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 exe_income、exe_amount、verify_date_id、customer_id、executed_date、is_valid、dp；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1；executed_date = DATE_SUB(CURRENT_DATE(),1)。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)",
+          "is_valid = 1",
+          "executed_date = DATE_SUB(CURRENT_DATE(),1)"
+        ],
+        "known_risks": [
+          "避免误用字段或口径：pay_gmv、pay_date、is_paydate_cash"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：昨天整体核销收入、核销GMV、核销人次、核销人数、核销客单价分别是多少？"
+    },
+    {
+      "id": "P0V1_002",
+      "question": "2026年7月截至昨日，整体核销收入、核销人次、核销客单价分别是多少？",
+      "category": "standard",
+      "difficulty": "medium",
+      "source_demo_id": null,
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "execution_income",
+        "execution_visit_count",
+        "execution_aov_by_visit"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+      ],
+      "expected_fields": [
+        "exe_income",
+        "verify_date_id",
+        "customer_id",
+        "executed_date",
+        "is_valid",
+        "dp"
+      ],
+      "expected_dimensions": [],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)",
+        "is_valid = 1"
+      ],
+      "expected_sql_must_contain": [
+        "SUM(exe_income)",
+        "COUNT(DISTINCT verify_date_id)",
+        "NULLIF",
+        "is_valid = 1"
+      ],
+      "expected_sql_any_of": [
+        [
+          "2026-07-01"
+        ],
+        [
+          "20260701"
+        ],
+        [
+          "2026-07"
+        ]
+      ],
+      "forbidden_sql_patterns": [
+        "pay_gmv",
+        "pay_date"
+      ],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 exe_income、verify_date_id、customer_id、executed_date、is_valid、dp；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)",
+          "is_valid = 1"
+        ],
+        "known_risks": [
+          "避免误用字段或口径：pay_gmv、pay_date",
+          "自然月问题不能用最近30天替代。"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：2026年7月截至昨日，整体核销收入、核销人次、核销客单价分别是多少？"
+    },
+    {
+      "id": "P0V1_003",
+      "question": "2026年7月截至昨日，按天统计核销收入、核销人次、核销客单价。",
+      "category": "composite",
+      "difficulty": "medium",
+      "source_demo_id": null,
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "execution_income",
+        "execution_visit_count",
+        "execution_aov_by_visit"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+      ],
+      "expected_fields": [
+        "exe_income",
+        "verify_date_id",
+        "customer_id",
+        "executed_date",
+        "is_valid",
+        "dp"
+      ],
+      "expected_dimensions": [
+        "executed_date"
+      ],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)",
+        "is_valid = 1"
+      ],
+      "expected_sql_must_contain": [
+        "executed_date",
+        "SUM(exe_income)",
+        "COUNT(DISTINCT verify_date_id)",
+        "GROUP BY",
+        "NULLIF"
+      ],
+      "expected_sql_any_of": [
+        [
+          "2026-07-01"
+        ],
+        [
+          "20260701"
+        ],
+        [
+          "2026-07"
+        ]
+      ],
+      "forbidden_sql_patterns": [
+        "pay_gmv",
+        "pay_date"
+      ],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 exe_income、verify_date_id、customer_id、executed_date、is_valid、dp；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)",
+          "is_valid = 1"
+        ],
+        "known_risks": [
+          "避免误用字段或口径：pay_gmv、pay_date",
+          "自然月问题不能用最近30天替代。"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：2026年7月截至昨日，按天统计核销收入、核销人次、核销客单价。"
+    },
+    {
+      "id": "P0V1_004",
+      "question": "2026年7月截至昨日，核销收入较6月同期的差额和变化率分别是多少？",
+      "category": "composite",
+      "difficulty": "hard",
+      "source_demo_id": null,
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "execution_income"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+      ],
+      "expected_fields": [
+        "exe_income",
+        "executed_date",
+        "is_valid",
+        "dp"
+      ],
+      "expected_dimensions": [],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)",
+        "is_valid = 1"
+      ],
+      "expected_sql_must_contain": [
+        "SUM(exe_income)",
+        "NULLIF",
+        "is_valid = 1"
+      ],
+      "expected_sql_any_of": [
+        [
+          "2026-07",
+          "2026-06"
+        ],
+        [
+          "202607",
+          "202606"
+        ],
+        [
+          "UNION ALL"
+        ],
+        [
+          "CASE WHEN"
+        ]
+      ],
+      "forbidden_sql_patterns": [
+        "pay_gmv",
+        "pay_date"
+      ],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 exe_income、executed_date、is_valid、dp；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)",
+          "is_valid = 1"
+        ],
+        "known_risks": [
+          "避免误用字段或口径：pay_gmv、pay_date",
+          "自然月问题不能用最近30天替代。"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：2026年7月截至昨日，核销收入较6月同期的差额和变化率分别是多少？"
+    },
+    {
+      "id": "P0V1_005",
+      "question": "2026年7月截至昨日，核销收入TOP10门店及其收入占比是多少？",
+      "category": "composite",
+      "difficulty": "hard",
+      "source_demo_id": null,
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "execution_income"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_user_execution_record_all_d",
+        "soyoung_dw.dim_qy_tenant_info_all_d"
+      ],
+      "expected_fields": [
+        "exe_income",
+        "tenant_id",
+        "sy_hospital_name",
+        "executed_date",
+        "is_valid",
+        "dp"
+      ],
+      "expected_dimensions": [
+        "sy_hospital_name"
+      ],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)",
+        "is_valid = 1"
+      ],
+      "expected_sql_must_contain": [
+        "JOIN",
+        "tenant_id",
+        "sy_hospital_name",
+        "SUM(exe_income)",
+        "ORDER BY",
+        "LIMIT 10",
+        "NULLIF"
+      ],
+      "expected_sql_any_of": [
+        [
+          "2026-07-01"
+        ],
+        [
+          "20260701"
+        ],
+        [
+          "2026-07"
+        ],
+        [
+          "OVER("
+        ]
+      ],
+      "forbidden_sql_patterns": [
+        "pay_gmv",
+        "pay_date",
+        "hospital_name"
+      ],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 exe_income、tenant_id、sy_hospital_name、executed_date、is_valid、dp；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)",
+          "is_valid = 1"
+        ],
+        "known_risks": [
+          "避免误用字段或口径：pay_gmv、pay_date、hospital_name",
+          "自然月问题不能用最近30天替代。",
+          "门店展示优先使用 sy_hospital_name，关联使用 tenant_id。"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：2026年7月截至昨日，核销收入TOP10门店及其收入占比是多少？"
+    },
+    {
+      "id": "P0V1_006",
+      "question": "2026年7月截至昨日，新客和老客核销收入、核销人次、核销客单价分别是多少？",
+      "category": "standard",
+      "difficulty": "medium",
+      "source_demo_id": null,
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "execution_income",
+        "execution_visit_count",
+        "execution_aov_by_visit"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+      ],
+      "expected_fields": [
+        "exe_income",
+        "verify_date_id",
+        "customer_id",
+        "executed_date",
+        "is_valid",
+        "dp",
+        "is_new"
+      ],
+      "expected_dimensions": [
+        "is_new"
+      ],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)",
+        "is_valid = 1"
+      ],
+      "expected_sql_must_contain": [
+        "is_new",
+        "SUM(exe_income)",
+        "COUNT(DISTINCT verify_date_id)",
+        "GROUP BY",
+        "NULLIF"
+      ],
+      "expected_sql_any_of": [
+        [
+          "2026-07-01"
+        ],
+        [
+          "20260701"
+        ],
+        [
+          "2026-07"
+        ]
+      ],
+      "forbidden_sql_patterns": [
+        "is_pay_new",
+        "pay_gmv"
+      ],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 exe_income、verify_date_id、customer_id、executed_date、is_valid、dp、is_new；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)",
+          "is_valid = 1"
+        ],
+        "known_risks": [
+          "避免误用字段或口径：is_pay_new、pay_gmv",
+          "自然月问题不能用最近30天替代。",
+          "核销域新客使用 is_new，支付域新客使用 is_pay_new。"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：2026年7月截至昨日，新客和老客核销收入、核销人次、核销客单价分别是多少？"
+    },
+    {
+      "id": "P0V1_007",
+      "question": "最近30天各城市核销收入TOP10是哪些？",
+      "category": "standard",
+      "difficulty": "medium",
+      "source_demo_id": null,
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "execution_income"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_user_execution_record_all_d",
+        "soyoung_dw.dim_qy_tenant_info_all_d"
+      ],
+      "expected_fields": [
+        "exe_income",
+        "tenant_id",
+        "city_name",
+        "executed_date",
+        "is_valid",
+        "dp"
+      ],
+      "expected_dimensions": [
+        "city_name"
+      ],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)",
+        "is_valid = 1",
+        "executed_date 近30天"
+      ],
+      "expected_sql_must_contain": [
+        "JOIN",
+        "tenant_id",
+        "city_name",
+        "SUM(exe_income)",
+        "ORDER BY",
+        "LIMIT 10"
+      ],
+      "expected_sql_any_of": [],
+      "forbidden_sql_patterns": [
+        "pay_gmv",
+        "pay_date",
+        " city "
+      ],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 exe_income、tenant_id、city_name、executed_date、is_valid、dp；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1；executed_date 近30天。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)",
+          "is_valid = 1",
+          "executed_date 近30天"
+        ],
+        "known_risks": [
+          "避免误用字段或口径：pay_gmv、pay_date、 city ",
+          "城市过滤优先使用 city_name。"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：最近30天各城市核销收入TOP10是哪些？"
+    },
+    {
+      "id": "P0V1_008",
+      "question": "2026年7月北京市核销收入、核销人次、核销客单价分别是多少？",
+      "category": "standard",
+      "difficulty": "medium",
+      "source_demo_id": null,
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "execution_income",
+        "execution_visit_count",
+        "execution_aov_by_visit"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_user_execution_record_all_d",
+        "soyoung_dw.dim_qy_tenant_info_all_d"
+      ],
+      "expected_fields": [
+        "exe_income",
+        "verify_date_id",
+        "customer_id",
+        "executed_date",
+        "is_valid",
+        "dp",
+        "tenant_id",
+        "city_name"
+      ],
+      "expected_dimensions": [],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)",
+        "is_valid = 1",
+        "city_name LIKE '%北京%'"
+      ],
+      "expected_sql_must_contain": [
+        "JOIN",
+        "tenant_id",
+        "city_name",
+        "SUM(exe_income)",
+        "COUNT(DISTINCT verify_date_id)",
+        "NULLIF"
+      ],
+      "expected_sql_any_of": [
+        [
+          "2026-07-01"
+        ],
+        [
+          "20260701"
+        ],
+        [
+          "2026-07"
+        ]
+      ],
+      "forbidden_sql_patterns": [
+        "pay_gmv",
+        "pay_date"
+      ],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 exe_income、verify_date_id、customer_id、executed_date、is_valid、dp、tenant_id、city_name；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1；city_name LIKE '%北京%'。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)",
+          "is_valid = 1",
+          "city_name LIKE '%北京%'"
+        ],
+        "known_risks": [
+          "避免误用字段或口径：pay_gmv、pay_date",
+          "自然月问题不能用最近30天替代。",
+          "城市过滤优先使用 city_name。"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：2026年7月北京市核销收入、核销人次、核销客单价分别是多少？"
+    },
+    {
+      "id": "P0V1_009",
+      "question": "2026年7月北京市核销收入较6月同期的差额和变化率分别是多少？",
+      "category": "composite",
+      "difficulty": "hard",
+      "source_demo_id": null,
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "execution_income"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_user_execution_record_all_d",
+        "soyoung_dw.dim_qy_tenant_info_all_d"
+      ],
+      "expected_fields": [
+        "exe_income",
+        "tenant_id",
+        "city_name",
+        "executed_date",
+        "is_valid",
+        "dp"
+      ],
+      "expected_dimensions": [],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)",
+        "is_valid = 1",
+        "city_name LIKE '%北京%'"
+      ],
+      "expected_sql_must_contain": [
+        "JOIN",
+        "tenant_id",
+        "city_name",
+        "SUM(exe_income)",
+        "NULLIF"
+      ],
+      "expected_sql_any_of": [
+        [
+          "2026-07",
+          "2026-06"
+        ],
+        [
+          "202607",
+          "202606"
+        ],
+        [
+          "CASE WHEN"
+        ],
+        [
+          "UNION ALL"
+        ]
+      ],
+      "forbidden_sql_patterns": [
+        "pay_gmv",
+        "pay_date"
+      ],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 exe_income、tenant_id、city_name、executed_date、is_valid、dp；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1；city_name LIKE '%北京%'。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)",
+          "is_valid = 1",
+          "city_name LIKE '%北京%'"
+        ],
+        "known_risks": [
+          "避免误用字段或口径：pay_gmv、pay_date",
+          "自然月问题不能用最近30天替代。",
+          "城市过滤优先使用 city_name。"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：2026年7月北京市核销收入较6月同期的差额和变化率分别是多少？"
+    },
+    {
+      "id": "P0V1_010",
+      "question": "2026年7月北京保利店核销收入、核销人次、核销客单价分别是多少？",
+      "category": "standard",
+      "difficulty": "medium",
+      "source_demo_id": null,
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "execution_income",
+        "execution_visit_count",
+        "execution_aov_by_visit"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_user_execution_record_all_d",
+        "soyoung_dw.dim_qy_tenant_info_all_d"
+      ],
+      "expected_fields": [
+        "exe_income",
+        "verify_date_id",
+        "customer_id",
+        "executed_date",
+        "is_valid",
+        "dp",
+        "tenant_id",
+        "city_name",
+        "sy_hospital_name"
+      ],
+      "expected_dimensions": [],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)",
+        "is_valid = 1",
+        "city_name LIKE '%北京%'"
+      ],
+      "expected_sql_must_contain": [
+        "JOIN",
+        "tenant_id",
+        "sy_hospital_name",
+        "SUM(exe_income)",
+        "COUNT(DISTINCT verify_date_id)",
+        "NULLIF"
+      ],
+      "expected_sql_any_of": [
+        [
+          "北京保利"
+        ],
+        [
+          "2026-07-01"
+        ],
+        [
+          "20260701"
+        ],
+        [
+          "2026-07"
+        ]
+      ],
+      "forbidden_sql_patterns": [
+        "pay_gmv",
+        "hospital_name"
+      ],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 exe_income、verify_date_id、customer_id、executed_date、is_valid、dp、tenant_id、city_name；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1；city_name LIKE '%北京%'。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)",
+          "is_valid = 1",
+          "city_name LIKE '%北京%'"
+        ],
+        "known_risks": [
+          "避免误用字段或口径：pay_gmv、hospital_name",
+          "自然月问题不能用最近30天替代。",
+          "城市过滤优先使用 city_name。",
+          "门店展示优先使用 sy_hospital_name，关联使用 tenant_id。"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：2026年7月北京保利店核销收入、核销人次、核销客单价分别是多少？"
+    },
+    {
+      "id": "P0V1_011",
+      "question": "2026年7月北京保利店新客和老客核销收入、核销人次分别是多少？",
+      "category": "composite",
+      "difficulty": "hard",
+      "source_demo_id": null,
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "execution_income",
+        "execution_visit_count"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_user_execution_record_all_d",
+        "soyoung_dw.dim_qy_tenant_info_all_d"
+      ],
+      "expected_fields": [
+        "exe_income",
+        "verify_date_id",
+        "customer_id",
+        "executed_date",
+        "is_valid",
+        "dp",
+        "tenant_id",
+        "city_name",
+        "sy_hospital_name",
+        "is_new"
+      ],
+      "expected_dimensions": [
+        "is_new"
+      ],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)",
+        "is_valid = 1",
+        "city_name LIKE '%北京%'"
+      ],
+      "expected_sql_must_contain": [
+        "JOIN",
+        "tenant_id",
+        "sy_hospital_name",
+        "is_new",
+        "SUM(exe_income)",
+        "COUNT(DISTINCT verify_date_id)",
+        "GROUP BY"
+      ],
+      "expected_sql_any_of": [
+        [
+          "北京保利"
+        ],
+        [
+          "2026-07-01"
+        ],
+        [
+          "20260701"
+        ],
+        [
+          "2026-07"
+        ]
+      ],
+      "forbidden_sql_patterns": [
+        "is_pay_new",
+        "pay_gmv"
+      ],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 exe_income、verify_date_id、customer_id、executed_date、is_valid、dp、tenant_id、city_name；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1；city_name LIKE '%北京%'。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)",
+          "is_valid = 1",
+          "city_name LIKE '%北京%'"
+        ],
+        "known_risks": [
+          "避免误用字段或口径：is_pay_new、pay_gmv",
+          "自然月问题不能用最近30天替代。",
+          "城市过滤优先使用 city_name。",
+          "门店展示优先使用 sy_hospital_name，关联使用 tenant_id。",
+          "核销域新客使用 is_new，支付域新客使用 is_pay_new。"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：2026年7月北京保利店新客和老客核销收入、核销人次分别是多少？"
+    },
+    {
+      "id": "P0V1_012",
+      "question": "最近30天北京各门店核销收入TOP10是哪些？",
+      "category": "standard",
+      "difficulty": "medium",
+      "source_demo_id": null,
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "execution_income"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_user_execution_record_all_d",
+        "soyoung_dw.dim_qy_tenant_info_all_d"
+      ],
+      "expected_fields": [
+        "exe_income",
+        "tenant_id",
+        "city_name",
+        "sy_hospital_name",
+        "executed_date",
+        "is_valid",
+        "dp"
+      ],
+      "expected_dimensions": [
+        "sy_hospital_name"
+      ],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)",
+        "is_valid = 1",
+        "executed_date 近30天",
+        "city_name LIKE '%北京%'"
+      ],
+      "expected_sql_must_contain": [
+        "JOIN",
+        "tenant_id",
+        "city_name",
+        "sy_hospital_name",
+        "SUM(exe_income)",
+        "ORDER BY",
+        "LIMIT 10"
+      ],
+      "expected_sql_any_of": [],
+      "forbidden_sql_patterns": [
+        "pay_gmv",
+        "hospital_name"
+      ],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 exe_income、tenant_id、city_name、sy_hospital_name、executed_date、is_valid、dp；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1；executed_date 近30天；city_name LIKE '%北京%'。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)",
+          "is_valid = 1",
+          "executed_date 近30天",
+          "city_name LIKE '%北京%'"
+        ],
+        "known_risks": [
+          "避免误用字段或口径：pay_gmv、hospital_name",
+          "城市过滤优先使用 city_name。",
+          "门店展示优先使用 sy_hospital_name，关联使用 tenant_id。"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：最近30天北京各门店核销收入TOP10是哪些？"
+    },
+    {
+      "id": "P0V1_013",
+      "question": "最近30天按天统计北京保利店核销收入、核销人次、核销客单价。",
+      "category": "composite",
+      "difficulty": "medium",
+      "source_demo_id": null,
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "execution_income",
+        "execution_visit_count",
+        "execution_aov_by_visit"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_user_execution_record_all_d",
+        "soyoung_dw.dim_qy_tenant_info_all_d"
+      ],
+      "expected_fields": [
+        "exe_income",
+        "verify_date_id",
+        "customer_id",
+        "executed_date",
+        "is_valid",
+        "dp",
+        "tenant_id",
+        "city_name",
+        "sy_hospital_name"
+      ],
+      "expected_dimensions": [
+        "executed_date"
+      ],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)",
+        "is_valid = 1",
+        "executed_date 近30天",
+        "city_name LIKE '%北京%'"
+      ],
+      "expected_sql_must_contain": [
+        "JOIN",
+        "tenant_id",
+        "sy_hospital_name",
+        "executed_date",
+        "SUM(exe_income)",
+        "COUNT(DISTINCT verify_date_id)",
+        "GROUP BY",
+        "NULLIF"
+      ],
+      "expected_sql_any_of": [
+        [
+          "北京保利"
+        ]
+      ],
+      "forbidden_sql_patterns": [
+        "pay_gmv",
+        "hospital_name"
+      ],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 exe_income、verify_date_id、customer_id、executed_date、is_valid、dp、tenant_id、city_name；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1；executed_date 近30天；city_name LIKE '%北京%'。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)",
+          "is_valid = 1",
+          "executed_date 近30天",
+          "city_name LIKE '%北京%'"
+        ],
+        "known_risks": [
+          "避免误用字段或口径：pay_gmv、hospital_name",
+          "城市过滤优先使用 city_name。",
+          "门店展示优先使用 sy_hospital_name，关联使用 tenant_id。"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：最近30天按天统计北京保利店核销收入、核销人次、核销客单价。"
+    },
+    {
+      "id": "P0V1_014",
+      "question": "最近30天品项核销收入TOP20是哪些？",
+      "category": "standard",
+      "difficulty": "medium",
+      "source_demo_id": "Q007",
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "execution_income"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+      ],
+      "expected_fields": [
+        "exe_income",
+        "standard_name",
+        "executed_date",
+        "is_valid",
+        "dp"
+      ],
+      "expected_dimensions": [
+        "standard_name"
+      ],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)",
+        "is_valid = 1",
+        "executed_date 近30天"
+      ],
+      "expected_sql_must_contain": [
+        "standard_name",
+        "SUM(exe_income)",
+        "GROUP BY",
+        "ORDER BY",
+        "LIMIT 20"
+      ],
+      "expected_sql_any_of": [],
+      "forbidden_sql_patterns": [
+        "product_name",
+        "pay_gmv"
+      ],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 exe_income、standard_name、executed_date、is_valid、dp；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1；executed_date 近30天。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)",
+          "is_valid = 1",
+          "executed_date 近30天"
+        ],
+        "known_risks": [
+          "避免误用字段或口径：product_name、pay_gmv",
+          "品项分析优先使用 standard_name，避免直接使用 product_name。"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：最近30天品项核销收入TOP20是哪些？"
+    },
+    {
+      "id": "P0V1_015",
+      "question": "2026年7月新一代热玛吉的核销收入、核销人次、核销人数分别是多少？",
+      "category": "standard",
+      "difficulty": "medium",
+      "source_demo_id": null,
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "execution_income",
+        "execution_visit_count",
+        "execution_user_count"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+      ],
+      "expected_fields": [
+        "exe_income",
+        "verify_date_id",
+        "customer_id",
+        "executed_date",
+        "is_valid",
+        "dp",
+        "standard_name"
+      ],
+      "expected_dimensions": [],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)",
+        "is_valid = 1"
+      ],
+      "expected_sql_must_contain": [
+        "standard_name",
+        "SUM(exe_income)",
+        "COUNT(DISTINCT verify_date_id)",
+        "COUNT(DISTINCT customer_id)"
+      ],
+      "expected_sql_any_of": [
+        [
+          "新一代热玛吉"
+        ],
+        [
+          "热玛吉"
+        ],
+        [
+          "2026-07"
+        ]
+      ],
+      "forbidden_sql_patterns": [
+        "product_name",
+        "pay_gmv"
+      ],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 exe_income、verify_date_id、customer_id、executed_date、is_valid、dp、standard_name；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)",
+          "is_valid = 1"
+        ],
+        "known_risks": [
+          "避免误用字段或口径：product_name、pay_gmv",
+          "自然月问题不能用最近30天替代。",
+          "品项分析优先使用 standard_name，避免直接使用 product_name。"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：2026年7月新一代热玛吉的核销收入、核销人次、核销人数分别是多少？"
+    },
+    {
+      "id": "P0V1_016",
+      "question": "2026年7月北京市新一代热玛吉核销收入较6月同期的差额和变化率是多少？",
+      "category": "composite",
+      "difficulty": "hard",
+      "source_demo_id": null,
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "execution_income"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_user_execution_record_all_d",
+        "soyoung_dw.dim_qy_tenant_info_all_d"
+      ],
+      "expected_fields": [
+        "exe_income",
+        "standard_name",
+        "tenant_id",
+        "city_name",
+        "executed_date",
+        "is_valid",
+        "dp"
+      ],
+      "expected_dimensions": [],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)",
+        "is_valid = 1",
+        "city_name LIKE '%北京%'"
+      ],
+      "expected_sql_must_contain": [
+        "JOIN",
+        "tenant_id",
+        "city_name",
+        "standard_name",
+        "SUM(exe_income)",
+        "NULLIF"
+      ],
+      "expected_sql_any_of": [
+        [
+          "新一代热玛吉"
+        ],
+        [
+          "热玛吉"
+        ],
+        [
+          "2026-07",
+          "2026-06"
+        ],
+        [
+          "202607",
+          "202606"
+        ]
+      ],
+      "forbidden_sql_patterns": [
+        "product_name",
+        "pay_gmv"
+      ],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 exe_income、standard_name、tenant_id、city_name、executed_date、is_valid、dp；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1；city_name LIKE '%北京%'。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)",
+          "is_valid = 1",
+          "city_name LIKE '%北京%'"
+        ],
+        "known_risks": [
+          "避免误用字段或口径：product_name、pay_gmv",
+          "自然月问题不能用最近30天替代。",
+          "城市过滤优先使用 city_name。",
+          "品项分析优先使用 standard_name，避免直接使用 product_name。"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：2026年7月北京市新一代热玛吉核销收入较6月同期的差额和变化率是多少？"
+    },
+    {
+      "id": "P0V1_017",
+      "question": "2026年7月北京保利店新一代热玛吉核销收入、核销人次、核销客单价分别是多少？",
+      "category": "composite",
+      "difficulty": "hard",
+      "source_demo_id": null,
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "execution_income",
+        "execution_visit_count",
+        "execution_aov_by_visit"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_user_execution_record_all_d",
+        "soyoung_dw.dim_qy_tenant_info_all_d"
+      ],
+      "expected_fields": [
+        "exe_income",
+        "verify_date_id",
+        "customer_id",
+        "executed_date",
+        "is_valid",
+        "dp",
+        "standard_name",
+        "tenant_id",
+        "city_name",
+        "sy_hospital_name"
+      ],
+      "expected_dimensions": [],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)",
+        "is_valid = 1",
+        "city_name LIKE '%北京%'"
+      ],
+      "expected_sql_must_contain": [
+        "JOIN",
+        "tenant_id",
+        "sy_hospital_name",
+        "standard_name",
+        "SUM(exe_income)",
+        "COUNT(DISTINCT verify_date_id)",
+        "NULLIF"
+      ],
+      "expected_sql_any_of": [
+        [
+          "新一代热玛吉"
+        ],
+        [
+          "热玛吉"
+        ],
+        [
+          "热玛吉"
+        ],
+        [
+          "2026-07"
+        ]
+      ],
+      "forbidden_sql_patterns": [
+        "product_name",
+        "pay_gmv",
+        "hospital_name"
+      ],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 exe_income、verify_date_id、customer_id、executed_date、is_valid、dp、standard_name、tenant_id；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1；city_name LIKE '%北京%'。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)",
+          "is_valid = 1",
+          "city_name LIKE '%北京%'"
+        ],
+        "known_risks": [
+          "避免误用字段或口径：product_name、pay_gmv、hospital_name",
+          "自然月问题不能用最近30天替代。",
+          "城市过滤优先使用 city_name。",
+          "门店展示优先使用 sy_hospital_name，关联使用 tenant_id。",
+          "品项分析优先使用 standard_name，避免直接使用 product_name。"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：2026年7月北京保利店新一代热玛吉核销收入、核销人次、核销客单价分别是多少？"
+    },
+    {
+      "id": "P0V1_018",
+      "question": "2026年7月大单品、常规品、大师团核销收入分别是多少，占比是多少？",
+      "category": "composite",
+      "difficulty": "medium",
+      "source_demo_id": null,
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "execution_income"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+      ],
+      "expected_fields": [
+        "exe_income",
+        "revenue_category",
+        "executed_date",
+        "is_valid",
+        "dp"
+      ],
+      "expected_dimensions": [
+        "revenue_category"
+      ],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)",
+        "is_valid = 1"
+      ],
+      "expected_sql_must_contain": [
+        "revenue_category",
+        "SUM(exe_income)",
+        "GROUP BY",
+        "NULLIF"
+      ],
+      "expected_sql_any_of": [
+        [
+          "2026-07-01"
+        ],
+        [
+          "20260701"
+        ],
+        [
+          "2026-07"
+        ],
+        [
+          "OVER("
+        ]
+      ],
+      "forbidden_sql_patterns": [
+        "income_type",
+        "is_master",
+        "pay_gmv"
+      ],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 exe_income、revenue_category、executed_date、is_valid、dp；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)",
+          "is_valid = 1"
+        ],
+        "known_risks": [
+          "避免误用字段或口径：income_type、is_master、pay_gmv",
+          "自然月问题不能用最近30天替代。"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：2026年7月大单品、常规品、大师团核销收入分别是多少，占比是多少？"
+    },
+    {
+      "id": "P0V1_019",
+      "question": "2026年7月大单品核销收入TOP5品项分别是什么？",
+      "category": "composite",
+      "difficulty": "medium",
+      "source_demo_id": null,
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "execution_income"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+      ],
+      "expected_fields": [
+        "exe_income",
+        "revenue_category",
+        "standard_name",
+        "executed_date",
+        "is_valid",
+        "dp"
+      ],
+      "expected_dimensions": [
+        "standard_name"
+      ],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)",
+        "is_valid = 1",
+        "revenue_category = '大单品'"
+      ],
+      "expected_sql_must_contain": [
+        "revenue_category = '大单品'",
+        "standard_name",
+        "SUM(exe_income)",
+        "ORDER BY",
+        "LIMIT 5"
+      ],
+      "expected_sql_any_of": [
+        [
+          "2026-07-01"
+        ],
+        [
+          "20260701"
+        ],
+        [
+          "2026-07"
+        ]
+      ],
+      "forbidden_sql_patterns": [
+        "product_name",
+        "pay_gmv"
+      ],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 exe_income、revenue_category、standard_name、executed_date、is_valid、dp；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1；revenue_category = '大单品'。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)",
+          "is_valid = 1",
+          "revenue_category = '大单品'"
+        ],
+        "known_risks": [
+          "避免误用字段或口径：product_name、pay_gmv",
+          "自然月问题不能用最近30天替代。",
+          "品项分析优先使用 standard_name，避免直接使用 product_name。"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：2026年7月大单品核销收入TOP5品项分别是什么？"
+    },
+    {
+      "id": "P0V1_020",
+      "question": "2026年7月奇迹胶原在北京各门店的核销收入TOP5是哪些？",
+      "category": "composite",
+      "difficulty": "hard",
+      "source_demo_id": null,
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "execution_income"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_user_execution_record_all_d",
+        "soyoung_dw.dim_qy_tenant_info_all_d"
+      ],
+      "expected_fields": [
+        "exe_income",
+        "standard_name",
+        "tenant_id",
+        "city_name",
+        "sy_hospital_name",
+        "executed_date",
+        "is_valid",
+        "dp"
+      ],
+      "expected_dimensions": [
+        "sy_hospital_name"
+      ],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)",
+        "is_valid = 1",
+        "city_name LIKE '%北京%'"
+      ],
+      "expected_sql_must_contain": [
+        "JOIN",
+        "tenant_id",
+        "city_name",
+        "sy_hospital_name",
+        "standard_name",
+        "SUM(exe_income)",
+        "ORDER BY",
+        "LIMIT 5"
+      ],
+      "expected_sql_any_of": [
+        [
+          "奇迹胶原"
+        ],
+        [
+          "2026-07-01"
+        ],
+        [
+          "20260701"
+        ],
+        [
+          "2026-07"
+        ]
+      ],
+      "forbidden_sql_patterns": [
+        "product_name",
+        "pay_gmv",
+        "hospital_name"
+      ],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 exe_income、standard_name、tenant_id、city_name、sy_hospital_name、executed_date、is_valid、dp；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1；city_name LIKE '%北京%'。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)",
+          "is_valid = 1",
+          "city_name LIKE '%北京%'"
+        ],
+        "known_risks": [
+          "避免误用字段或口径：product_name、pay_gmv、hospital_name",
+          "自然月问题不能用最近30天替代。",
+          "城市过滤优先使用 city_name。",
+          "门店展示优先使用 sy_hospital_name，关联使用 tenant_id。",
+          "品项分析优先使用 standard_name，避免直接使用 product_name。"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：2026年7月奇迹胶原在北京各门店的核销收入TOP5是哪些？"
+    },
+    {
+      "id": "P0V1_021",
+      "question": "2026年7月私域新客核销收入、核销人次、核销客单价分别是多少？",
+      "category": "standard",
+      "difficulty": "medium",
+      "source_demo_id": "Q003",
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "execution_income",
+        "execution_visit_count",
+        "execution_aov_by_visit"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+      ],
+      "expected_fields": [
+        "exe_income",
+        "verify_date_id",
+        "customer_id",
+        "executed_date",
+        "is_valid",
+        "dp",
+        "cx_first_channel",
+        "is_new"
+      ],
+      "expected_dimensions": [],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)",
+        "is_valid = 1",
+        "cx_first_channel = '私域'",
+        "is_new = 1"
+      ],
+      "expected_sql_must_contain": [
+        "cx_first_channel",
+        "is_new = 1",
+        "SUM(exe_income)",
+        "COUNT(DISTINCT verify_date_id)",
+        "NULLIF"
+      ],
+      "expected_sql_any_of": [
+        [
+          "私域"
+        ],
+        [
+          "2026-07"
+        ]
+      ],
+      "forbidden_sql_patterns": [
+        "is_pay_new",
+        "pay_gmv",
+        "channel_type"
+      ],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 exe_income、verify_date_id、customer_id、executed_date、is_valid、dp、cx_first_channel、is_new；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1；cx_first_channel = '私域'；is_new = 1。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)",
+          "is_valid = 1",
+          "cx_first_channel = '私域'",
+          "is_new = 1"
+        ],
+        "known_risks": [
+          "避免误用字段或口径：is_pay_new、pay_gmv、channel_type",
+          "自然月问题不能用最近30天替代。",
+          "核销域新客使用 is_new，支付域新客使用 is_pay_new。"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：2026年7月私域新客核销收入、核销人次、核销客单价分别是多少？"
+    },
+    {
+      "id": "P0V1_022",
+      "question": "2026年7月各渠道新客核销收入分别是多少？",
+      "category": "standard",
+      "difficulty": "medium",
+      "source_demo_id": null,
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "execution_income"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+      ],
+      "expected_fields": [
+        "exe_income",
+        "cx_first_channel",
+        "is_new",
+        "executed_date",
+        "is_valid",
+        "dp"
+      ],
+      "expected_dimensions": [
+        "cx_first_channel"
+      ],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)",
+        "is_valid = 1",
+        "is_new = 1"
+      ],
+      "expected_sql_must_contain": [
+        "cx_first_channel",
+        "is_new = 1",
+        "SUM(exe_income)",
+        "GROUP BY"
+      ],
+      "expected_sql_any_of": [
+        [
+          "2026-07-01"
+        ],
+        [
+          "20260701"
+        ],
+        [
+          "2026-07"
+        ]
+      ],
+      "forbidden_sql_patterns": [
+        "is_pay_new",
+        "pay_gmv",
+        "channel_type"
+      ],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 exe_income、cx_first_channel、is_new、executed_date、is_valid、dp；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1；is_new = 1。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)",
+          "is_valid = 1",
+          "is_new = 1"
+        ],
+        "known_risks": [
+          "避免误用字段或口径：is_pay_new、pay_gmv、channel_type",
+          "自然月问题不能用最近30天替代。",
+          "核销域新客使用 is_new，支付域新客使用 is_pay_new。"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：2026年7月各渠道新客核销收入分别是多少？"
+    },
+    {
+      "id": "P0V1_023",
+      "question": "2026年7月各渠道新客核销收入及收入占比是多少？",
+      "category": "composite",
+      "difficulty": "hard",
+      "source_demo_id": null,
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "execution_income"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+      ],
+      "expected_fields": [
+        "exe_income",
+        "cx_first_channel",
+        "is_new",
+        "executed_date",
+        "is_valid",
+        "dp"
+      ],
+      "expected_dimensions": [
+        "cx_first_channel"
+      ],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)",
+        "is_valid = 1",
+        "is_new = 1"
+      ],
+      "expected_sql_must_contain": [
+        "cx_first_channel",
+        "is_new = 1",
+        "SUM(exe_income)",
+        "GROUP BY",
+        "NULLIF"
+      ],
+      "expected_sql_any_of": [
+        [
+          "2026-07-01"
+        ],
+        [
+          "20260701"
+        ],
+        [
+          "2026-07"
+        ],
+        [
+          "OVER("
+        ]
+      ],
+      "forbidden_sql_patterns": [
+        "is_pay_new",
+        "pay_gmv",
+        "channel_type"
+      ],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 exe_income、cx_first_channel、is_new、executed_date、is_valid、dp；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1；is_new = 1。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)",
+          "is_valid = 1",
+          "is_new = 1"
+        ],
+        "known_risks": [
+          "避免误用字段或口径：is_pay_new、pay_gmv、channel_type",
+          "自然月问题不能用最近30天替代。",
+          "核销域新客使用 is_new，支付域新客使用 is_pay_new。"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：2026年7月各渠道新客核销收入及收入占比是多少？"
+    },
+    {
+      "id": "P0V1_024",
+      "question": "2026年7月私域新客核销品项TOP3是什么？",
+      "category": "composite",
+      "difficulty": "hard",
+      "source_demo_id": null,
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "execution_income"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+      ],
+      "expected_fields": [
+        "exe_income",
+        "cx_first_channel",
+        "is_new",
+        "standard_name",
+        "executed_date",
+        "is_valid",
+        "dp"
+      ],
+      "expected_dimensions": [
+        "standard_name"
+      ],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)",
+        "is_valid = 1",
+        "cx_first_channel = '私域'",
+        "is_new = 1"
+      ],
+      "expected_sql_must_contain": [
+        "cx_first_channel",
+        "is_new = 1",
+        "standard_name",
+        "SUM(exe_income)",
+        "ORDER BY",
+        "LIMIT 3"
+      ],
+      "expected_sql_any_of": [
+        [
+          "私域"
+        ],
+        [
+          "2026-07"
+        ]
+      ],
+      "forbidden_sql_patterns": [
+        "product_name",
+        "is_pay_new",
+        "pay_gmv",
+        "channel_type"
+      ],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 exe_income、cx_first_channel、is_new、standard_name、executed_date、is_valid、dp；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1；cx_first_channel = '私域'；is_new = 1。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)",
+          "is_valid = 1",
+          "cx_first_channel = '私域'",
+          "is_new = 1"
+        ],
+        "known_risks": [
+          "避免误用字段或口径：product_name、is_pay_new、pay_gmv、channel_type",
+          "自然月问题不能用最近30天替代。",
+          "品项分析优先使用 standard_name，避免直接使用 product_name。",
+          "核销域新客使用 is_new，支付域新客使用 is_pay_new。"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：2026年7月私域新客核销品项TOP3是什么？"
+    },
+    {
+      "id": "P0V1_025",
+      "question": "2026年7月北京私域新客核销收入TOP10门店是哪些？",
+      "category": "composite",
+      "difficulty": "hard",
+      "source_demo_id": null,
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "execution_income"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_user_execution_record_all_d",
+        "soyoung_dw.dim_qy_tenant_info_all_d"
+      ],
+      "expected_fields": [
+        "exe_income",
+        "cx_first_channel",
+        "is_new",
+        "tenant_id",
+        "city_name",
+        "sy_hospital_name",
+        "executed_date",
+        "is_valid",
+        "dp"
+      ],
+      "expected_dimensions": [
+        "sy_hospital_name"
+      ],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)",
+        "is_valid = 1",
+        "cx_first_channel = '私域'",
+        "is_new = 1",
+        "city_name LIKE '%北京%'"
+      ],
+      "expected_sql_must_contain": [
+        "JOIN",
+        "tenant_id",
+        "city_name",
+        "sy_hospital_name",
+        "cx_first_channel",
+        "is_new = 1",
+        "SUM(exe_income)",
+        "ORDER BY",
+        "LIMIT 10"
+      ],
+      "expected_sql_any_of": [
+        [
+          "北京"
+        ],
+        [
+          "2026-07"
+        ]
+      ],
+      "forbidden_sql_patterns": [
+        "hospital_name",
+        "is_pay_new",
+        "pay_gmv",
+        "channel_type"
+      ],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 exe_income、cx_first_channel、is_new、tenant_id、city_name、sy_hospital_name、executed_date、is_valid；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1；cx_first_channel = '私域'；is_new = 1；city_name LIKE '%北京%'。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)",
+          "is_valid = 1",
+          "cx_first_channel = '私域'",
+          "is_new = 1",
+          "city_name LIKE '%北京%'"
+        ],
+        "known_risks": [
+          "避免误用字段或口径：hospital_name、is_pay_new、pay_gmv、channel_type",
+          "自然月问题不能用最近30天替代。",
+          "城市过滤优先使用 city_name。",
+          "门店展示优先使用 sy_hospital_name，关联使用 tenant_id。",
+          "核销域新客使用 is_new，支付域新客使用 is_pay_new。"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：2026年7月北京私域新客核销收入TOP10门店是哪些？"
+    },
+    {
+      "id": "P0V1_026",
+      "question": "2026年7月老带新新客核销收入较6月同期的差额和变化率是多少？",
+      "category": "composite",
+      "difficulty": "hard",
+      "source_demo_id": null,
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "execution_income"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+      ],
+      "expected_fields": [
+        "exe_income",
+        "cx_first_channel",
+        "is_new",
+        "executed_date",
+        "is_valid",
+        "dp"
+      ],
+      "expected_dimensions": [],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)",
+        "is_valid = 1",
+        "is_new = 1"
+      ],
+      "expected_sql_must_contain": [
+        "cx_first_channel",
+        "is_new = 1",
+        "SUM(exe_income)",
+        "NULLIF"
+      ],
+      "expected_sql_any_of": [
+        [
+          "老带新"
+        ],
+        [
+          "2026-07",
+          "2026-06"
+        ],
+        [
+          "202607",
+          "202606"
+        ]
+      ],
+      "forbidden_sql_patterns": [
+        "is_pay_new",
+        "pay_gmv",
+        "channel_type"
+      ],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 exe_income、cx_first_channel、is_new、executed_date、is_valid、dp；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1；is_new = 1。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)",
+          "is_valid = 1",
+          "is_new = 1"
+        ],
+        "known_risks": [
+          "避免误用字段或口径：is_pay_new、pay_gmv、channel_type",
+          "自然月问题不能用最近30天替代。",
+          "核销域新客使用 is_new，支付域新客使用 is_pay_new。"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：2026年7月老带新新客核销收入较6月同期的差额和变化率是多少？"
+    },
+    {
+      "id": "P0V1_027",
+      "question": "最近30天按天、渠道统计新客核销收入及收入占比。",
+      "category": "composite",
+      "difficulty": "hard",
+      "source_demo_id": null,
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "execution_income"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+      ],
+      "expected_fields": [
+        "exe_income",
+        "cx_first_channel",
+        "is_new",
+        "executed_date",
+        "is_valid",
+        "dp"
+      ],
+      "expected_dimensions": [
+        "executed_date",
+        "cx_first_channel"
+      ],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)",
+        "is_valid = 1",
+        "executed_date 近30天"
+      ],
+      "expected_sql_must_contain": [
+        "executed_date",
+        "cx_first_channel",
+        "is_new = 1",
+        "SUM(exe_income)",
+        "GROUP BY",
+        "NULLIF"
+      ],
+      "expected_sql_any_of": [
+        [
+          "OVER("
+        ]
+      ],
+      "forbidden_sql_patterns": [
+        "is_pay_new",
+        "pay_gmv",
+        "channel_type"
+      ],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 exe_income、cx_first_channel、is_new、executed_date、is_valid、dp；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1；executed_date 近30天。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)",
+          "is_valid = 1",
+          "executed_date 近30天"
+        ],
+        "known_risks": [
+          "避免误用字段或口径：is_pay_new、pay_gmv、channel_type",
+          "核销域新客使用 is_new，支付域新客使用 is_pay_new。"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：最近30天按天、渠道统计新客核销收入及收入占比。"
+    },
+    {
+      "id": "P0V1_028",
+      "question": "最近30天0元单数量和核销人数是多少？",
+      "category": "standard",
+      "difficulty": "medium",
+      "source_demo_id": "Q009",
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "zero_income_order_count",
+        "execution_user_count"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+      ],
+      "expected_fields": [
+        "exe_income",
+        "main_order_id",
+        "customer_id",
+        "executed_date",
+        "is_valid",
+        "dp"
+      ],
+      "expected_dimensions": [],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)",
+        "is_valid = 1",
+        "executed_date 近30天"
+      ],
+      "expected_sql_must_contain": [
+        "exe_income = 0",
+        "COUNT(DISTINCT main_order_id)",
+        "COUNT(DISTINCT customer_id)"
+      ],
+      "expected_sql_any_of": [],
+      "forbidden_sql_patterns": [
+        "pay_gmv = 0",
+        "pay_date",
+        "is_paydate_cash"
+      ],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 exe_income、main_order_id、customer_id、executed_date、is_valid、dp；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1；executed_date 近30天。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)",
+          "is_valid = 1",
+          "executed_date 近30天"
+        ],
+        "known_risks": [
+          "避免误用字段或口径：pay_gmv = 0、pay_date、is_paydate_cash"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：最近30天0元单数量和核销人数是多少？"
+    },
+    {
+      "id": "P0V1_029",
+      "question": "2026年7月0元单核销人次、核销人数、核销收入分别是多少？",
+      "category": "standard",
+      "difficulty": "medium",
+      "source_demo_id": null,
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "execution_visit_count",
+        "execution_user_count",
+        "execution_income"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+      ],
+      "expected_fields": [
+        "exe_income",
+        "verify_date_id",
+        "customer_id",
+        "executed_date",
+        "is_valid",
+        "dp"
+      ],
+      "expected_dimensions": [],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)",
+        "is_valid = 1"
+      ],
+      "expected_sql_must_contain": [
+        "exe_income = 0",
+        "COUNT(DISTINCT verify_date_id)",
+        "COUNT(DISTINCT customer_id)",
+        "SUM(exe_income)"
+      ],
+      "expected_sql_any_of": [
+        [
+          "2026-07-01"
+        ],
+        [
+          "20260701"
+        ],
+        [
+          "2026-07"
+        ]
+      ],
+      "forbidden_sql_patterns": [
+        "pay_gmv = 0",
+        "pay_date"
+      ],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 exe_income、verify_date_id、customer_id、executed_date、is_valid、dp；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)",
+          "is_valid = 1"
+        ],
+        "known_risks": [
+          "避免误用字段或口径：pay_gmv = 0、pay_date",
+          "自然月问题不能用最近30天替代。"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：2026年7月0元单核销人次、核销人数、核销收入分别是多少？"
+    },
+    {
+      "id": "P0V1_030",
+      "question": "2026年7月剔除0元单后的核销收入、核销人次、核销客单价分别是多少？",
+      "category": "composite",
+      "difficulty": "hard",
+      "source_demo_id": null,
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "execution_income",
+        "execution_visit_count",
+        "execution_aov_by_visit"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+      ],
+      "expected_fields": [
+        "exe_income",
+        "verify_date_id",
+        "customer_id",
+        "executed_date",
+        "is_valid",
+        "dp"
+      ],
+      "expected_dimensions": [],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)",
+        "is_valid = 1"
+      ],
+      "expected_sql_must_contain": [
+        "exe_income > 0",
+        "SUM(exe_income)",
+        "COUNT(DISTINCT verify_date_id)",
+        "NULLIF"
+      ],
+      "expected_sql_any_of": [
+        [
+          "2026-07-01"
+        ],
+        [
+          "20260701"
+        ],
+        [
+          "2026-07"
+        ]
+      ],
+      "forbidden_sql_patterns": [
+        "pay_gmv",
+        "pay_date"
+      ],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 exe_income、verify_date_id、customer_id、executed_date、is_valid、dp；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)",
+          "is_valid = 1"
+        ],
+        "known_risks": [
+          "避免误用字段或口径：pay_gmv、pay_date",
+          "自然月问题不能用最近30天替代。"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：2026年7月剔除0元单后的核销收入、核销人次、核销客单价分别是多少？"
+    },
+    {
+      "id": "P0V1_031",
+      "question": "2026年7月剔除0元单后，北京各门店核销客单价TOP10是哪些？",
+      "category": "composite",
+      "difficulty": "hard",
+      "source_demo_id": null,
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "execution_aov_by_visit"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_user_execution_record_all_d",
+        "soyoung_dw.dim_qy_tenant_info_all_d"
+      ],
+      "expected_fields": [
+        "exe_income",
+        "verify_date_id",
+        "customer_id",
+        "executed_date",
+        "is_valid",
+        "dp",
+        "tenant_id",
+        "city_name",
+        "sy_hospital_name"
+      ],
+      "expected_dimensions": [
+        "sy_hospital_name"
+      ],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)",
+        "is_valid = 1",
+        "city_name LIKE '%北京%'"
+      ],
+      "expected_sql_must_contain": [
+        "JOIN",
+        "tenant_id",
+        "city_name",
+        "sy_hospital_name",
+        "exe_income > 0",
+        "SUM(exe_income)",
+        "COUNT(DISTINCT verify_date_id)",
+        "ORDER BY",
+        "LIMIT 10",
+        "NULLIF"
+      ],
+      "expected_sql_any_of": [
+        [
+          "2026-07-01"
+        ],
+        [
+          "20260701"
+        ],
+        [
+          "2026-07"
+        ]
+      ],
+      "forbidden_sql_patterns": [
+        "pay_gmv",
+        "hospital_name"
+      ],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 exe_income、verify_date_id、customer_id、executed_date、is_valid、dp、tenant_id、city_name；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1；city_name LIKE '%北京%'。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)",
+          "is_valid = 1",
+          "city_name LIKE '%北京%'"
+        ],
+        "known_risks": [
+          "避免误用字段或口径：pay_gmv、hospital_name",
+          "自然月问题不能用最近30天替代。",
+          "城市过滤优先使用 city_name。",
+          "门店展示优先使用 sy_hospital_name，关联使用 tenant_id。"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：2026年7月剔除0元单后，北京各门店核销客单价TOP10是哪些？"
+    },
+    {
+      "id": "P0V1_032",
+      "question": "2026年7月0元单占核销人次的比例是多少？",
+      "category": "composite",
+      "difficulty": "medium",
+      "source_demo_id": null,
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "execution_visit_count"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+      ],
+      "expected_fields": [
+        "exe_income",
+        "verify_date_id",
+        "executed_date",
+        "is_valid",
+        "dp"
+      ],
+      "expected_dimensions": [],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)",
+        "is_valid = 1"
+      ],
+      "expected_sql_must_contain": [
+        "exe_income = 0",
+        "COUNT(DISTINCT verify_date_id)",
+        "NULLIF"
+      ],
+      "expected_sql_any_of": [
+        [
+          "2026-07-01"
+        ],
+        [
+          "20260701"
+        ],
+        [
+          "2026-07"
+        ]
+      ],
+      "forbidden_sql_patterns": [
+        "pay_gmv = 0",
+        "pay_date"
+      ],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 exe_income、verify_date_id、executed_date、is_valid、dp；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)",
+          "is_valid = 1"
+        ],
+        "known_risks": [
+          "避免误用字段或口径：pay_gmv = 0、pay_date",
+          "自然月问题不能用最近30天替代。"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：2026年7月0元单占核销人次的比例是多少？"
+    },
+    {
+      "id": "P0V1_033",
+      "question": "2026年7月新客0元单核销人次占比和老客0元单核销人次占比分别是多少？",
+      "category": "composite",
+      "difficulty": "hard",
+      "source_demo_id": null,
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "execution_visit_count"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+      ],
+      "expected_fields": [
+        "exe_income",
+        "verify_date_id",
+        "is_new",
+        "executed_date",
+        "is_valid",
+        "dp"
+      ],
+      "expected_dimensions": [
+        "is_new"
+      ],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)",
+        "is_valid = 1"
+      ],
+      "expected_sql_must_contain": [
+        "is_new",
+        "exe_income = 0",
+        "COUNT(DISTINCT verify_date_id)",
+        "GROUP BY",
+        "NULLIF"
+      ],
+      "expected_sql_any_of": [
+        [
+          "2026-07-01"
+        ],
+        [
+          "20260701"
+        ],
+        [
+          "2026-07"
+        ]
+      ],
+      "forbidden_sql_patterns": [
+        "is_pay_new",
+        "pay_gmv = 0"
+      ],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 exe_income、verify_date_id、is_new、executed_date、is_valid、dp；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)",
+          "is_valid = 1"
+        ],
+        "known_risks": [
+          "避免误用字段或口径：is_pay_new、pay_gmv = 0",
+          "自然月问题不能用最近30天替代。",
+          "核销域新客使用 is_new，支付域新客使用 is_pay_new。"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：2026年7月新客0元单核销人次占比和老客0元单核销人次占比分别是多少？"
+    },
+    {
+      "id": "P0V1_034",
+      "question": "最近30天新客支付GMV、支付人数、支付客单价是多少？",
+      "category": "standard",
+      "difficulty": "medium",
+      "source_demo_id": "Q011",
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "payment_gmv",
+        "payment_user_count",
+        "payment_aov_by_user_day"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_order_info_all_d"
+      ],
+      "expected_fields": [
+        "pay_gmv",
+        "uid",
+        "pay_date",
+        "is_paydate_cash",
+        "dp",
+        "is_pay_new"
+      ],
+      "expected_dimensions": [],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)",
+        "is_paydate_cash = 0",
+        "pay_date 近30天"
+      ],
+      "expected_sql_must_contain": [
+        "SUM(pay_gmv)",
+        "COUNT(DISTINCT uid)",
+        "is_pay_new",
+        "is_paydate_cash = 0",
+        "NULLIF"
+      ],
+      "expected_sql_any_of": [],
+      "forbidden_sql_patterns": [
+        "exe_income",
+        "executed_date",
+        "is_new = 1"
+      ],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 pay_gmv、uid、pay_date、is_paydate_cash、dp、is_pay_new；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_paydate_cash = 0；pay_date 近30天。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)",
+          "is_paydate_cash = 0",
+          "pay_date 近30天"
+        ],
+        "known_risks": [
+          "避免误用字段或口径：exe_income、executed_date、is_new = 1",
+          "核销域新客使用 is_new，支付域新客使用 is_pay_new。"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：最近30天新客支付GMV、支付人数、支付客单价是多少？"
+    },
+    {
+      "id": "P0V1_035",
+      "question": "2026年7月支付GMV、支付人数、支付客单价分别是多少？",
+      "category": "standard",
+      "difficulty": "medium",
+      "source_demo_id": null,
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "payment_gmv",
+        "payment_user_count",
+        "payment_aov_by_user_day"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_order_info_all_d"
+      ],
+      "expected_fields": [
+        "pay_gmv",
+        "uid",
+        "pay_date",
+        "is_paydate_cash",
+        "dp"
+      ],
+      "expected_dimensions": [],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)",
+        "is_paydate_cash = 0"
+      ],
+      "expected_sql_must_contain": [
+        "SUM(pay_gmv)",
+        "COUNT(DISTINCT uid)",
+        "is_paydate_cash = 0",
+        "NULLIF"
+      ],
+      "expected_sql_any_of": [
+        [
+          "2026-07-01"
+        ],
+        [
+          "20260701"
+        ],
+        [
+          "2026-07"
+        ]
+      ],
+      "forbidden_sql_patterns": [
+        "exe_income",
+        "executed_date"
+      ],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 pay_gmv、uid、pay_date、is_paydate_cash、dp；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_paydate_cash = 0。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)",
+          "is_paydate_cash = 0"
+        ],
+        "known_risks": [
+          "避免误用字段或口径：exe_income、executed_date",
+          "自然月问题不能用最近30天替代。"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：2026年7月支付GMV、支付人数、支付客单价分别是多少？"
+    },
+    {
+      "id": "P0V1_036",
+      "question": "2026年7月北京各门店支付GMV TOP10是哪些？",
+      "category": "standard",
+      "difficulty": "medium",
+      "source_demo_id": null,
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "payment_gmv"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_order_info_all_d",
+        "soyoung_dw.dim_qy_tenant_info_all_d"
+      ],
+      "expected_fields": [
+        "pay_gmv",
+        "tenant_id",
+        "city_name",
+        "sy_hospital_name",
+        "pay_date",
+        "is_paydate_cash",
+        "dp"
+      ],
+      "expected_dimensions": [
+        "sy_hospital_name"
+      ],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)",
+        "is_paydate_cash = 0",
+        "city_name LIKE '%北京%'"
+      ],
+      "expected_sql_must_contain": [
+        "JOIN",
+        "tenant_id",
+        "city_name",
+        "sy_hospital_name",
+        "SUM(pay_gmv)",
+        "is_paydate_cash = 0",
+        "ORDER BY",
+        "LIMIT 10"
+      ],
+      "expected_sql_any_of": [
+        [
+          "2026-07-01"
+        ],
+        [
+          "20260701"
+        ],
+        [
+          "2026-07"
+        ]
+      ],
+      "forbidden_sql_patterns": [
+        "exe_income",
+        "executed_date",
+        "hospital_name"
+      ],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 pay_gmv、tenant_id、city_name、sy_hospital_name、pay_date、is_paydate_cash、dp；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_paydate_cash = 0；city_name LIKE '%北京%'。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)",
+          "is_paydate_cash = 0",
+          "city_name LIKE '%北京%'"
+        ],
+        "known_risks": [
+          "避免误用字段或口径：exe_income、executed_date、hospital_name",
+          "自然月问题不能用最近30天替代。",
+          "城市过滤优先使用 city_name。",
+          "门店展示优先使用 sy_hospital_name，关联使用 tenant_id。"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：2026年7月北京各门店支付GMV TOP10是哪些？"
+    },
+    {
+      "id": "P0V1_037",
+      "question": "截至昨天各门店待核销金额TOP10是哪些？",
+      "category": "standard",
+      "difficulty": "medium",
+      "source_demo_id": "Q010",
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "unverified_amount"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_order_info_all_d",
+        "soyoung_dw.dim_qy_tenant_info_all_d"
+      ],
+      "expected_fields": [
+        "left_gmv",
+        "tenant_id",
+        "sy_hospital_name",
+        "dp"
+      ],
+      "expected_dimensions": [
+        "sy_hospital_name"
+      ],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)",
+        "left_gmv > 0"
+      ],
+      "expected_sql_must_contain": [
+        "JOIN",
+        "tenant_id",
+        "sy_hospital_name",
+        "SUM(left_gmv)",
+        "left_gmv > 0",
+        "ORDER BY",
+        "LIMIT 10"
+      ],
+      "expected_sql_any_of": [],
+      "forbidden_sql_patterns": [
+        "exe_income",
+        "executed_date",
+        "is_valid = 1"
+      ],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 left_gmv、tenant_id、sy_hospital_name、dp；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；left_gmv > 0。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)",
+          "left_gmv > 0"
+        ],
+        "known_risks": [
+          "避免误用字段或口径：exe_income、executed_date、is_valid = 1",
+          "门店展示优先使用 sy_hospital_name，关联使用 tenant_id。"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：截至昨天各门店待核销金额TOP10是哪些？"
+    },
+    {
+      "id": "P0V1_038",
+      "question": "截至昨天北京各门店待核销金额TOP10是哪些？",
+      "category": "standard",
+      "difficulty": "medium",
+      "source_demo_id": null,
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "unverified_amount"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_order_info_all_d",
+        "soyoung_dw.dim_qy_tenant_info_all_d"
+      ],
+      "expected_fields": [
+        "left_gmv",
+        "tenant_id",
+        "city_name",
+        "sy_hospital_name",
+        "dp"
+      ],
+      "expected_dimensions": [
+        "sy_hospital_name"
+      ],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)",
+        "left_gmv > 0",
+        "city_name LIKE '%北京%'"
+      ],
+      "expected_sql_must_contain": [
+        "JOIN",
+        "tenant_id",
+        "city_name",
+        "sy_hospital_name",
+        "SUM(left_gmv)",
+        "left_gmv > 0",
+        "ORDER BY",
+        "LIMIT 10"
+      ],
+      "expected_sql_any_of": [],
+      "forbidden_sql_patterns": [
+        "exe_income",
+        "executed_date",
+        "is_valid = 1"
+      ],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 left_gmv、tenant_id、city_name、sy_hospital_name、dp；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；left_gmv > 0；city_name LIKE '%北京%'。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)",
+          "left_gmv > 0",
+          "city_name LIKE '%北京%'"
+        ],
+        "known_risks": [
+          "避免误用字段或口径：exe_income、executed_date、is_valid = 1",
+          "城市过滤优先使用 city_name。",
+          "门店展示优先使用 sy_hospital_name，关联使用 tenant_id。"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：截至昨天北京各门店待核销金额TOP10是哪些？"
+    },
+    {
+      "id": "P0V1_039",
+      "question": "2026年7月支付GMV、核销收入及二者差额分别是多少？",
+      "category": "composite",
+      "difficulty": "hard",
+      "source_demo_id": null,
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "payment_gmv",
+        "execution_income"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_order_info_all_d",
+        "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+      ],
+      "expected_fields": [
+        "pay_gmv",
+        "pay_date",
+        "is_paydate_cash",
+        "exe_income",
+        "executed_date",
+        "is_valid",
+        "dp"
+      ],
+      "expected_dimensions": [],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)"
+      ],
+      "expected_sql_must_contain": [
+        "SUM(pay_gmv)",
+        "SUM(exe_income)"
+      ],
+      "expected_sql_any_of": [
+        [
+          "2026-07-01"
+        ],
+        [
+          "20260701"
+        ],
+        [
+          "2026-07"
+        ],
+        [
+          "UNION ALL"
+        ],
+        [
+          "JOIN"
+        ]
+      ],
+      "forbidden_sql_patterns": [],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 pay_gmv、pay_date、is_paydate_cash、exe_income、executed_date、is_valid、dp；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)"
+        ],
+        "known_risks": [
+          "自然月问题不能用最近30天替代。"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：2026年7月支付GMV、核销收入及二者差额分别是多少？"
+    },
+    {
+      "id": "P0V1_040",
+      "question": "最近30天升单核销人次、升单核销收入分别是多少？",
+      "category": "standard",
+      "difficulty": "medium",
+      "source_demo_id": "Q013",
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "execution_visit_count",
+        "execution_income"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+      ],
+      "expected_fields": [
+        "is_up",
+        "exe_income",
+        "verify_date_id",
+        "executed_date",
+        "is_valid",
+        "dp"
+      ],
+      "expected_dimensions": [],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)",
+        "is_valid = 1",
+        "executed_date 近30天",
+        "is_up = 1"
+      ],
+      "expected_sql_must_contain": [
+        "is_up = 1",
+        "SUM(exe_income)",
+        "COUNT(DISTINCT verify_date_id)"
+      ],
+      "expected_sql_any_of": [],
+      "forbidden_sql_patterns": [
+        "pay_gmv",
+        "pay_date"
+      ],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 is_up、exe_income、verify_date_id、executed_date、is_valid、dp；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1；executed_date 近30天；is_up = 1。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)",
+          "is_valid = 1",
+          "executed_date 近30天",
+          "is_up = 1"
+        ],
+        "known_risks": [
+          "避免误用字段或口径：pay_gmv、pay_date"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：最近30天升单核销人次、升单核销收入分别是多少？"
+    },
+    {
+      "id": "P0V1_041",
+      "question": "2026年7月升单核销收入、升单核销人次、升单客单价分别是多少？",
+      "category": "standard",
+      "difficulty": "medium",
+      "source_demo_id": null,
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "execution_income",
+        "execution_visit_count",
+        "execution_aov_by_visit"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+      ],
+      "expected_fields": [
+        "is_up",
+        "exe_income",
+        "verify_date_id",
+        "executed_date",
+        "is_valid",
+        "dp"
+      ],
+      "expected_dimensions": [],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)",
+        "is_valid = 1",
+        "is_up = 1"
+      ],
+      "expected_sql_must_contain": [
+        "is_up = 1",
+        "SUM(exe_income)",
+        "COUNT(DISTINCT verify_date_id)",
+        "NULLIF"
+      ],
+      "expected_sql_any_of": [
+        [
+          "2026-07-01"
+        ],
+        [
+          "20260701"
+        ],
+        [
+          "2026-07"
+        ]
+      ],
+      "forbidden_sql_patterns": [
+        "pay_gmv"
+      ],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 is_up、exe_income、verify_date_id、executed_date、is_valid、dp；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1；is_up = 1。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)",
+          "is_valid = 1",
+          "is_up = 1"
+        ],
+        "known_risks": [
+          "避免误用字段或口径：pay_gmv",
+          "自然月问题不能用最近30天替代。"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：2026年7月升单核销收入、升单核销人次、升单客单价分别是多少？"
+    },
+    {
+      "id": "P0V1_042",
+      "question": "2026年7月北京各门店升单核销收入TOP10是哪些？",
+      "category": "composite",
+      "difficulty": "hard",
+      "source_demo_id": null,
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "execution_income"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_user_execution_record_all_d",
+        "soyoung_dw.dim_qy_tenant_info_all_d"
+      ],
+      "expected_fields": [
+        "is_up",
+        "exe_income",
+        "tenant_id",
+        "city_name",
+        "sy_hospital_name",
+        "executed_date",
+        "is_valid",
+        "dp"
+      ],
+      "expected_dimensions": [
+        "sy_hospital_name"
+      ],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)",
+        "is_valid = 1",
+        "is_up = 1",
+        "city_name LIKE '%北京%'"
+      ],
+      "expected_sql_must_contain": [
+        "JOIN",
+        "tenant_id",
+        "city_name",
+        "sy_hospital_name",
+        "is_up = 1",
+        "SUM(exe_income)",
+        "ORDER BY",
+        "LIMIT 10"
+      ],
+      "expected_sql_any_of": [
+        [
+          "2026-07-01"
+        ],
+        [
+          "20260701"
+        ],
+        [
+          "2026-07"
+        ]
+      ],
+      "forbidden_sql_patterns": [
+        "pay_gmv",
+        "hospital_name"
+      ],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 is_up、exe_income、tenant_id、city_name、sy_hospital_name、executed_date、is_valid、dp；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1；is_up = 1；city_name LIKE '%北京%'。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)",
+          "is_valid = 1",
+          "is_up = 1",
+          "city_name LIKE '%北京%'"
+        ],
+        "known_risks": [
+          "避免误用字段或口径：pay_gmv、hospital_name",
+          "自然月问题不能用最近30天替代。",
+          "城市过滤优先使用 city_name。",
+          "门店展示优先使用 sy_hospital_name，关联使用 tenant_id。"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：2026年7月北京各门店升单核销收入TOP10是哪些？"
+    },
+    {
+      "id": "P0V1_043",
+      "question": "2026年7月升单核销收入TOP10品项是哪些？",
+      "category": "composite",
+      "difficulty": "hard",
+      "source_demo_id": null,
+      "expected_intent": "nl2sql",
+      "expected_metrics": [
+        "execution_income"
+      ],
+      "expected_tables": [
+        "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+      ],
+      "expected_fields": [
+        "is_up",
+        "exe_income",
+        "standard_name",
+        "executed_date",
+        "is_valid",
+        "dp"
+      ],
+      "expected_dimensions": [
+        "standard_name"
+      ],
+      "expected_filters": [
+        "dp = DATE_SUB(CURRENT_DATE(),1)",
+        "is_valid = 1",
+        "is_up = 1"
+      ],
+      "expected_sql_must_contain": [
+        "is_up = 1",
+        "standard_name",
+        "SUM(exe_income)",
+        "ORDER BY",
+        "LIMIT 10"
+      ],
+      "expected_sql_any_of": [
+        [
+          "2026-07-01"
+        ],
+        [
+          "20260701"
+        ],
+        [
+          "2026-07"
+        ]
+      ],
+      "forbidden_sql_patterns": [
+        "product_name",
+        "pay_gmv"
+      ],
+      "expected_caliber": {
+        "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 is_up、exe_income、standard_name、executed_date、is_valid、dp；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1；is_up = 1。",
+        "must_filters": [
+          "dp = DATE_SUB(CURRENT_DATE(),1)",
+          "is_valid = 1",
+          "is_up = 1"
+        ],
+        "known_risks": [
+          "避免误用字段或口径：product_name、pay_gmv",
+          "自然月问题不能用最近30天替代。",
+          "品项分析优先使用 standard_name，避免直接使用 product_name。"
+        ]
+      },
+      "evaluation_focus": [
+        "schema_retrieval",
+        "sql_generation",
+        "caliber"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：2026年7月升单核销收入TOP10品项是哪些？"
+    },
+    {
+      "id": "P0V1_044",
+      "question": "核销收入和核销GMV有什么区别？",
+      "category": "caliber_explain",
+      "difficulty": "easy",
+      "source_demo_id": null,
+      "expected_intent": "caliber_explain",
+      "expected_metrics": [
+        "execution_income",
+        "execution_gmv"
+      ],
+      "expected_tables": [],
+      "expected_fields": [
+        "exe_income",
+        "exe_amount"
+      ],
+      "expected_dimensions": [],
+      "expected_filters": [],
+      "expected_sql_must_contain": [],
+      "expected_sql_any_of": [],
+      "forbidden_sql_patterns": [
+        "SELECT",
+        "FROM",
+        "SUM(",
+        "COUNT(",
+        "WHERE"
+      ],
+      "expected_caliber": {
+        "definition": "核销收入使用 SUM(exe_income)，表示实际收入口径；核销GMV使用 SUM(exe_amount)，通常是核销金额口径，二者字段和业务含义不同。",
+        "must_filters": [],
+        "known_risks": [
+          "不能把 exe_amount 当作 exe_income。"
+        ]
+      },
+      "evaluation_focus": [
+        "intent_routing",
+        "caliber",
+        "reject_boundary"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：核销收入和核销GMV有什么区别？"
+    },
+    {
+      "id": "P0V1_045",
+      "question": "核销收入和支付GMV有什么区别？",
+      "category": "caliber_explain",
+      "difficulty": "medium",
+      "source_demo_id": null,
+      "expected_intent": "caliber_explain",
+      "expected_metrics": [
+        "execution_income",
+        "payment_gmv"
+      ],
+      "expected_tables": [],
+      "expected_fields": [
+        "exe_income",
+        "executed_date",
+        "pay_gmv",
+        "pay_date"
+      ],
+      "expected_dimensions": [],
+      "expected_filters": [],
+      "expected_sql_must_contain": [],
+      "expected_sql_any_of": [],
+      "forbidden_sql_patterns": [
+        "SELECT",
+        "FROM",
+        "SUM(",
+        "COUNT(",
+        "WHERE"
+      ],
+      "expected_caliber": {
+        "definition": "核销收入来自核销域，使用 exe_income 和 executed_date；支付GMV来自支付域，使用 pay_gmv 和 pay_date，两者表、字段、日期锚点不同。",
+        "must_filters": [],
+        "known_risks": [
+          "不能把支付GMV等同于核销收入。"
+        ]
+      },
+      "evaluation_focus": [
+        "intent_routing",
+        "caliber",
+        "reject_boundary"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：核销收入和支付GMV有什么区别？"
+    },
+    {
+      "id": "P0V1_046",
+      "question": "核销人数和核销人次有什么区别？",
+      "category": "caliber_explain",
+      "difficulty": "easy",
+      "source_demo_id": null,
+      "expected_intent": "caliber_explain",
+      "expected_metrics": [
+        "execution_user_count",
+        "execution_visit_count"
+      ],
+      "expected_tables": [],
+      "expected_fields": [
+        "customer_id",
+        "verify_date_id"
+      ],
+      "expected_dimensions": [],
+      "expected_filters": [],
+      "expected_sql_must_contain": [],
+      "expected_sql_any_of": [],
+      "forbidden_sql_patterns": [
+        "SELECT",
+        "FROM",
+        "SUM(",
+        "COUNT(",
+        "WHERE"
+      ],
+      "expected_caliber": {
+        "definition": "核销人数按 COUNT(DISTINCT customer_id) 统计，核销人次按 COUNT(DISTINCT verify_date_id) 统计；人数看用户，人次看到店/核销事件。",
+        "must_filters": [],
+        "known_risks": [
+          "不能用核销人数替代核销人次。"
+        ]
+      },
+      "evaluation_focus": [
+        "intent_routing",
+        "caliber",
+        "reject_boundary"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：核销人数和核销人次有什么区别？"
+    },
+    {
+      "id": "P0V1_047",
+      "question": "核销客单价为什么默认用核销人次做分母？",
+      "category": "caliber_explain",
+      "difficulty": "easy",
+      "source_demo_id": null,
+      "expected_intent": "caliber_explain",
+      "expected_metrics": [
+        "execution_aov_by_visit"
+      ],
+      "expected_tables": [],
+      "expected_fields": [
+        "exe_income",
+        "verify_date_id"
+      ],
+      "expected_dimensions": [],
+      "expected_filters": [],
+      "expected_sql_must_contain": [],
+      "expected_sql_any_of": [],
+      "forbidden_sql_patterns": [
+        "SELECT",
+        "FROM",
+        "SUM(",
+        "COUNT(",
+        "WHERE"
+      ],
+      "expected_caliber": {
+        "definition": "核销客单价默认使用 SUM(exe_income) / NULLIF(COUNT(DISTINCT verify_date_id),0)，分母是核销人次 verify_date_id。",
+        "must_filters": [],
+        "known_risks": [
+          "默认分母不是 customer_id。"
+        ]
+      },
+      "evaluation_focus": [
+        "intent_routing",
+        "caliber",
+        "reject_boundary"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：核销客单价为什么默认用核销人次做分母？"
+    },
+    {
+      "id": "P0V1_048",
+      "question": "待核销金额为什么是库存快照口径，不能直接按支付日期当作发生额？",
+      "category": "caliber_explain",
+      "difficulty": "medium",
+      "source_demo_id": null,
+      "expected_intent": "caliber_explain",
+      "expected_metrics": [
+        "unverified_amount"
+      ],
+      "expected_tables": [],
+      "expected_fields": [
+        "left_gmv",
+        "dp",
+        "pay_date"
+      ],
+      "expected_dimensions": [],
+      "expected_filters": [],
+      "expected_sql_must_contain": [],
+      "expected_sql_any_of": [],
+      "forbidden_sql_patterns": [
+        "SELECT",
+        "FROM",
+        "SUM(",
+        "COUNT(",
+        "WHERE"
+      ],
+      "expected_caliber": {
+        "definition": "待核销金额是库存快照口径，通常使用 left_gmv 和 left_num > 0，并锁定最新 dp 分区；不能直接按 pay_date 当作发生额。",
+        "must_filters": [],
+        "known_risks": [
+          "待核销不是支付发生额。"
+        ]
+      },
+      "evaluation_focus": [
+        "intent_routing",
+        "caliber",
+        "reject_boundary"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：待核销金额为什么是库存快照口径，不能直接按支付日期当作发生额？"
+    },
+    {
+      "id": "P0V1_049",
+      "question": "新客核销和新客支付分别应该使用什么新客口径？",
+      "category": "caliber_explain",
+      "difficulty": "medium",
+      "source_demo_id": null,
+      "expected_intent": "caliber_explain",
+      "expected_metrics": [],
+      "expected_tables": [],
+      "expected_fields": [
+        "is_new",
+        "is_pay_new"
+      ],
+      "expected_dimensions": [],
+      "expected_filters": [],
+      "expected_sql_must_contain": [],
+      "expected_sql_any_of": [],
+      "forbidden_sql_patterns": [
+        "SELECT",
+        "FROM",
+        "SUM(",
+        "COUNT(",
+        "WHERE"
+      ],
+      "expected_caliber": {
+        "definition": "新客核销使用核销域 is_new；新客支付使用支付域 is_pay_new。两个字段属于不同业务域，不能混用。",
+        "must_filters": [],
+        "known_risks": [
+          "核销新客不要用 is_pay_new，支付新客不要用 is_new。"
+        ]
+      },
+      "evaluation_focus": [
+        "intent_routing",
+        "caliber",
+        "reject_boundary"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：新客核销和新客支付分别应该使用什么新客口径？"
+    },
+    {
+      "id": "P0V1_050",
+      "question": "品项分析应该优先使用 standard_name 还是 product_name？",
+      "category": "caliber_explain",
+      "difficulty": "medium",
+      "source_demo_id": null,
+      "expected_intent": "caliber_explain",
+      "expected_metrics": [],
+      "expected_tables": [],
+      "expected_fields": [
+        "standard_name",
+        "product_name"
+      ],
+      "expected_dimensions": [],
+      "expected_filters": [],
+      "expected_sql_must_contain": [],
+      "expected_sql_any_of": [],
+      "forbidden_sql_patterns": [
+        "SELECT",
+        "FROM",
+        "SUM(",
+        "COUNT(",
+        "WHERE"
+      ],
+      "expected_caliber": {
+        "definition": "品项分析优先使用 standard_name 作为标准品项名称；product_name 更偏商品/明细名称，可能导致统计口径不统一。",
+        "must_filters": [],
+        "known_risks": [
+          "品项统计不要优先使用 product_name 替代 standard_name。"
+        ]
+      },
+      "evaluation_focus": [
+        "intent_routing",
+        "caliber",
+        "reject_boundary"
+      ],
+      "critical_rules": [],
+      "notes": "P0 v1 正式评测：品项分析应该优先使用 standard_name 还是 product_name？"
+    }
+  ]
+}
