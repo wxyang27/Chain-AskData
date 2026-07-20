@@ -118,6 +118,11 @@ class AskDataPipeline:
         final_sql, sql_source = self._stage_sql_selection(
             template_sql, llm_sql, llm_sql_validation, trace,
         )
+        query_plan.llm_adopted = sql_source == "llm"
+        query_plan.llm_validation_passed = llm_sql_validation.passed
+        query_plan.llm_validation_errors = list(llm_sql_validation.errors)
+        if llm_sql and sql_source != "llm":
+            query_plan.llm_fallback_reason = "llm_sql_validation_failed"
         self._stage_sql_generation(final_sql, sql_source, template_sql, llm_sql, trace)
         safety_result = self._stage_sql_safety_gate(final_sql, schema_graph, trace)
 

@@ -68,16 +68,13 @@ class QueryPlanCoTValidator:
 
             # --- cross-table integrity ---
             has_join_instruction = any(
-                "关联" in instr or "JOIN" in instr.upper()
+                self._mentions_real_join(instr)
                 for instr in step.operation_instructions
             )
             has_relations_in_objects = bool(step_relations)
-            has_multiple_tables = len({
-                obj.rsplit(".", 1)[0] for obj in step.processing_objects
-                if "<->" not in obj and "." in obj
-            }) > 1
 
-            if (has_join_instruction or has_multiple_tables) and not has_relations_in_objects:
+            relation_optional = self._is_target_progress_metric(step_fields)
+            if has_join_instruction and not has_relations_in_objects and not relation_optional:
                 if not schema_graph.relations:
                     errors.append(
                         f"cross_table_no_relations:step_{step.step}"
@@ -185,6 +182,45 @@ class QueryPlanCoTValidator:
                 if "." in part:
                     tokens.add(self._normalize_field(part))
         return tokens
+
+    def _mentions_real_join(self, instruction: str) -> bool:
+        """Return True only when the instruction asks for a real table join.
+
+        Multi-source metrics such as target progress can read actuals and
+        targets in separate CTEs without a row-level relation in SchemaGraph.
+        Also avoid treating "no relation needed" wording as a join request.
+        """
+        text = instruction or ""
+        if "JOIN" in text.upper():
+            return True
+
+        compact = "".join(text.split())
+        negative_markers = (
+            "无关联",
+            "无需关联",
+            "无需表关联",
+            "无须关联",
+            "不关联",
+            "单表",
+            "無關聯",
+            "無需關聯",
+        )
+        if any(marker in compact for marker in negative_markers):
+            return False
+
+        return "关联" in text or "關聯" in text
+
+    def _is_target_progress_metric(self, step_fields: set[str]) -> bool:
+        """Target progress metrics combine actual and target aggregates.
+
+        They use both the execution fact table and the monthly target table,
+        but do not require a row-level business relation such as tenant_id or
+        main_order_id in SchemaGraph.
+        """
+        return (
+            "dm_opt_qy_user_execution_record_all_d.exe_income" in step_fields
+            and "dim_channel_month_income_target.target_absolute_value" in step_fields
+        )
 
     def _looks_like_field_reference(self, token: str) -> bool:
         """Only flag tokens that look like technical field references.

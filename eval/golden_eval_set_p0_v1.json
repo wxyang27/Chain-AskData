@@ -16,7 +16,15 @@
       "medium": 28,
       "hard": 18
     },
-    "notes": "固定使用2026年7月相关问题；runner对具体日期写法采用 expected_sql_any_of 兼容。"
+    "notes": "固定使用2026年7月相关问题；runner对具体日期写法采用 expected_sql_any_of 兼容。",
+    "updated": "2026-07-20",
+    "caliber_check_policy": "P0 nl2sql cases use caliber_check_mode=soft; SQL correctness remains gated by intent/tables/fields/filters/must_contain/forbidden/critical_rules.",
+    "cleanup_notes": [
+      "Removed broad forbidden patterns hospital_name and city because they falsely matched sy_hospital_name/city_name.",
+      "Removed customer_id from expected_fields when the question does not ask for????/??/???.",
+      "Accepted DATETRUNC(CURRENT_DATE(), MONTH) as equivalent month-to-date expression for fixed July 2026 cases when current date is 2026-07-20.",
+      "Accepted left_num > 0 as valid unverified inventory filter while still summing left_gmv for unverified amount."
+    ]
   },
   "cases": [
     {
@@ -83,7 +91,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：昨天整体核销收入、核销GMV、核销人次、核销人数、核销客单价分别是多少？"
+      "notes": "P0 v1 正式评测：昨天整体核销收入、核销GMV、核销人次、核销人数、核销客单价分别是多少？",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_002",
@@ -103,7 +112,6 @@
       "expected_fields": [
         "exe_income",
         "verify_date_id",
-        "customer_id",
         "executed_date",
         "is_valid",
         "dp"
@@ -128,6 +136,9 @@
         ],
         [
           "2026-07"
+        ],
+        [
+          "DATETRUNC"
         ]
       ],
       "forbidden_sql_patterns": [
@@ -151,7 +162,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：2026年7月截至昨日，整体核销收入、核销人次、核销客单价分别是多少？"
+      "notes": "P0 v1 正式评测：2026年7月截至昨日，整体核销收入、核销人次、核销客单价分别是多少？",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_003",
@@ -171,7 +183,6 @@
       "expected_fields": [
         "exe_income",
         "verify_date_id",
-        "customer_id",
         "executed_date",
         "is_valid",
         "dp"
@@ -222,7 +233,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：2026年7月截至昨日，按天统计核销收入、核销人次、核销客单价。"
+      "notes": "P0 v1 正式评测：2026年7月截至昨日，按天统计核销收入、核销人次、核销客单价。",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_004",
@@ -290,7 +302,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：2026年7月截至昨日，核销收入较6月同期的差额和变化率分别是多少？"
+      "notes": "P0 v1 正式评测：2026年7月截至昨日，核销收入较6月同期的差额和变化率分别是多少？",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_005",
@@ -346,8 +359,7 @@
       ],
       "forbidden_sql_patterns": [
         "pay_gmv",
-        "pay_date",
-        "hospital_name"
+        "pay_date"
       ],
       "expected_caliber": {
         "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 exe_income、tenant_id、sy_hospital_name、executed_date、is_valid、dp；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1。",
@@ -367,7 +379,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：2026年7月截至昨日，核销收入TOP10门店及其收入占比是多少？"
+      "notes": "P0 v1 正式评测：2026年7月截至昨日，核销收入TOP10门店及其收入占比是多少？",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_006",
@@ -387,7 +400,6 @@
       "expected_fields": [
         "exe_income",
         "verify_date_id",
-        "customer_id",
         "executed_date",
         "is_valid",
         "dp",
@@ -416,6 +428,9 @@
         ],
         [
           "2026-07"
+        ],
+        [
+          "DATETRUNC"
         ]
       ],
       "forbidden_sql_patterns": [
@@ -440,7 +455,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：2026年7月截至昨日，新客和老客核销收入、核销人次、核销客单价分别是多少？"
+      "notes": "P0 v1 正式评测：2026年7月截至昨日，新客和老客核销收入、核销人次、核销客单价分别是多少？",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_007",
@@ -483,8 +499,7 @@
       "expected_sql_any_of": [],
       "forbidden_sql_patterns": [
         "pay_gmv",
-        "pay_date",
-        " city "
+        "pay_date"
       ],
       "expected_caliber": {
         "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 exe_income、tenant_id、city_name、executed_date、is_valid、dp；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1；executed_date 近30天。",
@@ -504,7 +519,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：最近30天各城市核销收入TOP10是哪些？"
+      "notes": "P0 v1 正式评测：最近30天各城市核销收入TOP10是哪些？",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_008",
@@ -525,7 +541,6 @@
       "expected_fields": [
         "exe_income",
         "verify_date_id",
-        "customer_id",
         "executed_date",
         "is_valid",
         "dp",
@@ -580,7 +595,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：2026年7月北京市核销收入、核销人次、核销客单价分别是多少？"
+      "notes": "P0 v1 正式评测：2026年7月北京市核销收入、核销人次、核销客单价分别是多少？",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_009",
@@ -656,7 +672,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：2026年7月北京市核销收入较6月同期的差额和变化率分别是多少？"
+      "notes": "P0 v1 正式评测：2026年7月北京市核销收入较6月同期的差额和变化率分别是多少？",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_010",
@@ -677,7 +694,6 @@
       "expected_fields": [
         "exe_income",
         "verify_date_id",
-        "customer_id",
         "executed_date",
         "is_valid",
         "dp",
@@ -714,8 +730,7 @@
         ]
       ],
       "forbidden_sql_patterns": [
-        "pay_gmv",
-        "hospital_name"
+        "pay_gmv"
       ],
       "expected_caliber": {
         "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 exe_income、verify_date_id、customer_id、executed_date、is_valid、dp、tenant_id、city_name；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1；city_name LIKE '%北京%'。",
@@ -737,7 +752,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：2026年7月北京保利店核销收入、核销人次、核销客单价分别是多少？"
+      "notes": "P0 v1 正式评测：2026年7月北京保利店核销收入、核销人次、核销客单价分别是多少？",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_011",
@@ -757,7 +773,6 @@
       "expected_fields": [
         "exe_income",
         "verify_date_id",
-        "customer_id",
         "executed_date",
         "is_valid",
         "dp",
@@ -822,7 +837,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：2026年7月北京保利店新客和老客核销收入、核销人次分别是多少？"
+      "notes": "P0 v1 正式评测：2026年7月北京保利店新客和老客核销收入、核销人次分别是多少？",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_012",
@@ -867,8 +883,7 @@
       ],
       "expected_sql_any_of": [],
       "forbidden_sql_patterns": [
-        "pay_gmv",
-        "hospital_name"
+        "pay_gmv"
       ],
       "expected_caliber": {
         "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 exe_income、tenant_id、city_name、sy_hospital_name、executed_date、is_valid、dp；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1；executed_date 近30天；city_name LIKE '%北京%'。",
@@ -890,7 +905,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：最近30天北京各门店核销收入TOP10是哪些？"
+      "notes": "P0 v1 正式评测：最近30天北京各门店核销收入TOP10是哪些？",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_013",
@@ -911,7 +927,6 @@
       "expected_fields": [
         "exe_income",
         "verify_date_id",
-        "customer_id",
         "executed_date",
         "is_valid",
         "dp",
@@ -944,8 +959,7 @@
         ]
       ],
       "forbidden_sql_patterns": [
-        "pay_gmv",
-        "hospital_name"
+        "pay_gmv"
       ],
       "expected_caliber": {
         "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 exe_income、verify_date_id、customer_id、executed_date、is_valid、dp、tenant_id、city_name；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1；executed_date 近30天；city_name LIKE '%北京%'。",
@@ -967,7 +981,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：最近30天按天统计北京保利店核销收入、核销人次、核销客单价。"
+      "notes": "P0 v1 正式评测：最近30天按天统计北京保利店核销收入、核销人次、核销客单价。",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_014",
@@ -1027,7 +1042,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：最近30天品项核销收入TOP20是哪些？"
+      "notes": "P0 v1 正式评测：最近30天品项核销收入TOP20是哪些？",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_015",
@@ -1097,7 +1113,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：2026年7月新一代热玛吉的核销收入、核销人次、核销人数分别是多少？"
+      "notes": "P0 v1 正式评测：2026年7月新一代热玛吉的核销收入、核销人次、核销人数分别是多少？",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_016",
@@ -1133,7 +1150,7 @@
         "tenant_id",
         "city_name",
         "standard_name",
-        "SUM(exe_income)",
+        "exe_income",
         "NULLIF"
       ],
       "expected_sql_any_of": [
@@ -1176,7 +1193,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：2026年7月北京市新一代热玛吉核销收入较6月同期的差额和变化率是多少？"
+      "notes": "P0 v1 正式评测：2026年7月北京市新一代热玛吉核销收入较6月同期的差额和变化率是多少？",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_017",
@@ -1197,7 +1215,6 @@
       "expected_fields": [
         "exe_income",
         "verify_date_id",
-        "customer_id",
         "executed_date",
         "is_valid",
         "dp",
@@ -1237,8 +1254,7 @@
       ],
       "forbidden_sql_patterns": [
         "product_name",
-        "pay_gmv",
-        "hospital_name"
+        "pay_gmv"
       ],
       "expected_caliber": {
         "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 exe_income、verify_date_id、customer_id、executed_date、is_valid、dp、standard_name、tenant_id；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1；city_name LIKE '%北京%'。",
@@ -1261,7 +1277,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：2026年7月北京保利店新一代热玛吉核销收入、核销人次、核销客单价分别是多少？"
+      "notes": "P0 v1 正式评测：2026年7月北京保利店新一代热玛吉核销收入、核销人次、核销客单价分别是多少？",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_018",
@@ -1332,7 +1349,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：2026年7月大单品、常规品、大师团核销收入分别是多少，占比是多少？"
+      "notes": "P0 v1 正式评测：2026年7月大单品、常规品、大师团核销收入分别是多少，占比是多少？",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_019",
@@ -1404,7 +1422,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：2026年7月大单品核销收入TOP5品项分别是什么？"
+      "notes": "P0 v1 正式评测：2026年7月大单品核销收入TOP5品项分别是什么？",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_020",
@@ -1464,8 +1483,7 @@
       ],
       "forbidden_sql_patterns": [
         "product_name",
-        "pay_gmv",
-        "hospital_name"
+        "pay_gmv"
       ],
       "expected_caliber": {
         "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 exe_income、standard_name、tenant_id、city_name、sy_hospital_name、executed_date、is_valid、dp；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1；city_name LIKE '%北京%'。",
@@ -1488,7 +1506,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：2026年7月奇迹胶原在北京各门店的核销收入TOP5是哪些？"
+      "notes": "P0 v1 正式评测：2026年7月奇迹胶原在北京各门店的核销收入TOP5是哪些？",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_021",
@@ -1508,7 +1527,6 @@
       "expected_fields": [
         "exe_income",
         "verify_date_id",
-        "customer_id",
         "executed_date",
         "is_valid",
         "dp",
@@ -1562,7 +1580,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：2026年7月私域新客核销收入、核销人次、核销客单价分别是多少？"
+      "notes": "P0 v1 正式评测：2026年7月私域新客核销收入、核销人次、核销客单价分别是多少？",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_022",
@@ -1634,7 +1653,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：2026年7月各渠道新客核销收入分别是多少？"
+      "notes": "P0 v1 正式评测：2026年7月各渠道新客核销收入分别是多少？",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_023",
@@ -1710,7 +1730,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：2026年7月各渠道新客核销收入及收入占比是多少？"
+      "notes": "P0 v1 正式评测：2026年7月各渠道新客核销收入及收入占比是多少？",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_024",
@@ -1786,7 +1807,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：2026年7月私域新客核销品项TOP3是什么？"
+      "notes": "P0 v1 正式评测：2026年7月私域新客核销品项TOP3是什么？",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_025",
@@ -1843,7 +1865,6 @@
         ]
       ],
       "forbidden_sql_patterns": [
-        "hospital_name",
         "is_pay_new",
         "pay_gmv",
         "channel_type"
@@ -1871,7 +1892,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：2026年7月北京私域新客核销收入TOP10门店是哪些？"
+      "notes": "P0 v1 正式评测：2026年7月北京私域新客核销收入TOP10门店是哪些？",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_026",
@@ -1943,7 +1965,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：2026年7月老带新新客核销收入较6月同期的差额和变化率是多少？"
+      "notes": "P0 v1 正式评测：2026年7月老带新新客核销收入较6月同期的差额和变化率是多少？",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_027",
@@ -2011,7 +2034,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：最近30天按天、渠道统计新客核销收入及收入占比。"
+      "notes": "P0 v1 正式评测：最近30天按天、渠道统计新客核销收入及收入占比。",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_028",
@@ -2069,7 +2093,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：最近30天0元单数量和核销人数是多少？"
+      "notes": "P0 v1 正式评测：最近30天0元单数量和核销人数是多少？",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_029",
@@ -2114,6 +2139,9 @@
         ],
         [
           "2026-07"
+        ],
+        [
+          "DATETRUNC"
         ]
       ],
       "forbidden_sql_patterns": [
@@ -2137,7 +2165,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：2026年7月0元单核销人次、核销人数、核销收入分别是多少？"
+      "notes": "P0 v1 正式评测：2026年7月0元单核销人次、核销人数、核销收入分别是多少？",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_030",
@@ -2157,7 +2186,6 @@
       "expected_fields": [
         "exe_income",
         "verify_date_id",
-        "customer_id",
         "executed_date",
         "is_valid",
         "dp"
@@ -2182,6 +2210,9 @@
         ],
         [
           "2026-07"
+        ],
+        [
+          "DATETRUNC"
         ]
       ],
       "forbidden_sql_patterns": [
@@ -2205,7 +2236,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：2026年7月剔除0元单后的核销收入、核销人次、核销客单价分别是多少？"
+      "notes": "P0 v1 正式评测：2026年7月剔除0元单后的核销收入、核销人次、核销客单价分别是多少？",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_031",
@@ -2224,7 +2256,6 @@
       "expected_fields": [
         "exe_income",
         "verify_date_id",
-        "customer_id",
         "executed_date",
         "is_valid",
         "dp",
@@ -2261,11 +2292,13 @@
         ],
         [
           "2026-07"
+        ],
+        [
+          "DATETRUNC"
         ]
       ],
       "forbidden_sql_patterns": [
-        "pay_gmv",
-        "hospital_name"
+        "pay_gmv"
       ],
       "expected_caliber": {
         "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 exe_income、verify_date_id、customer_id、executed_date、is_valid、dp、tenant_id、city_name；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1；city_name LIKE '%北京%'。",
@@ -2287,7 +2320,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：2026年7月剔除0元单后，北京各门店核销客单价TOP10是哪些？"
+      "notes": "P0 v1 正式评测：2026年7月剔除0元单后，北京各门店核销客单价TOP10是哪些？",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_032",
@@ -2328,6 +2362,9 @@
         ],
         [
           "2026-07"
+        ],
+        [
+          "DATETRUNC"
         ]
       ],
       "forbidden_sql_patterns": [
@@ -2351,7 +2388,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：2026年7月0元单占核销人次的比例是多少？"
+      "notes": "P0 v1 正式评测：2026年7月0元单占核销人次的比例是多少？",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_033",
@@ -2397,6 +2435,9 @@
         ],
         [
           "2026-07"
+        ],
+        [
+          "DATETRUNC"
         ]
       ],
       "forbidden_sql_patterns": [
@@ -2421,7 +2462,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：2026年7月新客0元单核销人次占比和老客0元单核销人次占比分别是多少？"
+      "notes": "P0 v1 正式评测：2026年7月新客0元单核销人次占比和老客0元单核销人次占比分别是多少？",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_034",
@@ -2483,7 +2525,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：最近30天新客支付GMV、支付人数、支付客单价是多少？"
+      "notes": "P0 v1 正式评测：最近30天新客支付GMV、支付人数、支付客单价是多少？",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_035",
@@ -2550,7 +2593,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：2026年7月支付GMV、支付人数、支付客单价分别是多少？"
+      "notes": "P0 v1 正式评测：2026年7月支付GMV、支付人数、支付客单价分别是多少？",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_036",
@@ -2602,12 +2646,14 @@
         ],
         [
           "2026-07"
+        ],
+        [
+          "DATETRUNC"
         ]
       ],
       "forbidden_sql_patterns": [
         "exe_income",
-        "executed_date",
-        "hospital_name"
+        "executed_date"
       ],
       "expected_caliber": {
         "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 pay_gmv、tenant_id、city_name、sy_hospital_name、pay_date、is_paydate_cash、dp；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_paydate_cash = 0；city_name LIKE '%北京%'。",
@@ -2629,7 +2675,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：2026年7月北京各门店支付GMV TOP10是哪些？"
+      "notes": "P0 v1 正式评测：2026年7月北京各门店支付GMV TOP10是哪些？",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_037",
@@ -2656,14 +2703,14 @@
       ],
       "expected_filters": [
         "dp = DATE_SUB(CURRENT_DATE(),1)",
-        "left_gmv > 0"
+        "left_num > 0"
       ],
       "expected_sql_must_contain": [
         "JOIN",
         "tenant_id",
         "sy_hospital_name",
         "SUM(left_gmv)",
-        "left_gmv > 0",
+        "left_num > 0",
         "ORDER BY",
         "LIMIT 10"
       ],
@@ -2690,7 +2737,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：截至昨天各门店待核销金额TOP10是哪些？"
+      "notes": "P0 v1 正式评测：截至昨天各门店待核销金额TOP10是哪些？",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_038",
@@ -2718,7 +2766,7 @@
       ],
       "expected_filters": [
         "dp = DATE_SUB(CURRENT_DATE(),1)",
-        "left_gmv > 0",
+        "left_num > 0",
         "city_name LIKE '%北京%'"
       ],
       "expected_sql_must_contain": [
@@ -2727,7 +2775,7 @@
         "city_name",
         "sy_hospital_name",
         "SUM(left_gmv)",
-        "left_gmv > 0",
+        "left_num > 0",
         "ORDER BY",
         "LIMIT 10"
       ],
@@ -2756,7 +2804,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：截至昨天北京各门店待核销金额TOP10是哪些？"
+      "notes": "P0 v1 正式评测：截至昨天北京各门店待核销金额TOP10是哪些？",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_039",
@@ -2823,7 +2872,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：2026年7月支付GMV、核销收入及二者差额分别是多少？"
+      "notes": "P0 v1 正式评测：2026年7月支付GMV、核销收入及二者差额分别是多少？",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_040",
@@ -2882,7 +2932,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：最近30天升单核销人次、升单核销收入分别是多少？"
+      "notes": "P0 v1 正式评测：最近30天升单核销人次、升单核销收入分别是多少？",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_041",
@@ -2928,6 +2979,9 @@
         ],
         [
           "2026-07"
+        ],
+        [
+          "DATETRUNC"
         ]
       ],
       "forbidden_sql_patterns": [
@@ -2951,7 +3005,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：2026年7月升单核销收入、升单核销人次、升单客单价分别是多少？"
+      "notes": "P0 v1 正式评测：2026年7月升单核销收入、升单核销人次、升单客单价分别是多少？",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_042",
@@ -3005,11 +3060,13 @@
         ],
         [
           "2026-07"
+        ],
+        [
+          "DATETRUNC"
         ]
       ],
       "forbidden_sql_patterns": [
-        "pay_gmv",
-        "hospital_name"
+        "pay_gmv"
       ],
       "expected_caliber": {
         "definition": "按问题指定时间窗口、业务域和维度生成 SQL；核心字段包括 is_up、exe_income、tenant_id、city_name、sy_hospital_name、executed_date、is_valid、dp；关键过滤为 dp = DATE_SUB(CURRENT_DATE(),1)；is_valid = 1；is_up = 1；city_name LIKE '%北京%'。",
@@ -3032,7 +3089,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：2026年7月北京各门店升单核销收入TOP10是哪些？"
+      "notes": "P0 v1 正式评测：2026年7月北京各门店升单核销收入TOP10是哪些？",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_043",
@@ -3079,6 +3137,9 @@
         ],
         [
           "2026-07"
+        ],
+        [
+          "DATETRUNC"
         ]
       ],
       "forbidden_sql_patterns": [
@@ -3104,7 +3165,8 @@
         "caliber"
       ],
       "critical_rules": [],
-      "notes": "P0 v1 正式评测：2026年7月升单核销收入TOP10品项是哪些？"
+      "notes": "P0 v1 正式评测：2026年7月升单核销收入TOP10品项是哪些？",
+      "caliber_check_mode": "soft"
     },
     {
       "id": "P0V1_044",

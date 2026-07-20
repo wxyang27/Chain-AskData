@@ -473,6 +473,18 @@ class SqlSafetyGate:
             if "新客" in query and not re.search(r"\bis_pay_new\s*=\s*1\b", sql, re.IGNORECASE):
                 errors.append("business_semantics:missing_is_pay_new_filter")
 
+        if self._query_requests_time_progress_achievement(query):
+            if "DIM_CHANNEL_MONTH_INCOME_TARGET" not in upper_sql:
+                errors.append("business_semantics:progress_must_use_target_table")
+            if "TARGET_ABSOLUTE_VALUE" not in upper_sql:
+                errors.append("business_semantics:progress_missing_target_value")
+            if not re.search(r"\btarget_type\b\s*=\s*'收入'", sql, re.IGNORECASE):
+                errors.append("business_semantics:progress_missing_income_target_type")
+            if not re.search(r"\bsecond_level_hierarchy\b\s*=\s*'大单品'", sql, re.IGNORECASE):
+                errors.append("business_semantics:progress_missing_big_item_level")
+            if "TIME_PROGRESS_ACHIEVEMENT_RATE" not in upper_sql:
+                errors.append("business_semantics:progress_missing_achievement_output")
+
         if any(term in query for term in ("大单品", "常规品", "大师团")):
             if not re.search(
                 r"\brevenue_category\b\s*(?:=|IN\b|LIKE\b|REGEXP\b|RLIKE\b)",
@@ -515,11 +527,31 @@ class SqlSafetyGate:
             for term in ("支付GMV", "支付人数", "支付客单价", "付了多少", "多少人付", "人均", "按支付日")
         )
 
+    def _query_requests_time_progress_achievement(self, query: str) -> bool:
+        return (
+            "核销收入" in query
+            and any(term in query for term in ("时间进度", "进度达成率", "达成率", "进度完成率"))
+        )
+
     def _cte_aliases(self, sql: str) -> set[str]:
         """Extract CTE alias names from WITH clauses."""
         aliases = set()
-        for m in re.finditer(r"\bWITH\s+(\w+)\s+AS\s*\(", sql, re.IGNORECASE):
-            aliases.add(m.group(1))
+        cte_names = {
+            m.group(1)
+            for m in re.finditer(r"(?:\bWITH|,)\s+(\w+)\s+AS\s*\(", sql, re.IGNORECASE)
+        }
+        aliases.update(cte_names)
+
+        reserved = {
+            "ON", "WHERE", "AND", "OR", "GROUP", "ORDER", "HAVING", "LIMIT",
+            "LEFT", "RIGHT", "INNER", "OUTER", "JOIN",
+        }
+        for cte_name in cte_names:
+            pattern = rf"(?:FROM|JOIN)\s+{re.escape(cte_name)}\s+(?:AS\s+)?(\w+)"
+            for match in re.finditer(pattern, sql, re.IGNORECASE):
+                alias = match.group(1)
+                if alias.upper() not in reserved:
+                    aliases.add(alias)
         return aliases
 
     def _validate_date_semantics(
@@ -650,13 +682,16 @@ class SqlSafetyGate:
         business_fields = [
             field
             for field in ("EXECUTED_DATE", "PAY_DATE")
-            if re.search(rf"(?:\w+\.)?{field}\b", compact_sql)
+            if field in compact_sql
         ]
         if not business_fields:
             errors.append("date_semantics:this_month_missing_business_date")
             return
 
-        month_start = r"DATETRUNC\(CURRENT_DATE\(\),['\"]?(?:MONTH|MON|MM)['\"]?\)"
+        month_start = (
+            r"(?:DATETRUNC\(CURRENT_DATE\(\),['\"]?(?:MONTH|MON|MM)['\"]?\)"
+            r"|DATE_FORMAT\(CAST\(CURRENT_DATE\(\)ASTIMESTAMP\),['\"]YYYY-MM-01['\"]\))"
+        )
         yesterday = r"DATE_SUB\(CURRENT_DATE\(\),1\)"
 
         for field in business_fields:

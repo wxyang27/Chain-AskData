@@ -1,0 +1,265 @@
+{
+  "meta": {
+    "name": "metric_asset_eval",
+    "version": "1.0.0",
+    "created_at": "2026-07-20",
+    "purpose": "Validate whether Chain-AskData can explain metric assets, distinguish easy-to-confuse fields, and respect SQL capability boundaries before expanding P1 metrics.",
+    "total": 16
+  },
+  "cases": [
+    {
+      "id": "METRIC_ASSET_001",
+      "question": "核销收入的定义、来源表、统计日期字段和计算公式分别是什么？",
+      "difficulty": "easy",
+      "expected_intent": "caliber_explain",
+      "expected_canonical": "execution_income",
+      "expected_support_status": "sql_supported",
+      "expected_terms": [
+        "核销收入",
+        "dm_opt_qy_user_execution_record_all_d",
+        "executed_date",
+        "SUM(exe_income)",
+        "is_valid = 1"
+      ]
+    },
+    {
+      "id": "METRIC_ASSET_002",
+      "question": "支付GMV和核销收入有什么区别？分别应该用哪个表、哪个金额字段和哪个日期字段？",
+      "difficulty": "medium",
+      "expected_intent": "caliber_explain",
+      "expected_canonical": [
+        "payment_gmv",
+        "execution_income"
+      ],
+      "expected_support_status": "sql_supported",
+      "expected_terms": [
+        "pay_gmv",
+        "pay_date",
+        "exe_income",
+        "executed_date",
+        "dm_opt_qy_order_info_all_d",
+        "dm_opt_qy_user_execution_record_all_d"
+      ]
+    },
+    {
+      "id": "METRIC_ASSET_003",
+      "question": "为什么核销人次不能用customer_id计算？正确的去重字段是什么？",
+      "difficulty": "easy",
+      "expected_intent": "caliber_explain",
+      "expected_canonical": "execution_visit_count",
+      "expected_support_status": "sql_supported",
+      "expected_terms": [
+        "核销人次",
+        "verify_date_id",
+        "customer_id",
+        "核销人数"
+      ]
+    },
+    {
+      "id": "METRIC_ASSET_004",
+      "question": "待核销金额为什么是库存快照口径？查询时应该使用哪些字段和过滤条件？",
+      "difficulty": "medium",
+      "expected_intent": "caliber_explain",
+      "expected_canonical": "unverified_amount",
+      "expected_support_status": "sql_supported",
+      "expected_terms": [
+        "left_gmv",
+        "left_num > 0",
+        "dp",
+        "库存快照",
+        "pay_date",
+        "executed_date"
+      ]
+    },
+    {
+      "id": "METRIC_ASSET_005",
+      "question": "0元单量应该如何定义？为什么不能用支付金额判断？",
+      "difficulty": "medium",
+      "expected_intent": "caliber_explain",
+      "expected_canonical": "zero_income_order_count",
+      "expected_support_status": "sql_supported",
+      "expected_terms": [
+        "exe_income = 0",
+        "main_order_id",
+        "is_valid = 1",
+        "pay_gmv"
+      ]
+    },
+    {
+      "id": "METRIC_ASSET_006",
+      "question": "品项渗透率应该优先使用standard_name还是product_name？分子和分母分别是什么？",
+      "difficulty": "hard",
+      "expected_intent": "caliber_explain",
+      "expected_canonical": "standard_item_penetration",
+      "expected_support_status": "sql_supported",
+      "expected_terms": [
+        "standard_name",
+        "product_name",
+        "指定标准品项核销人数",
+        "总核销人数",
+        "customer_id"
+      ]
+    },
+    {
+      "id": "METRIC_ASSET_007",
+      "question": "时间进度达成率现在是否可以直接生成SQL？如果不能，还缺哪些指标资产？",
+      "difficulty": "medium",
+      "expected_intent": "caliber_explain",
+      "expected_canonical": "time_progress_achievement_rate",
+      "expected_support_status": "explain_only",
+      "expected_terms": [
+        "月目标",
+        "时间进度",
+        "actual_mtd",
+        "elapsed_period_rate",
+        "暂不支持SQL"
+      ]
+    },
+    {
+      "id": "METRIC_ASSET_012",
+      "question": "如果业务要新增一个指标进入AskData，最少需要补哪些资产字段和评测用例？",
+      "difficulty": "medium",
+      "expected_intent": "governance_explain",
+      "expected_canonical": "metric_update_workflow",
+      "expected_support_status": "governance",
+      "expected_terms": [
+        "canonical",
+        "source_tables",
+        "date_field",
+        "required_filters",
+        "critical_rules",
+        "eval_cases"
+      ]
+    },
+    {
+      "id": "METRIC_ASSET_013",
+      "question": "核销服务点数和待核销服务点数有什么区别？分别应该用哪个字段？",
+      "difficulty": "medium",
+      "expected_intent": "caliber_explain",
+      "expected_canonical": [
+        "execution_service_point_count",
+        "unverified_service_point_count"
+      ],
+      "expected_support_status": "sql_supported",
+      "expected_terms": [
+        "exe_cnt",
+        "left_num",
+        "executed_date",
+        "dp",
+        "is_valid = 1",
+        "left_num > 0"
+      ]
+    },
+    {
+      "id": "METRIC_ASSET_014",
+      "question": "支付人数应该用哪个用户字段去重？它和核销人数的去重字段有什么区别？",
+      "difficulty": "easy",
+      "expected_intent": "caliber_explain",
+      "expected_canonical": [
+        "payment_user_count",
+        "execution_user_count"
+      ],
+      "expected_support_status": "sql_supported",
+      "expected_terms": [
+        "uid",
+        "customer_id",
+        "支付人数",
+        "核销人数",
+        "is_paydate_cash = 0"
+      ]
+    },
+    {
+      "id": "METRIC_ASSET_015",
+      "question": "支付客单价的分子和分母分别是什么？为什么不能套用核销客单价的分母？",
+      "difficulty": "medium",
+      "expected_intent": "caliber_explain",
+      "expected_canonical": "payment_aov_by_user_day",
+      "expected_support_status": "sql_supported",
+      "expected_terms": [
+        "SUM(pay_gmv)",
+        "uid",
+        "pay_date",
+        "支付人次",
+        "verify_date_id",
+        "核销客单价"
+      ]
+    },
+    {
+      "id": "METRIC_ASSET_016",
+      "question": "奇迹胶原本月核销收入时间进度达成率的口径是什么？",
+      "difficulty": "medium",
+      "expected_intent": "caliber_explain",
+      "expected_canonical": "miracle_collagen_execution_income_time_progress_rate",
+      "expected_support_status": "sql_supported",
+      "expected_terms": [
+        "SUM(exe_income)",
+        "??????",
+        "????",
+        "executed_date",
+        "standard_name REGEXP '????'"
+      ]
+    },
+    {
+      "id": "METRIC_ASSET_017",
+      "question": "奇迹胶原本月目标收入应该从哪张target表取？层级和target_type过滤条件是什么？",
+      "difficulty": "medium",
+      "expected_intent": "caliber_explain",
+      "expected_canonical": "miracle_collagen_execution_income_time_progress_rate",
+      "expected_support_status": "sql_supported",
+      "expected_terms": [
+        "dim_channel_month_income_target",
+        "target_absolute_value",
+        "first_level_hierarchy = '?'",
+        "second_level_hierarchy = '???'",
+        "third_level_hierarchy REGEXP '????'",
+        "fourth_level_hierarchy = '??'",
+        "target_type = '??'"
+      ]
+    },
+    {
+      "id": "METRIC_ASSET_018",
+      "question": "今天是2026-07-20，如果奇迹胶原本月截至昨天核销收入33762、目标收入48263，时间进度达成率是多少？",
+      "difficulty": "hard",
+      "expected_intent": "caliber_explain",
+      "expected_canonical": "miracle_collagen_execution_income_time_progress_rate",
+      "expected_support_status": "sql_supported",
+      "expected_terms": [
+        "33762",
+        "48263",
+        "19",
+        "31",
+        "114.14%"
+      ]
+    },
+    {
+      "id": "METRIC_ASSET_019",
+      "question": "本月奇迹童颜核销收入时间进度达成率",
+      "difficulty": "medium",
+      "expected_intent": "nl2sql",
+      "expected_canonical": "item_execution_income_time_progress_rate",
+      "expected_support_status": "sql_supported",
+      "expected_terms": [
+        "dm_opt_qy_user_execution_record_all_d",
+        "dim_channel_month_income_target",
+        "standard_name REGEXP '奇迹童颜'",
+        "third_level_hierarchy REGEXP '奇迹童颜'",
+        "time_progress_achievement_rate"
+      ]
+    },
+    {
+      "id": "METRIC_ASSET_020",
+      "question": "本月BBL HERO核销收入时间进度达成率",
+      "difficulty": "medium",
+      "expected_intent": "nl2sql",
+      "expected_canonical": "item_execution_income_time_progress_rate",
+      "expected_support_status": "sql_supported",
+      "expected_terms": [
+        "dm_opt_qy_user_execution_record_all_d",
+        "dim_channel_month_income_target",
+        "standard_name REGEXP 'BBL HERO'",
+        "third_level_hierarchy REGEXP 'BBL HERO'",
+        "time_progress_achievement_rate"
+      ]
+    }
+  ]
+}

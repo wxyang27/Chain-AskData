@@ -179,6 +179,22 @@ class ResultValidator:
             aliases.extend(["核销人数", "customer_id", "user_count", "execution_user_count"])
         if "unverified_amount" in lowered:
             aliases.extend(["待核销金额", "left_gmv", "unverified_amount", "left_amount"])
+        if (
+            "time_progress" in lowered
+            or "achievement_rate" in lowered
+            or "进度达成率" in column
+            or "时间进度达成率" in column
+        ):
+            aliases.extend([
+                "品项本月核销收入时间进度达成率",
+                "时间进度达成率",
+                "进度达成率",
+                "达成率",
+                "item_execution_income_time_progress_rate",
+                "time_progress_achievement_rate",
+                "target_completion_rate",
+                "time_progress_rate",
+            ])
         return aliases
 
     def _all_null_metric_columns(self, sample_rows: list[dict[str, Any]]) -> list[str]:

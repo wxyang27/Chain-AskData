@@ -44,11 +44,11 @@
       </section>
 
       <section class="panel sql-panel">
-        <h2>SQL <span id="sql-source-badge" class="badge badge-active">模板</span></h2>
+        <h2>SQL <span id="sql-source-badge" class="badge badge-active">最终采用：模板</span></h2>
 
         <div class="sql-module">
           <div class="sql-module-title">
-            <span class="dot dot-template"></span> 模板 SQL
+            <span class="dot dot-template"></span> 最终采用 SQL
             <button id="copy-template" class="btn-sm">复制</button>
           </div>
           <pre id="sql">等待生成...</pre>
@@ -56,7 +56,7 @@
 
         <div class="sql-module">
           <div class="sql-module-title">
-            <span class="dot dot-llm"></span> LLM SQL（影子模式）
+            <span class="dot dot-llm"></span> LLM SQL（影子模式，不直接执行）
           </div>
           <pre id="llm-sql">等待生成...</pre>
           <div class="llm-meta" id="llm-meta"></div>
@@ -75,6 +75,6 @@
       </section>
     </main>
 
-    <script src="/static/app.js?v=20260715-trace"></script>
+    <script src="/static/app.js?v=20260720-progress-demo"></script>
   </body>
 </html>

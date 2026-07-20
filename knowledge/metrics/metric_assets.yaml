@@ -1,0 +1,897 @@
+schema_version: '1.0'
+asset_name: chain_metric_assets
+last_updated: '2026-07-20'
+owner: Chain-AskData
+purpose: Govern metric definitions, SQL capability, field mapping, risk boundaries,
+  and eval linkage for chain AskData.
+support_status:
+  sql_supported: Source tables, fields, date field, filters, dimensions, and critical
+    rules are clear enough for SQL generation.
+  explain_only: Business caliber can be explained, but SQL should not be generated
+    until dependencies are complete.
+  exploratory: High-value metric under validation; allowed in exploratory eval, not
+    in P0 hard gate.
+  unsupported: Current project should refuse or redirect this request.
+default_rules:
+  partition_filter: Use latest partition dp = DATE_SUB(CURRENT_DATE(), 1) unless the
+    source table explicitly defines another partition rule.
+  execution_valid_filter: Execution metrics must include is_valid = 1.
+  payment_refund_filter: Payment metrics default to is_paydate_cash = 0.
+  fixed_period_rule: When the user asks a fixed month such as 2026-07, filter the
+    metric date field to that month.
+  ratio_rule: Ratio metrics must expose numerator, denominator, and denominator zero
+    handling.
+metrics:
+- canonical: execution_income
+  display_name: 核销收入
+  aliases:
+  - 核销实收
+  - 消耗收入
+  - 核销新客收入
+  - 新客核销收入
+  priority: P0
+  metric_type: atomic
+  business_domain: execution
+  support_status: sql_supported
+  definition: 统计周期内连锁业务已核销服务产生的实收收入。
+  formula_sql: SUM(exe_income)
+  source_tables:
+  - soyoung_dw.dm_opt_qy_user_execution_record_all_d
+  date_field: executed_date
+  required_fields:
+  - exe_income
+  - executed_date
+  - dp
+  - is_valid
+  required_filters:
+  - is_valid = 1
+  supported_dimensions:
+  - city_name
+  - sy_hospital_name
+  - standard_name
+  - cx_first_channel
+  - is_new
+  - revenue_category
+  - is_up
+  forbidden_fields:
+  - pay_gmv
+  - pay_date
+  - left_gmv
+  critical_rules:
+  - CR001_dp
+  - CR002_execution_valid
+  - CR003_execution_income_field
+  known_risks:
+  - 不要把核销收入写成支付GMV。
+  - 问新客核销时使用 is_new，不使用 is_pay_new。
+  capability_notes: P0 主链路指标，可用于城市、门店、品项、渠道、新老客、升单等切片。
+  version: 1.0.0
+  eval_cases:
+  - P0V1_001
+  - P0V1_002
+  - P0V1_006
+- canonical: execution_gmv
+  display_name: 核销GMV
+  aliases:
+  - 核销金额
+  - 核销成交额
+  priority: P0
+  metric_type: atomic
+  business_domain: execution
+  support_status: sql_supported
+  definition: 统计周期内连锁业务已核销服务对应的成交额。
+  formula_sql: SUM(exe_amount)
+  source_tables:
+  - soyoung_dw.dm_opt_qy_user_execution_record_all_d
+  date_field: executed_date
+  required_fields:
+  - exe_amount
+  - executed_date
+  - dp
+  - is_valid
+  required_filters:
+  - is_valid = 1
+  supported_dimensions:
+  - city_name
+  - sy_hospital_name
+  - standard_name
+  - cx_first_channel
+  - is_new
+  - revenue_category
+  forbidden_fields:
+  - exe_income
+  - pay_gmv
+  - left_gmv
+  critical_rules:
+  - CR001_dp
+  - CR002_execution_valid
+  known_risks:
+  - 核销GMV不是核销收入，0元单和赠送会影响GMV与收入差异。
+  capability_notes: 适合与核销收入一起用于量价或价格结构分析。
+  version: 1.0.0
+  eval_cases:
+  - P0V1_001
+- canonical: execution_visit_count
+  display_name: 核销人次
+  aliases:
+  - 核销到院人次
+  - 消耗人次
+  - 核销服务人次
+  priority: P0
+  metric_type: atomic
+  business_domain: execution
+  support_status: sql_supported
+  definition: 统计周期内核销人次，按 verify_date_id 去重。
+  formula_sql: COUNT(DISTINCT verify_date_id)
+  source_tables:
+  - soyoung_dw.dm_opt_qy_user_execution_record_all_d
+  date_field: executed_date
+  required_fields:
+  - verify_date_id
+  - executed_date
+  - dp
+  - is_valid
+  required_filters:
+  - is_valid = 1
+  supported_dimensions:
+  - city_name
+  - sy_hospital_name
+  - standard_name
+  - cx_first_channel
+  - is_new
+  - revenue_category
+  - is_up
+  forbidden_fields:
+  - customer_id
+  - uid
+  critical_rules:
+  - CR001_dp
+  - CR002_execution_valid
+  - CR004_visit_count_key
+  known_risks:
+  - 问人次时不能按 customer_id 或 uid 去重。
+  capability_notes: 核销客单价默认分母。
+  version: 1.0.0
+  eval_cases:
+  - P0V1_009
+  - P0V1_030
+- canonical: execution_user_count
+  display_name: 核销人数
+  aliases:
+  - 核销用户数
+  - 消耗人数
+  priority: P0
+  metric_type: atomic
+  business_domain: execution
+  support_status: sql_supported
+  definition: 统计周期内核销用户数，按 customer_id 去重。
+  formula_sql: COUNT(DISTINCT customer_id)
+  source_tables:
+  - soyoung_dw.dm_opt_qy_user_execution_record_all_d
+  date_field: executed_date
+  required_fields:
+  - customer_id
+  - executed_date
+  - dp
+  - is_valid
+  required_filters:
+  - is_valid = 1
+  supported_dimensions:
+  - city_name
+  - sy_hospital_name
+  - standard_name
+  - cx_first_channel
+  - is_new
+  forbidden_fields:
+  - uid
+  - verify_date_id
+  critical_rules:
+  - CR001_dp
+  - CR002_execution_valid
+  - CR005_execution_user_key
+  known_risks:
+  - 问人数时不能返回人次口径。
+  capability_notes: 仅在用户明确问人数、用户数、渗透率分母时要求。
+  version: 1.0.0
+  eval_cases:
+  - P0V1_043
+- canonical: execution_service_point_count
+  display_name: 核销服务点数
+  aliases:
+  - 核销点数
+  - 消耗服务点
+  - 服务点数
+  priority: P0
+  metric_type: atomic
+  business_domain: execution
+  support_status: sql_supported
+  definition: 统计周期内已核销服务点数量。
+  formula_sql: SUM(exe_cnt)
+  source_tables:
+  - soyoung_dw.dm_opt_qy_user_execution_record_all_d
+  date_field: executed_date
+  required_fields:
+  - exe_cnt
+  - executed_date
+  - dp
+  - is_valid
+  required_filters:
+  - is_valid = 1
+  supported_dimensions:
+  - city_name
+  - sy_hospital_name
+  - standard_name
+  - cx_first_channel
+  - is_new
+  forbidden_fields:
+  - left_num
+  - pay_gmv
+  critical_rules:
+  - CR001_dp
+  - CR002_execution_valid
+  known_risks:
+  - 核销服务点数不同于待核销服务点数。
+  capability_notes: 可用于单服务点收入和货盘效率分析。
+  version: 1.0.0
+  eval_cases:
+  - METRIC_ASSET_013
+- canonical: execution_aov_by_visit
+  display_name: 核销客单价
+  aliases:
+  - 核销客单
+  - 消耗客单价
+  - 核销人次客单价
+  priority: P0
+  metric_type: derived
+  business_domain: execution
+  support_status: sql_supported
+  definition: 核销收入除以核销人次。默认按人次口径，不按人数口径。
+  formula_sql: SUM(exe_income) / NULLIF(COUNT(DISTINCT verify_date_id), 0)
+  source_tables:
+  - soyoung_dw.dm_opt_qy_user_execution_record_all_d
+  date_field: executed_date
+  required_fields:
+  - exe_income
+  - verify_date_id
+  - executed_date
+  - dp
+  - is_valid
+  required_filters:
+  - is_valid = 1
+  supported_dimensions:
+  - city_name
+  - sy_hospital_name
+  - standard_name
+  - cx_first_channel
+  - is_new
+  - revenue_category
+  forbidden_fields:
+  - customer_id
+  - uid
+  - pay_gmv
+  critical_rules:
+  - CR001_dp
+  - CR002_execution_valid
+  - CR004_visit_count_key
+  known_risks:
+  - 客单价默认分母是核销人次，除非问题明确要求按人数。
+  capability_notes: 支持整体、非0元、非0非大师团三层口径扩展。
+  version: 1.0.0
+  eval_cases:
+  - P0V1_026
+- canonical: payment_gmv
+  display_name: 支付GMV
+  aliases:
+  - 支付金额
+  - 支付成交额
+  priority: P0
+  metric_type: atomic
+  business_domain: payment
+  support_status: sql_supported
+  definition: 统计周期内连锁业务支付成交额，默认剔除当日退款。
+  formula_sql: SUM(pay_gmv)
+  source_tables:
+  - soyoung_dw.dm_opt_qy_order_info_all_d
+  date_field: pay_date
+  required_fields:
+  - pay_gmv
+  - pay_date
+  - dp
+  - is_paydate_cash
+  required_filters:
+  - is_paydate_cash = 0
+  supported_dimensions:
+  - city_name
+  - sy_hospital_name
+  - standard_name
+  - cx_first_channel
+  - is_pay_new
+  forbidden_fields:
+  - exe_income
+  - executed_date
+  - left_gmv
+  critical_rules:
+  - CR001_dp
+  - CR006_payment_refund_filter
+  known_risks:
+  - 支付指标用 pay_date；不要用 executed_date。
+  - 支付新客用 is_pay_new，不是 is_new。
+  capability_notes: 适合支付总盘、支付门店、支付品项和支付新客查询。
+  version: 1.0.0
+  eval_cases:
+  - P0V1_031
+  - P0V1_032
+- canonical: payment_user_count
+  display_name: 支付人数
+  aliases:
+  - 支付用户数
+  - 付款人数
+  priority: P0
+  metric_type: atomic
+  business_domain: payment
+  support_status: sql_supported
+  definition: 统计周期内支付用户数，按 uid 去重。
+  formula_sql: COUNT(DISTINCT uid)
+  source_tables:
+  - soyoung_dw.dm_opt_qy_order_info_all_d
+  date_field: pay_date
+  required_fields:
+  - uid
+  - pay_date
+  - dp
+  - is_paydate_cash
+  required_filters:
+  - is_paydate_cash = 0
+  supported_dimensions:
+  - city_name
+  - sy_hospital_name
+  - standard_name
+  - cx_first_channel
+  - is_pay_new
+  forbidden_fields:
+  - customer_id
+  - verify_date_id
+  critical_rules:
+  - CR001_dp
+  - CR006_payment_refund_filter
+  known_risks:
+  - 支付表用户键是 uid，不能直接套用核销表 customer_id。
+  capability_notes: 用于支付人数、支付客单价分母。
+  version: 1.0.0
+  eval_cases:
+  - METRIC_ASSET_014
+- canonical: payment_aov_by_user_day
+  display_name: 支付客单价
+  aliases:
+  - 付款客单价
+  - 支付人次客单价
+  priority: P0
+  metric_type: derived
+  business_domain: payment
+  support_status: sql_supported
+  definition: 支付GMV除以支付人次，支付人次默认按 uid + pay_date 去重。
+  formula_sql: SUM(pay_gmv) / NULLIF(COUNT(DISTINCT CONCAT(CAST(uid AS STRING), '_',
+    CAST(pay_date AS STRING))), 0)
+  source_tables:
+  - soyoung_dw.dm_opt_qy_order_info_all_d
+  date_field: pay_date
+  required_fields:
+  - pay_gmv
+  - uid
+  - pay_date
+  - dp
+  - is_paydate_cash
+  required_filters:
+  - is_paydate_cash = 0
+  supported_dimensions:
+  - city_name
+  - sy_hospital_name
+  - standard_name
+  - cx_first_channel
+  - is_pay_new
+  forbidden_fields:
+  - exe_income
+  - verify_date_id
+  critical_rules:
+  - CR001_dp
+  - CR006_payment_refund_filter
+  known_risks:
+  - 支付客单价不是核销客单价。
+  capability_notes: 当前为 P0 可解释、可 SQL 的支付派生指标。
+  version: 1.0.0
+  eval_cases:
+  - METRIC_ASSET_015
+- canonical: unverified_amount
+  display_name: 待核销金额
+  aliases:
+  - 待核销GMV
+  - 未核销金额
+  - 待消耗金额
+  priority: P0
+  metric_type: atomic
+  business_domain: inventory
+  support_status: sql_supported
+  definition: 当前快照下仍未核销的订单剩余金额。
+  formula_sql: SUM(left_gmv)
+  source_tables:
+  - soyoung_dw.dm_opt_qy_order_info_all_d
+  date_field: dp
+  required_fields:
+  - left_gmv
+  - left_num
+  - dp
+  required_filters:
+  - left_num > 0
+  supported_dimensions:
+  - city_name
+  - sy_hospital_name
+  - standard_name
+  - cx_first_channel
+  - is_pay_new
+  forbidden_fields:
+  - pay_date
+  - executed_date
+  - exe_income
+  critical_rules:
+  - CR001_dp
+  - CR008_unverified_snapshot
+  known_risks:
+  - 待核销是库存快照口径，不按 pay_date 或 executed_date 截发生期。
+  capability_notes: 适合查当前待核销库存及门店、品项、渠道切片。
+  version: 1.0.0
+  eval_cases:
+  - P0V1_037
+- canonical: unverified_service_point_count
+  display_name: 待核销服务点数
+  aliases:
+  - 待核销点数
+  - 未核销服务点数
+  priority: P0
+  metric_type: atomic
+  business_domain: inventory
+  support_status: sql_supported
+  definition: 当前快照下仍未核销的服务点数量。
+  formula_sql: SUM(left_num)
+  source_tables:
+  - soyoung_dw.dm_opt_qy_order_info_all_d
+  date_field: dp
+  required_fields:
+  - left_num
+  - dp
+  required_filters:
+  - left_num > 0
+  supported_dimensions:
+  - city_name
+  - sy_hospital_name
+  - standard_name
+  - cx_first_channel
+  - is_pay_new
+  forbidden_fields:
+  - exe_cnt
+  - pay_date
+  - executed_date
+  critical_rules:
+  - CR001_dp
+  - CR008_unverified_snapshot
+  known_risks:
+  - 待核销服务点数不同于核销服务点数 exe_cnt。
+  capability_notes: 用于库存释放和待消耗规模查询。
+  version: 1.0.0
+  eval_cases:
+  - P0V1_038
+- canonical: zero_income_order_count
+  display_name: 0元单量
+  aliases:
+  - 0元单订单数
+  - 零元单量
+  - 免费单量
+  priority: P0
+  metric_type: atomic
+  business_domain: execution
+  support_status: sql_supported
+  definition: 统计周期内核销收入为0的核销订单数。
+  formula_sql: COUNT(DISTINCT main_order_id)
+  source_tables:
+  - soyoung_dw.dm_opt_qy_user_execution_record_all_d
+  date_field: executed_date
+  required_fields:
+  - main_order_id
+  - exe_income
+  - executed_date
+  - dp
+  - is_valid
+  required_filters:
+  - is_valid = 1
+  - exe_income = 0
+  supported_dimensions:
+  - city_name
+  - sy_hospital_name
+  - standard_name
+  - cx_first_channel
+  - is_new
+  forbidden_fields:
+  - pay_gmv
+  - pay_amount
+  critical_rules:
+  - CR001_dp
+  - CR002_execution_valid
+  - CR009_zero_income_filter
+  known_risks:
+  - 0元单判断必须使用核销收入 exe_income = 0。
+  capability_notes: 用于0元单规模和结构分析。
+  version: 1.0.0
+  eval_cases:
+  - P0V1_022
+  - P0V1_023
+- canonical: zero_income_visit_rate
+  display_name: 0元单人次占比
+  aliases:
+  - 0元核销人次占比
+  - 免费单人次占比
+  priority: P0
+  metric_type: ratio
+  business_domain: execution
+  support_status: sql_supported
+  definition: 0元核销人次除以总核销人次。
+  formula_sql: COUNT(DISTINCT CASE WHEN exe_income = 0 THEN verify_date_id END) /
+    NULLIF(COUNT(DISTINCT verify_date_id), 0)
+  source_tables:
+  - soyoung_dw.dm_opt_qy_user_execution_record_all_d
+  date_field: executed_date
+  required_fields:
+  - exe_income
+  - verify_date_id
+  - executed_date
+  - dp
+  - is_valid
+  required_filters:
+  - is_valid = 1
+  supported_dimensions:
+  - city_name
+  - sy_hospital_name
+  - standard_name
+  - cx_first_channel
+  - is_new
+  forbidden_fields:
+  - main_order_id
+  critical_rules:
+  - CR001_dp
+  - CR002_execution_valid
+  - CR009_zero_income_filter
+  - CR004_visit_count_key
+  known_risks:
+  - 如果问题问人次占比，分子分母都应使用 verify_date_id。
+  capability_notes: 比0元单订单占比更适合评估到院结构。
+  version: 1.0.0
+  eval_cases:
+  - P0V1_024
+  - P0V1_025
+- canonical: standard_item_penetration
+  display_name: 品项渗透率
+  aliases:
+  - 项目渗透率
+  - 标准品项渗透率
+  priority: P0
+  metric_type: ratio
+  business_domain: product
+  support_status: sql_supported
+  definition: 指定标准品项核销人数除以总核销人数。
+  formula_sql: COUNT(DISTINCT CASE WHEN standard_name = '${item}' THEN customer_id
+    END) / NULLIF(COUNT(DISTINCT customer_id), 0)
+  source_tables:
+  - soyoung_dw.dm_opt_qy_user_execution_record_all_d
+  date_field: executed_date
+  required_fields:
+  - standard_name
+  - customer_id
+  - executed_date
+  - dp
+  - is_valid
+  required_filters:
+  - is_valid = 1
+  supported_dimensions:
+  - city_name
+  - sy_hospital_name
+  - is_new
+  forbidden_fields:
+  - product_name
+  - verify_date_id
+  critical_rules:
+  - CR001_dp
+  - CR002_execution_valid
+  - CR010_standard_name
+  known_risks:
+  - 标准品项优先使用 standard_name，不使用自由文本 product_name。
+  capability_notes: 适合品项覆盖和渗透率查询。
+  version: 1.0.0
+  eval_cases:
+  - P0V1_043
+  - P0V1_050
+- canonical: upgrade_execution_income
+  display_name: 升单收入
+  aliases:
+  - 升单核销收入
+  - 升单实收
+  priority: P0
+  metric_type: atomic
+  business_domain: upgrade
+  support_status: sql_supported
+  definition: 统计周期内升单订单产生的核销收入。
+  formula_sql: SUM(exe_income)
+  source_tables:
+  - soyoung_dw.dm_opt_qy_user_execution_record_all_d
+  date_field: executed_date
+  required_fields:
+  - exe_income
+  - is_up
+  - executed_date
+  - dp
+  - is_valid
+  required_filters:
+  - is_valid = 1
+  - is_up = 1
+  supported_dimensions:
+  - city_name
+  - sy_hospital_name
+  - standard_name
+  - cx_first_channel
+  - is_new
+  forbidden_fields:
+  - pay_gmv
+  critical_rules:
+  - CR001_dp
+  - CR002_execution_valid
+  - CR011_upgrade_filter
+  known_risks:
+  - 升单题必须带 is_up = 1，不能只查普通核销收入。
+  capability_notes: P0 可保留收入、人次、门店TOP类问题；复杂渠道升单可放探索集。
+  version: 1.0.0
+  eval_cases:
+  - P0V1_027
+  - P0V1_028
+- canonical: upgrade_visit_count
+  display_name: 升单人次
+  aliases:
+  - 升单核销人次
+  priority: P0
+  metric_type: atomic
+  business_domain: upgrade
+  support_status: sql_supported
+  definition: 统计周期内升单核销人次，按 verify_date_id 去重。
+  formula_sql: COUNT(DISTINCT verify_date_id)
+  source_tables:
+  - soyoung_dw.dm_opt_qy_user_execution_record_all_d
+  date_field: executed_date
+  required_fields:
+  - verify_date_id
+  - is_up
+  - executed_date
+  - dp
+  - is_valid
+  required_filters:
+  - is_valid = 1
+  - is_up = 1
+  supported_dimensions:
+  - city_name
+  - sy_hospital_name
+  - standard_name
+  - cx_first_channel
+  - is_new
+  forbidden_fields:
+  - customer_id
+  - uid
+  critical_rules:
+  - CR001_dp
+  - CR002_execution_valid
+  - CR004_visit_count_key
+  - CR011_upgrade_filter
+  known_risks:
+  - 升单人次不能写成升单人数。
+  capability_notes: 适合升单规模和门店TOP查询。
+  version: 1.0.0
+  eval_cases:
+  - P0V1_029
+- canonical: time_progress_achievement_rate
+  display_name: 时间进度达成率
+  aliases:
+  - 进度达成率
+  - 时间进度完成率
+  - 月进度达成
+  priority: P1
+  metric_type: ratio
+  business_domain: planning
+  support_status: explain_only
+  definition: 累计实际值除以按时间进度折算后的月目标。
+  formula_sql: actual_mtd / NULLIF(month_target * elapsed_period_rate, 0)
+  source_tables: []
+  date_field: null
+  required_fields:
+  - actual_metric
+  - month_target
+  - elapsed_period_rate
+  required_filters: []
+  supported_dimensions:
+  - city_name
+  - sy_hospital_name
+  - business_line
+  forbidden_fields: []
+  critical_rules:
+  - CR012_target_dependency
+  known_risks:
+  - 缺少稳定月目标表前，不应生成正式SQL。
+  - 需要确认按自然日、营业日还是业务日计算时间进度。
+  capability_notes: 先支持口径解释；补目标表和日期进度规则后再升级为 sql_supported。
+  version: 0.1.0
+  eval_cases:
+  - METRIC_ASSET_007
+- canonical: item_execution_income_time_progress_rate
+  display_name: 品项本月核销收入时间进度达成率
+  aliases:
+  - 品项进度达成率
+  - 品项核销收入进度
+  - 本月品项收入进度达成率
+  - 任意品项本月核销收入时间进度达成率
+  priority: P1
+  metric_type: ratio
+  business_domain: planning
+  support_status: sql_supported
+  definition: 本月截至昨天指定品项实际核销收入，相对于按时间进度折算后的本月目标收入的完成率。
+  formula_sql: (actual_exe_income / NULLIF(target_exe_income, 0)) / NULLIF(1.0 * elapsed_days
+    / month_days, 0)
+  source_tables:
+  - soyoung_dw.dm_opt_qy_user_execution_record_all_d
+  - soyoung_dw.dim_channel_month_income_target
+  date_field: executed_date
+  target_date_field: month
+  parameters:
+  - name: item_name
+    type: string
+    required: true
+    description: 用户问题中的品项关键词，例如奇迹胶原、奇迹童颜、新一代热玛吉、BBL HERO。
+  required_fields:
+  - exe_income
+  - executed_date
+  - standard_name
+  - dp
+  - is_valid
+  - target_absolute_value
+  - month
+  - first_level_hierarchy
+  - second_level_hierarchy
+  - third_level_hierarchy
+  - fourth_level_hierarchy
+  - target_type
+  required_filters:
+  - execution.dp = DATE_SUB(CURRENT_DATE(), 1)
+  - execution.is_valid = 1
+  - execution.standard_name REGEXP '<item_name>'
+  - execution.executed_date >= DATE_FORMAT(CAST(CURRENT_DATE() AS TIMESTAMP), 'yyyy-MM-01')
+  - execution.executed_date <= DATE_SUB(CURRENT_DATE(), 1)
+  - target.month = DATE_FORMAT(CAST(CURRENT_DATE() AS TIMESTAMP), 'yyyy-MM')
+  - target.first_level_hierarchy = '货'
+  - target.second_level_hierarchy = '大单品'
+  - target.third_level_hierarchy REGEXP '<item_name>'
+  - target.fourth_level_hierarchy = '整体'
+  - target.target_type = '收入'
+  supported_dimensions:
+  - standard_name
+  forbidden_fields:
+  - pay_gmv
+  - pay_date
+  - exe_amount
+  - product_name
+  numerator: 本月截至昨天指定品项实际核销收入，SUM(exe_income)
+  denominator: 本月目标收入 * 时间进度
+  time_progress_formula: elapsed_days / month_days，其中 elapsed_days 为本月1日至昨天的自然日天数，month_days
+    为本月总自然日天数。
+  critical_rules:
+  - CR001_dp
+  - CR002_execution_valid
+  - CR003_execution_income_field
+  - CR010_standard_name
+  - CR012_target_dependency
+  - CR016_time_progress_as_of_yesterday
+  known_risks:
+  - 品项名必须能映射到执行表 standard_name 和目标表 third_level_hierarchy。
+  - 目标表仅按一级=货、二级=大单品、四级=整体、target_type=收入取目标。
+  - target_absolute_value 在DDL中是 STRING，运行异常时需要显式 CAST。
+  capability_notes: 任意品项本月核销收入时间进度达成率的参数化SQL指标。
+  version: 1.1.0
+  eval_cases:
+  - METRIC_ASSET_019
+- canonical: miracle_collagen_execution_income_time_progress_rate
+  display_name: 奇迹胶原本月核销收入时间进度达成率
+  aliases:
+  - 奇迹胶原进度达成率
+  - 奇迹胶原核销收入进度
+  - 奇迹胶原本月收入进度达成率
+  priority: P1
+  metric_type: ratio
+  business_domain: planning
+  support_status: sql_supported
+  definition: 本月截至昨天奇迹胶原实际核销收入，相对于按时间进度折算后的本月目标收入的完成率。
+  formula_sql: (actual_exe_income / NULLIF(target_exe_income, 0)) / NULLIF(1.0 * elapsed_days
+    / month_days, 0)
+  source_tables:
+  - soyoung_dw.dm_opt_qy_user_execution_record_all_d
+  - soyoung_dw.dim_channel_month_income_target
+  date_field: executed_date
+  target_date_field: month
+  required_fields:
+  - exe_income
+  - executed_date
+  - standard_name
+  - dp
+  - is_valid
+  - target_absolute_value
+  - month
+  - first_level_hierarchy
+  - second_level_hierarchy
+  - third_level_hierarchy
+  - fourth_level_hierarchy
+  - target_type
+  required_filters:
+  - execution.dp = DATE_SUB(CURRENT_DATE(), 1)
+  - execution.is_valid = 1
+  - execution.standard_name REGEXP '????'
+  - execution.executed_date >= DATE_FORMAT(CAST(CURRENT_DATE() AS TIMESTAMP), 'yyyy-MM-01')
+  - execution.executed_date <= DATE_SUB(CURRENT_DATE(), 1)
+  - target.month = DATE_FORMAT(CAST(CURRENT_DATE() AS TIMESTAMP), 'yyyy-MM')
+  - target.first_level_hierarchy = '?'
+  - target.second_level_hierarchy = '???'
+  - target.third_level_hierarchy REGEXP '????'
+  - target.fourth_level_hierarchy = '??'
+  - target.target_type = '??'
+  supported_dimensions:
+  - standard_name
+  forbidden_fields:
+  - pay_gmv
+  - pay_date
+  - exe_amount
+  - product_name
+  numerator: 本月截至昨天奇迹胶原实际核销收入，SUM(exe_income)
+  denominator: 本月目标收入 * 时间进度
+  time_progress_formula: elapsed_days / month_days，其中 elapsed_days 为本月1日至昨天的自然日天数，month_days
+    为本月总自然日天数。
+  sample_as_of: '2026-07-20'
+  sample_values:
+    actual_exe_income: 33762
+    target_exe_income: 48263
+    elapsed_days: 19
+    month_days: 31
+    time_progress_rate: 0.6129032258
+    achievement_rate: 1.1413581506
+    achievement_rate_display: 114.14%
+  critical_rules:
+  - CR001_dp
+  - CR002_execution_valid
+  - CR003_execution_income_field
+  - CR010_standard_name
+  - CR012_target_dependency
+  - CR016_time_progress_as_of_yesterday
+  known_risks:
+  - ??????????GMV???GMV?
+  - ??????????? product_name????????? standard_name REGEXP '????'?
+  - ??????????????? target_type?
+  - target_absolute_value ?DDL?? STRING???????????????? CAST?
+  - ????????????????
+  capability_notes: 这是时间进度达成率的第一个可SQL样板指标，后续新增其他品项进度指标可复制此结构。
+  version: 1.0.0
+  eval_cases:
+  - METRIC_ASSET_016
+  - METRIC_ASSET_017
+  - METRIC_ASSET_018
+critical_rules:
+  CR001_dp: 查询分区必须使用最新 dp，除非表资产另有说明。
+  CR002_execution_valid: 核销类指标必须过滤 is_valid = 1。
+  CR003_execution_income_field: 核销收入必须使用 exe_income。
+  CR004_visit_count_key: 核销人次必须使用 verify_date_id 去重。
+  CR005_execution_user_key: 核销人数必须使用 customer_id 去重。
+  CR006_payment_refund_filter: 支付类指标默认过滤 is_paydate_cash = 0。
+  CR007_new_customer_field: 核销新客使用 is_new；支付新客使用 is_pay_new。
+  CR008_unverified_snapshot: 待核销是库存快照口径，使用 left_num > 0。
+  CR009_zero_income_filter: 0元单使用 exe_income = 0。
+  CR010_standard_name: 标准品项优先使用 standard_name。
+  CR011_upgrade_filter: 升单指标必须使用 is_up = 1。
+  CR012_target_dependency: 进度达成率必须有目标来源和时间进度规则。
+  CR016_time_progress_as_of_yesterday: 时间进度达成率默认使用本月1日至昨天的自然日天数除以本月总天数。

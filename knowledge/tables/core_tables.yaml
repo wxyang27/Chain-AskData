@@ -119,6 +119,21 @@
       "caliber_rules": [
         "P1 CRM 用户扩展表，默认不允许输出手机号、姓名等敏感字段"
       ]
+    },
+    {
+      "name": "dim_channel_month_income_target",
+      "full_name": "soyoung_dw.dim_channel_month_income_target",
+      "layer": "DIM",
+      "theme": "连锁目标表维护",
+      "grain": "月份-目标层级-目标类型",
+      "required_partition": "",
+      "date_fields": ["month"],
+      "key_fields": ["month", "first_level_hierarchy", "second_level_hierarchy", "third_level_hierarchy", "fourth_level_hierarchy", "target_type"],
+      "caliber_rules": [
+        "月度目标使用 month = DATE_FORMAT(CAST(CURRENT_DATE() AS TIMESTAMP), 'yyyy-MM')",
+        "奇迹胶原收入目标过滤 first_level_hierarchy = '货'、second_level_hierarchy = '大单品'、third_level_hierarchy REGEXP '奇迹胶原'、fourth_level_hierarchy = '整体'、target_type = '收入'",
+        "目标绝对值字段 target_absolute_value 在 DDL 中为 STRING，执行环境如不支持隐式转换需显式 CAST"
+      ]
     }
   ]
 }

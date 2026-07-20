@@ -10,6 +10,22 @@ Chain-AskData 是一个面向新氧连锁医美经营分析场景的 **Agentic T
 
 ---
 
+## 当前里程碑（2026-07-20）
+
+- P0 补充评测集已从早期低命中状态迭代到可用基线，最近一轮 P0 overall 达到 84%。
+- 主链路已支持 `template SQL + LLM SQL 影子模式 + SQL Safety Gate + Result Validation + Repair/Fallback`。
+- MaxCompute 执行层已接入，支持通过 PyODPS 只读执行真实 SQL。
+- 新增“任意品项本月核销收入时间进度达成率”参数化指标模板：
+  - `本月奇迹胶原核销收入时间进度达成率`
+  - `本月奇迹童颜核销收入时间进度达成率`
+  - `本月BBL HERO核销收入时间进度达成率`
+  - `本月新一代热玛吉核销收入时间进度达成率`
+- 该指标已完成从指标识别、QueryPlan、SchemaGraph 补证、template SQL、safety gate、前端展示到 MaxCompute 真实执行的闭环。
+- LLM SQL 目前默认作为影子模式：可以生成 SQL 供对比，但只有通过门禁才会被采用；否则最终采用 template SQL。
+- 飞书机器人入口暂未接入，计划在核心问数链路和指标资产治理稳定后作为 P2/MVP 入口接入。
+
+---
+
 ## 1. 项目背景
 
 连锁医美经营分析中，业务问题通常包含大量隐含约束：
@@ -607,6 +623,10 @@ table_recall >= 85%
 最近30天新客支付GMV、支付人数、支付客单价是多少？
 最近60天支付后30日核销率是多少？
 最近30天升单人数、升单核销人次、升单核销收入是多少？
+本月奇迹胶原核销收入时间进度达成率
+本月奇迹童颜核销收入时间进度达成率
+本月BBL HERO核销收入时间进度达成率
+本月新一代热玛吉核销收入时间进度达成率
 ```
 
 ---
@@ -674,6 +694,17 @@ table_recall >= 85%
   "repair_attempt": {},
   "pipeline_trace": {}
 }
+```
+
+字段说明：
+
+```text
+sql              最终采用 SQL，可能来自 template、LLM 或 fallback
+template_sql     模板 SQL
+llm_sql          LLM 影子 SQL，用于对比和门禁评估
+llm_sql_adopted  LLM SQL 是否被最终采用
+sql_source       最终 SQL 来源：template / llm / template_fallback / *_repaired
+execution_mode   disabled / mock / sqlite / maxcompute
 ```
 
 ---

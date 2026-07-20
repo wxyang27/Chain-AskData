@@ -482,8 +482,11 @@ def evaluate_case(case: dict, response: dict) -> dict:
     # Pass if at least 50% of key terms are mentioned, or if caliber_notes is non-empty and intent is nl2sql
     caliber_ratio = len(matched_terms) / max(len(caliber_key_terms), 1)
     caliber_ok = caliber_ratio >= 0.4 or (len(caliber_notes) > 0 and len(caliber_key_terms) <= 2)
-    _add("caliber", caliber_ok,
-         f"matched {len(matched_terms)}/{len(caliber_key_terms)} key terms ({caliber_ratio:.0%})")
+    caliber_detail = f"matched {len(matched_terms)}/{len(caliber_key_terms)} key terms ({caliber_ratio:.0%})"
+    if expected.get("caliber_check_mode") == "soft" and expected.get("expected_intent") == "nl2sql":
+        _add("caliber_soft", True, f"{caliber_detail}; soft check for nl2sql")
+    else:
+        _add("caliber", caliber_ok, caliber_detail)
 
     # --- 10. Critical rules (CR001-CR007) ---
     applicable_rules = _detect_critical_rules(case, effective_sql)

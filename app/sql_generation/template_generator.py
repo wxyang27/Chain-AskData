@@ -1,7 +1,49 @@
+from app.business.item_progress import (
+    ITEM_INCOME_PROGRESS_TEMPLATE,
+    extract_item_name,
+    is_item_income_progress_question,
+    item_income_progress_sql,
+)
 from app.models.query import QueryPlan
 
 
 SQL_TEMPLATES = {
+    "miracle_collagen_income_progress_mtd": """WITH actual_income AS (
+    SELECT  DATE_FORMAT(CAST(CURRENT_DATE() AS TIMESTAMP), 'yyyy-MM') AS month,
+            '奇迹胶原' AS standard_name,
+            COALESCE(SUM(exe_income), 0) AS actual_exe_income
+    FROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d
+    WHERE   dp = DATE_SUB(CURRENT_DATE(), 1)
+    AND     is_valid = 1
+    AND     standard_name REGEXP '奇迹胶原'
+    AND     executed_date BETWEEN DATE_FORMAT(CAST(CURRENT_DATE() AS TIMESTAMP), 'yyyy-MM-01')
+                              AND DATE_SUB(CURRENT_DATE(), 1)
+),
+target_income AS (
+    SELECT  month,
+            third_level_hierarchy AS standard_name,
+            SUM(target_absolute_value) AS target_exe_income
+    FROM    soyoung_dw.dim_channel_month_income_target
+    WHERE   month = DATE_FORMAT(CAST(CURRENT_DATE() AS TIMESTAMP), 'yyyy-MM')
+    AND     first_level_hierarchy = '货'
+    AND     second_level_hierarchy = '大单品'
+    AND     third_level_hierarchy REGEXP '奇迹胶原'
+    AND     fourth_level_hierarchy = '整体'
+    AND     target_type = '收入'
+    GROUP BY month, third_level_hierarchy
+)
+SELECT  a.actual_exe_income,
+        t.target_exe_income,
+        DAY(DATE_SUB(CURRENT_DATE(), 1)) AS elapsed_days,
+        DAY(LAST_DAY(CURRENT_DATE())) AS month_days,
+        a.actual_exe_income / NULLIF(t.target_exe_income, 0) AS target_completion_rate,
+        1.0 * DAY(DATE_SUB(CURRENT_DATE(), 1)) / NULLIF(DAY(LAST_DAY(CURRENT_DATE())), 0) AS time_progress_rate,
+        (a.actual_exe_income / NULLIF(t.target_exe_income, 0))
+        / NULLIF(1.0 * DAY(DATE_SUB(CURRENT_DATE(), 1)) / NULLIF(DAY(LAST_DAY(CURRENT_DATE())), 0), 0) AS time_progress_achievement_rate
+FROM    actual_income a
+LEFT JOIN target_income t
+       ON  a.month = t.month
+       AND a.standard_name = t.standard_name;""",
     "execution_summary_yesterday": """SELECT  SUM(exe_income) AS 核销收入,
         SUM(exe_amount) AS 核销GMV,
         COUNT(DISTINCT verify_date_id) AS 核销人次,
@@ -68,6 +110,52 @@ AND     executed_date BETWEEN DATE_SUB(CURRENT_DATE(),30) AND DATE_SUB(CURRENT_D
 GROUP BY standard_name
 ORDER BY 核销收入 DESC
 LIMIT 20;""",
+    "baoli_newold_execution_mtd": """SELECT  b.sy_hospital_name AS 门店,
+        CASE WHEN a.is_new = 1 THEN '新客' ELSE '老客' END AS 新老客类型,
+        SUM(a.exe_income) AS 核销收入,
+        COUNT(DISTINCT a.verify_date_id) AS 核销人次
+FROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d a
+LEFT JOIN soyoung_dw.dim_qy_tenant_info_all_d b
+ON      a.tenant_id = b.tenant_id
+AND     b.dp = DATE_SUB(CURRENT_DATE(),1)
+WHERE   a.dp = DATE_SUB(CURRENT_DATE(),1)
+AND     a.is_valid = 1
+AND     a.executed_date BETWEEN DATETRUNC(CURRENT_DATE(), 'MONTH') AND DATE_SUB(CURRENT_DATE(),1)
+AND     b.city_name LIKE '%北京%'
+AND     b.sy_hospital_name LIKE '%保利%'
+GROUP BY b.sy_hospital_name, CASE WHEN a.is_new = 1 THEN '新客' ELSE '老客' END;""",
+    "baoli_daily_execution_30d": """SELECT  a.executed_date,
+        b.sy_hospital_name AS 门店,
+        SUM(a.exe_income) AS 核销收入,
+        COUNT(DISTINCT a.verify_date_id) AS 核销人次,
+        SUM(a.exe_income) / NULLIF(COUNT(DISTINCT a.verify_date_id),0) AS 核销客单价
+FROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d a
+LEFT JOIN soyoung_dw.dim_qy_tenant_info_all_d b
+ON      a.tenant_id = b.tenant_id
+AND     b.dp = DATE_SUB(CURRENT_DATE(),1)
+WHERE   a.dp = DATE_SUB(CURRENT_DATE(),1)
+AND     a.is_valid = 1
+AND     a.executed_date BETWEEN DATE_SUB(CURRENT_DATE(),30) AND DATE_SUB(CURRENT_DATE(),1)
+AND     b.city_name LIKE '%北京%'
+AND     b.sy_hospital_name LIKE '%保利%'
+GROUP BY a.executed_date, b.sy_hospital_name
+ORDER BY a.executed_date;""",
+    "baoli_item_execution_mtd": """SELECT  b.sy_hospital_name AS 门店,
+        a.standard_name AS 品项,
+        SUM(a.exe_income) AS 核销收入,
+        COUNT(DISTINCT a.verify_date_id) AS 核销人次,
+        SUM(a.exe_income) / NULLIF(COUNT(DISTINCT a.verify_date_id),0) AS 核销客单价
+FROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d a
+LEFT JOIN soyoung_dw.dim_qy_tenant_info_all_d b
+ON      a.tenant_id = b.tenant_id
+AND     b.dp = DATE_SUB(CURRENT_DATE(),1)
+WHERE   a.dp = DATE_SUB(CURRENT_DATE(),1)
+AND     a.is_valid = 1
+AND     a.executed_date BETWEEN DATETRUNC(CURRENT_DATE(), 'MONTH') AND DATE_SUB(CURRENT_DATE(),1)
+AND     b.city_name LIKE '%北京%'
+AND     b.sy_hospital_name LIKE '%保利%'
+AND     a.standard_name REGEXP '新一代热玛吉|热玛吉'
+GROUP BY b.sy_hospital_name, a.standard_name;""",
     "standard_item_penetration_90d": """WITH base AS (
     SELECT  customer_id,
             standard_name
@@ -92,6 +180,56 @@ WHERE   dp = DATE_SUB(CURRENT_DATE(),1)
 AND     is_valid = 1
 AND     executed_date BETWEEN DATE_SUB(CURRENT_DATE(),30) AND DATE_SUB(CURRENT_DATE(),1)
 AND     exe_income = 0;""",
+    "zero_income_summary_mtd": """SELECT  COUNT(DISTINCT verify_date_id) AS 0元核销人次,
+        COUNT(DISTINCT customer_id) AS 0元核销人数,
+        SUM(exe_income) AS 0元核销收入
+FROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d
+WHERE   dp = DATE_SUB(CURRENT_DATE(),1)
+AND     is_valid = 1
+AND     executed_date BETWEEN DATETRUNC(CURRENT_DATE(), 'MONTH') AND DATE_SUB(CURRENT_DATE(),1)
+AND     exe_income = 0;""",
+    "nonzero_execution_summary_mtd": """SELECT  SUM(exe_income) AS 核销收入,
+        COUNT(DISTINCT verify_date_id) AS 核销人次,
+        SUM(exe_income) / NULLIF(COUNT(DISTINCT verify_date_id),0) AS 核销客单价
+FROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d
+WHERE   dp = DATE_SUB(CURRENT_DATE(),1)
+AND     is_valid = 1
+AND     executed_date BETWEEN DATETRUNC(CURRENT_DATE(), 'MONTH') AND DATE_SUB(CURRENT_DATE(),1)
+AND     exe_income > 0;""",
+    "nonzero_beijing_store_aov_top10_mtd": """SELECT  b.sy_hospital_name AS 门店,
+        SUM(a.exe_income) AS 核销收入,
+        COUNT(DISTINCT a.verify_date_id) AS 核销人次,
+        SUM(a.exe_income) / NULLIF(COUNT(DISTINCT a.verify_date_id),0) AS 核销客单价
+FROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d a
+LEFT JOIN soyoung_dw.dim_qy_tenant_info_all_d b
+ON      a.tenant_id = b.tenant_id
+AND     b.dp = DATE_SUB(CURRENT_DATE(),1)
+WHERE   a.dp = DATE_SUB(CURRENT_DATE(),1)
+AND     a.is_valid = 1
+AND     a.executed_date BETWEEN DATETRUNC(CURRENT_DATE(), 'MONTH') AND DATE_SUB(CURRENT_DATE(),1)
+AND     a.exe_income > 0
+AND     b.city_name LIKE '%北京%'
+GROUP BY b.sy_hospital_name
+ORDER BY 核销客单价 DESC
+LIMIT 10;""",
+    "zero_income_visit_rate_mtd": """SELECT  COUNT(DISTINCT CASE WHEN exe_income = 0 THEN verify_date_id END) AS 0元核销人次,
+        COUNT(DISTINCT verify_date_id) AS 总核销人次,
+        COUNT(DISTINCT CASE WHEN exe_income = 0 THEN verify_date_id END)
+        / NULLIF(COUNT(DISTINCT verify_date_id),0) AS 0元单人次占比
+FROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d
+WHERE   dp = DATE_SUB(CURRENT_DATE(),1)
+AND     is_valid = 1
+AND     executed_date BETWEEN DATETRUNC(CURRENT_DATE(), 'MONTH') AND DATE_SUB(CURRENT_DATE(),1);""",
+    "zero_income_visit_rate_newold_mtd": """SELECT  CASE WHEN is_new = 1 THEN '新客' ELSE '老客' END AS 新老客类型,
+        COUNT(DISTINCT CASE WHEN exe_income = 0 THEN verify_date_id END) AS 0元核销人次,
+        COUNT(DISTINCT verify_date_id) AS 总核销人次,
+        COUNT(DISTINCT CASE WHEN exe_income = 0 THEN verify_date_id END)
+        / NULLIF(COUNT(DISTINCT verify_date_id),0) AS 0元单人次占比
+FROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d
+WHERE   dp = DATE_SUB(CURRENT_DATE(),1)
+AND     is_valid = 1
+AND     executed_date BETWEEN DATETRUNC(CURRENT_DATE(), 'MONTH') AND DATE_SUB(CURRENT_DATE(),1)
+GROUP BY CASE WHEN is_new = 1 THEN '新客' ELSE '老客' END;""",
     "unverified_amount_store_top10": """SELECT  b.sy_hospital_name AS 门店,
         SUM(left_gmv) AS 待核销金额
 FROM    soyoung_dw.dm_opt_qy_order_info_all_d a
@@ -146,6 +284,32 @@ WHERE   dp = DATE_SUB(CURRENT_DATE(),1)
 AND     is_valid = 1
 AND     executed_date BETWEEN DATE_SUB(CURRENT_DATE(),30) AND DATE_SUB(CURRENT_DATE(),1)
 AND     is_up = 1;""",
+    "upgrade_beijing_store_income_top10_mtd": """SELECT  b.sy_hospital_name AS 门店,
+        SUM(a.exe_income) AS 升单核销收入
+FROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d a
+LEFT JOIN soyoung_dw.dim_qy_tenant_info_all_d b
+ON      a.tenant_id = b.tenant_id
+AND     b.dp = DATE_SUB(CURRENT_DATE(),1)
+WHERE   a.dp = DATE_SUB(CURRENT_DATE(),1)
+AND     a.is_valid = 1
+AND     a.is_up = 1
+AND     a.executed_date BETWEEN DATETRUNC(CURRENT_DATE(), 'MONTH') AND DATE_SUB(CURRENT_DATE(),1)
+AND     b.city_name LIKE '%北京%'
+GROUP BY b.sy_hospital_name
+ORDER BY 升单核销收入 DESC
+LIMIT 10;""",
+    "laodaixin_new_customer_income_compare_mtd": """SELECT  SUM(CASE WHEN executed_date BETWEEN DATETRUNC(CURRENT_DATE(), 'MONTH') AND DATE_SUB(CURRENT_DATE(),1) THEN exe_income ELSE 0 END) AS 本月核销收入,
+        SUM(CASE WHEN executed_date BETWEEN DATEADD(DATETRUNC(CURRENT_DATE(), 'MONTH'), -1, 'mm') AND DATEADD(DATE_SUB(CURRENT_DATE(),1), -1, 'mm') THEN exe_income ELSE 0 END) AS 上月同期核销收入,
+        SUM(CASE WHEN executed_date BETWEEN DATETRUNC(CURRENT_DATE(), 'MONTH') AND DATE_SUB(CURRENT_DATE(),1) THEN exe_income ELSE 0 END)
+        - SUM(CASE WHEN executed_date BETWEEN DATEADD(DATETRUNC(CURRENT_DATE(), 'MONTH'), -1, 'mm') AND DATEADD(DATE_SUB(CURRENT_DATE(),1), -1, 'mm') THEN exe_income ELSE 0 END) AS 收入差额,
+        (SUM(CASE WHEN executed_date BETWEEN DATETRUNC(CURRENT_DATE(), 'MONTH') AND DATE_SUB(CURRENT_DATE(),1) THEN exe_income ELSE 0 END)
+        - SUM(CASE WHEN executed_date BETWEEN DATEADD(DATETRUNC(CURRENT_DATE(), 'MONTH'), -1, 'mm') AND DATEADD(DATE_SUB(CURRENT_DATE(),1), -1, 'mm') THEN exe_income ELSE 0 END))
+        / NULLIF(SUM(CASE WHEN executed_date BETWEEN DATEADD(DATETRUNC(CURRENT_DATE(), 'MONTH'), -1, 'mm') AND DATEADD(DATE_SUB(CURRENT_DATE(),1), -1, 'mm') THEN exe_income ELSE 0 END),0) AS 变化率
+FROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d
+WHERE   dp = DATE_SUB(CURRENT_DATE(),1)
+AND     is_valid = 1
+AND     is_new = 1
+AND     cx_first_channel = '老带新';""",
 }
 
 
@@ -153,11 +317,41 @@ class SqlGenerator:
     """根据 QueryPlan 生成 MaxCompute SQL。"""
 
     def generate(self, query_plan: QueryPlan) -> str:
+        template_id = self._specialized_template_id(query_plan)
+        if template_id == ITEM_INCOME_PROGRESS_TEMPLATE:
+            return item_income_progress_sql(extract_item_name(query_plan.original_question))
         sql = SQL_TEMPLATES.get(
-            query_plan.template_id,
+            template_id,
             SQL_TEMPLATES["store_income_top10_30d"],
         )
         return self._apply_time_overrides(sql, query_plan)
+
+    def _specialized_template_id(self, query_plan: QueryPlan) -> str:
+        question = query_plan.original_question
+        if is_item_income_progress_question(question):
+            return ITEM_INCOME_PROGRESS_TEMPLATE
+        if "北京" in question and "保利" in question and "新一代热玛吉" in question:
+            return "baoli_item_execution_mtd"
+        if "北京" in question and "保利" in question and "新客" in question and "老客" in question:
+            return "baoli_newold_execution_mtd"
+        if "北京" in question and "保利" in question and "按天" in question:
+            return "baoli_daily_execution_30d"
+        if "老带新" in question and "新客" in question and ("6月同期" in question or "较6月" in question):
+            return "laodaixin_new_customer_income_compare_mtd"
+        if "0元" in question or "0 元" in question:
+            if "剔除" in question and "北京" in question and "门店" in question and "客单价" in question:
+                return "nonzero_beijing_store_aov_top10_mtd"
+            if "剔除" in question:
+                return "nonzero_execution_summary_mtd"
+            if "新客" in question and "老客" in question and "占比" in question:
+                return "zero_income_visit_rate_newold_mtd"
+            if "占核销人次" in question or "人次占比" in question:
+                return "zero_income_visit_rate_mtd"
+            if "核销人次" in question and "核销人数" in question and "核销收入" in question:
+                return "zero_income_summary_mtd"
+        if "升单" in question and "北京" in question and "门店" in question and "TOP" in question:
+            return "upgrade_beijing_store_income_top10_mtd"
+        return query_plan.template_id
 
     def _apply_time_overrides(self, sql: str, query_plan: QueryPlan) -> str:
         if self._is_this_week(query_plan):

@@ -335,6 +335,90 @@
       "caliber": "品项维表中的收入分类 revenue_category 可作为分类补充来源。",
       "filters": ["revenue_category IN ('大单品','常规品','大师团')"],
       "risk_notes": ["若事实表已有 revenue_category，优先减少 JOIN 放大风险"]
+    },
+    {
+      "field_name": "month",
+      "business_name": "目标月份",
+      "table_name": "dim_channel_month_income_target",
+      "full_table_name": "soyoung_dw.dim_channel_month_income_target",
+      "field_type": "date",
+      "canonical_name": "target_month",
+      "used_by_metrics": ["miracle_collagen_execution_income_time_progress_rate"],
+      "caliber": "连锁月度收入目标表字段，用于时间进度达成率目标月份口径。",
+      "filters": ["month = DATE_FORMAT(CAST(CURRENT_DATE() AS TIMESTAMP), 'yyyy-MM')"],
+      "risk_notes": ["月份格式为 yyyy-MM"]
+    },
+    {
+      "field_name": "first_level_hierarchy",
+      "business_name": "目标一级分层",
+      "table_name": "dim_channel_month_income_target",
+      "full_table_name": "soyoung_dw.dim_channel_month_income_target",
+      "field_type": "dimension",
+      "canonical_name": "target_first_level",
+      "used_by_metrics": ["miracle_collagen_execution_income_time_progress_rate"],
+      "caliber": "奇迹胶原收入目标一级分层。",
+      "filters": ["first_level_hierarchy = '货'"],
+      "risk_notes": ["奇迹胶原收入目标必须限定一级=货"]
+    },
+    {
+      "field_name": "second_level_hierarchy",
+      "business_name": "目标二级分层",
+      "table_name": "dim_channel_month_income_target",
+      "full_table_name": "soyoung_dw.dim_channel_month_income_target",
+      "field_type": "dimension",
+      "canonical_name": "target_second_level",
+      "used_by_metrics": ["miracle_collagen_execution_income_time_progress_rate"],
+      "caliber": "奇迹胶原收入目标二级分层。",
+      "filters": ["second_level_hierarchy = '大单品'"],
+      "risk_notes": ["奇迹胶原收入目标必须限定二级=大单品"]
+    },
+    {
+      "field_name": "third_level_hierarchy",
+      "business_name": "目标三级分层",
+      "table_name": "dim_channel_month_income_target",
+      "full_table_name": "soyoung_dw.dim_channel_month_income_target",
+      "field_type": "dimension",
+      "canonical_name": "target_third_level",
+      "used_by_metrics": ["miracle_collagen_execution_income_time_progress_rate"],
+      "caliber": "奇迹胶原收入目标三级品项分层。",
+      "filters": ["third_level_hierarchy REGEXP '奇迹胶原'"],
+      "risk_notes": ["奇迹胶原目标可用 REGEXP 覆盖奇迹胶原-注射等变体"]
+    },
+    {
+      "field_name": "fourth_level_hierarchy",
+      "business_name": "目标四级分层",
+      "table_name": "dim_channel_month_income_target",
+      "full_table_name": "soyoung_dw.dim_channel_month_income_target",
+      "field_type": "dimension",
+      "canonical_name": "target_fourth_level",
+      "used_by_metrics": ["miracle_collagen_execution_income_time_progress_rate"],
+      "caliber": "奇迹胶原收入目标四级分层。",
+      "filters": ["fourth_level_hierarchy = '整体'"],
+      "risk_notes": ["当前样板指标限定四级=整体"]
+    },
+    {
+      "field_name": "target_type",
+      "business_name": "目标类型",
+      "table_name": "dim_channel_month_income_target",
+      "full_table_name": "soyoung_dw.dim_channel_month_income_target",
+      "field_type": "dimension",
+      "canonical_name": "target_type",
+      "used_by_metrics": ["miracle_collagen_execution_income_time_progress_rate"],
+      "caliber": "奇迹胶原时间进度达成率使用收入目标。",
+      "filters": ["target_type = '收入'"],
+      "risk_notes": ["收入进度目标必须限定 target_type=收入"]
+    },
+    {
+      "field_name": "target_absolute_value",
+      "business_name": "目标绝对值",
+      "table_name": "dim_channel_month_income_target",
+      "full_table_name": "soyoung_dw.dim_channel_month_income_target",
+      "field_type": "amount",
+      "canonical_name": "target_absolute_value",
+      "used_by_metrics": ["miracle_collagen_execution_income_time_progress_rate"],
+      "caliber": "奇迹胶原时间进度达成率的目标收入字段。",
+      "filters": [],
+      "risk_notes": ["DDL 中为 STRING，必要时显式 CAST 后再聚合或计算"]
     }
   ]
 }

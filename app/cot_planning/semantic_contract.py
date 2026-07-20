@@ -6,6 +6,11 @@ and template hints that the existing planner and SQL gate can consume.
 """
 
 from app.knowledge_indexer.retrieval_context import RetrievalContext
+from app.business.item_progress import (
+    ITEM_INCOME_PROGRESS_METRIC,
+    ITEM_INCOME_PROGRESS_TEMPLATE,
+    is_item_income_progress_question,
+)
 from app.models.query import SemanticContract
 
 
@@ -23,13 +28,6 @@ class SemanticContractBuilder:
         filters: list[str] = []
         required_fields: list[str] = []
 
-        if self._is_reject_boundary(q):
-            return SemanticContract(
-                intent="unknown",
-                domain="reject_boundary",
-                reject_reason="预测、原因诊断或问题归因类问题不应在当前版本强行生成 SQL",
-            )
-
         if self._is_schema_explain(q):
             return SemanticContract(
                 intent="schema_explain",
@@ -46,6 +44,13 @@ class SemanticContractBuilder:
                 metrics=self._metrics(q),
                 required_fields=self._required_fields(q),
                 template_id=self._template_hint(q, self._metrics(q)),
+            )
+
+        if self._is_reject_boundary(q):
+            return SemanticContract(
+                intent="unknown",
+                domain="reject_boundary",
+                reject_reason="预测、原因诊断或问题归因类问题不应在当前版本强行生成 SQL",
             )
 
         metrics = self._metrics(q)
@@ -90,9 +95,11 @@ class SemanticContractBuilder:
         )
 
     def _is_caliber_explain(self, question: str) -> bool:
+        if "standard_name" in question and "product_name" in question:
+            return True
         if any(term in question for term in ("口径", "区别", "差别", "分母", "分子", "定义")):
             return True
-        explain_style = any(term in question for term in ("怎么看", "怎么算", "怎么计算", "如何看", "如何算", "如何计算"))
+        explain_style = any(term in question for term in ("怎么看", "怎么算", "怎么计算", "如何看", "如何算", "如何计算", "应该优先使用"))
         metric_style = any(term in question for term in ("渗透率", "客单价", "占比", "核销", "支付", "GMV", "品项"))
         return explain_style and metric_style
 
@@ -105,6 +112,9 @@ class SemanticContractBuilder:
 
         payment_context = self._payment_context(question)
         execution_context = self._execution_context(question)
+
+        if is_item_income_progress_question(question):
+            add(ITEM_INCOME_PROGRESS_METRIC)
 
         if "待核销" in question or "没核销" in question or "未核销" in question:
             add("unverified_amount")
@@ -243,6 +253,8 @@ class SemanticContractBuilder:
         return "last_30d"
 
     def _template_hint(self, question: str, metrics: list[str]) -> str:
+        if ITEM_INCOME_PROGRESS_METRIC in metrics:
+            return ITEM_INCOME_PROGRESS_TEMPLATE
         if "支付后" in question and "核销率" in question:
             return "pay_to_verify_rate_30d"
         if any(term in question for term in ("本周", "这周")) and "私域" in question and "新客" in question:
@@ -297,6 +309,18 @@ class SemanticContractBuilder:
 
 
 _FIELDS_BY_METRIC = {
+    "item_execution_income_time_progress_rate": [
+        "exe_income", "executed_date", "standard_name", "dp", "is_valid",
+        "target_absolute_value", "month", "first_level_hierarchy",
+        "second_level_hierarchy", "third_level_hierarchy",
+        "fourth_level_hierarchy", "target_type",
+    ],
+    "miracle_collagen_execution_income_time_progress_rate": [
+        "exe_income", "executed_date", "standard_name", "dp", "is_valid",
+        "target_absolute_value", "month", "first_level_hierarchy",
+        "second_level_hierarchy", "third_level_hierarchy",
+        "fourth_level_hierarchy", "target_type",
+    ],
     "execution_income": ["exe_income", "executed_date", "dp", "is_valid"],
     "execution_gmv": ["exe_amount", "executed_date", "dp", "is_valid"],
     "execution_visit_count": ["verify_date_id", "executed_date", "dp", "is_valid"],

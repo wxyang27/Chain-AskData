@@ -393,44 +393,62 @@ function renderCompare(templateSql, llmSql, validation) {
   cmp.innerHTML = html;
 }
 
+function setSqlSourceBadge(finalSource, llmAdopted) {
+  if (!sqlSourceBadge) return;
+
+  const normalized = String(finalSource || "").toLowerCase();
+  if (llmAdopted || normalized.startsWith("llm")) {
+    sqlSourceBadge.textContent = "最终采用：LLM";
+    sqlSourceBadge.className = "badge badge-llm";
+  } else if (normalized.includes("fallback")) {
+    sqlSourceBadge.textContent = "最终采用：模板回退";
+    sqlSourceBadge.className = "badge badge-shadow";
+  } else {
+    sqlSourceBadge.textContent = "最终采用：模板";
+    sqlSourceBadge.className = "badge badge-active";
+  }
+}
+
 function renderLlmSql(data) {
   if (!llmSqlBlock) return;
 
   const detail = data.llm_sql_detail || {};
   const validation = data.llm_sql_validation || {};
+  const finalSql = data.sql || data.template_sql || "";
+  const templateSql = data.template_sql || "";
+  const llmSql = data.llm_sql || "";
+  const finalSource = data.sql_source || (data.llm_sql_adopted ? "llm" : "template");
 
-  // Format template SQL for display
-  sqlBlock.textContent = formatSql(data.template_sql || data.sql || "");
+  sqlBlock.textContent = formatSql(finalSql);
+  setSqlSourceBadge(finalSource, data.llm_sql_adopted);
 
   if (!detail.generated) {
     llmSqlBlock.textContent = detail.error || "LLM SQL not generated";
-    if (sqlSourceBadge) { sqlSourceBadge.textContent = "模板"; sqlSourceBadge.className = "badge badge-active"; }
+    if (llmMetaBlock) {
+      llmMetaBlock.textContent = "影子模式：LLM SQL 未生成，最终采用 SQL 不受影响。";
+    }
+    renderCompare(templateSql || finalSql, llmSql, validation);
     return;
   }
 
-  llmSqlBlock.textContent = formatSql(data.llm_sql || "");
+  llmSqlBlock.textContent = formatSql(llmSql);
 
-  const meta = [];
+  const meta = ["影子模式：LLM SQL 仅用于对比和门禁评估，不直接执行。"];
+  if (data.llm_sql_adopted) {
+    meta.push("采纳状态：已通过门禁并被采用。");
+  } else {
+    meta.push(`采纳状态：未采纳，最终采用 ${finalSource || "template"} SQL。`);
+  }
   if (detail.explanation) meta.push(detail.explanation);
-  if (!validation.passed && validation.errors.length) {
-    meta.push("门禁错误: " + validation.errors.join("; "));
+  const validationErrors = validation.errors || [];
+  if (!validation.passed && validationErrors.length) {
+    meta.push("门禁拦截: " + validationErrors.join("; "));
+  } else if (validation.passed) {
+    meta.push("门禁结果: 通过。");
   }
-  if (llmMetaBlock) llmMetaBlock.textContent = meta.join("\n") || "通过所有门禁检查";
+  if (llmMetaBlock) llmMetaBlock.textContent = meta.join("\n");
 
-  if (sqlSourceBadge) {
-    if (data.llm_sql_adopted) {
-      sqlSourceBadge.textContent = "LLM";
-      sqlSourceBadge.className = "badge badge-llm";
-    } else if (validation.passed) {
-      sqlSourceBadge.textContent = "模板";
-      sqlSourceBadge.className = "badge badge-active";
-    } else {
-      sqlSourceBadge.textContent = "模板（门禁未过）";
-      sqlSourceBadge.className = "badge badge-shadow";
-    }
-  }
-
-  renderCompare(data.template_sql || data.sql, data.llm_sql, validation);
+  renderCompare(templateSql || finalSql, llmSql, validation);
 }
 
 generateButton.addEventListener("click", async () => {
@@ -463,7 +481,7 @@ generateButton.addEventListener("click", async () => {
 
     planBlock.textContent = JSON.stringify(data.query_plan, null, 2);
     renderLlmStatus(data.query_plan);
-    sqlBlock.textContent = data.template_sql || data.sql;
+    sqlBlock.textContent = formatSql(data.sql || data.template_sql || "");
     validationBlock.textContent = JSON.stringify(data.validation, null, 2);
     renderLlmSql(data);
     renderPipelineTrace(data.pipeline_trace);

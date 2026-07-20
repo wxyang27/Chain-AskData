@@ -244,6 +244,15 @@ class AnswerComposer:
             if "核销客单价" in question and "分母" in question:
                 notes.append("核销客单价的分母是核销人次：COUNT(DISTINCT verify_date_id)，不是核销人数 customer_id。")
                 notes.append("公式使用 SUM(exe_income) / NULLIF(COUNT(DISTINCT verify_date_id),0)；verify_date_id（COUNT DISTINCT）是分母，customer_id；除法必须用 NULLIF 防止除零。")
+            if "待核销" in question and "库存快照" in question:
+                notes.append("待核销金额是库存快照口径：使用 soyoung_dw.dm_opt_qy_order_info_all_d.left_gmv，并以 dp = DATE_SUB(CURRENT_DATE(),1) 表示截至昨天。")
+                notes.append("待核销不是按 pay_date 发生的新增支付额，也不应使用核销表的 executed_date；常见过滤为 left_num > 0。")
+            if "新客核销" in question and "新客支付" in question:
+                notes.append("新客核销属于核销域，使用 soyoung_dw.dm_opt_qy_user_execution_record_all_d.is_new。")
+                notes.append("新客支付属于支付域，使用 soyoung_dw.dm_opt_qy_order_info_all_d.is_pay_new；不能把 is_new 和 is_pay_new 混用。")
+            if "standard_name" in question and "product_name" in question:
+                notes.append("品项分析优先使用 standard_name，它是核销/经营分析里的标准品项字段。")
+                notes.append("product_name 更偏商品展示名称，容易把同一标准品项拆散；常规品项筛选使用 standard_name REGEXP/LIKE。")
             if "渗透率" in question and ("品项" in question or "项目" in question):
                 notes.append(
                     "品项渗透率 = 品项核销人数 / NULLIF(总核销人数,0)。"

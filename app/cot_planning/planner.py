@@ -1,4 +1,10 @@
 from app.assets.loader import load_yaml_asset
+from app.business.item_progress import (
+    ITEM_INCOME_PROGRESS_METRIC,
+    ITEM_INCOME_PROGRESS_TEMPLATE,
+    extract_item_name,
+    is_item_income_progress_question,
+)
 from app.core.config import settings
 from app.knowledge_indexer.retrieval_context import RetrievalContext
 from app.llm.local_client import LocalLLMClient
@@ -252,6 +258,9 @@ class QueryPlanner:
         if "0元单" in question or "0 元单" in question:
             add("zero_income_order_count")
 
+        if is_item_income_progress_question(question):
+            add(ITEM_INCOME_PROGRESS_METRIC)
+
         if payment_context and any(term in question for term in ("支付", "付了", "GMV")):
             add("payment_gmv")
         if payment_context and any(term in question for term in ("支付人数", "多少人付", "付的人")):
@@ -285,6 +294,9 @@ class QueryPlanner:
         return all(term in question for term in ("私域", "公域", "老带新"))
 
     def _named_item_filter_value(self, question: str) -> str:
+        item_name = extract_item_name(question)
+        if item_name:
+            return item_name
         for item_name in ("奇迹胶原", "BBL HERO", "奇迹童颜", "热玛吉"):
             if item_name in question:
                 return item_name
@@ -378,6 +390,29 @@ class QueryPlanner:
     ) -> dict:
         if semantic_contract and semantic_contract.template_id in self.cases_by_template:
             return self.cases_by_template[semantic_contract.template_id]
+        if semantic_contract and semantic_contract.template_id in {
+            ITEM_INCOME_PROGRESS_TEMPLATE,
+            "miracle_collagen_income_progress_mtd",
+        }:
+            item_name = extract_item_name(question) or "奇迹胶原"
+            return {
+                "case_id": "Q_P1_ITEM_PROGRESS",
+                "template_id": ITEM_INCOME_PROGRESS_TEMPLATE,
+                "question": f"{item_name}本月核销收入时间进度达成率是多少？",
+                "business_domain": "连锁经营-目标进度",
+                "metrics": [ITEM_INCOME_PROGRESS_METRIC],
+                "dimensions": [],
+                "source_tables": [
+                    "soyoung_dw.dm_opt_qy_user_execution_record_all_d",
+                    "soyoung_dw.dim_channel_month_income_target",
+                ],
+                "risk_flags": [
+                    "实际值使用核销收入 exe_income",
+                    "目标值使用 dim_channel_month_income_target.target_absolute_value",
+                    f"品项过滤使用 standard_name REGEXP '{item_name}' 和 third_level_hierarchy REGEXP '{item_name}'",
+                    "时间进度默认截至昨天",
+                ],
+            }
 
         if retrieval_context:
             template_id = retrieval_context.top_template_id()
@@ -468,6 +503,16 @@ class QueryPlanner:
             "revenue_category_execution_30d": common_execution_filters + ["revenue_category IN ('大单品','常规品','大师团')"],
             "standard_item_income_top20_30d": common_execution_filters,
             "standard_item_penetration_90d": common_execution_filters + ["standard_name REGEXP '奇迹胶原'"],
+            ITEM_INCOME_PROGRESS_TEMPLATE: common_execution_filters + [
+                "standard_name REGEXP '<item_name>'",
+                "executed_date BETWEEN DATE_FORMAT(CAST(CURRENT_DATE() AS TIMESTAMP), 'yyyy-MM-01') AND DATE_SUB(CURRENT_DATE(),1)",
+                "target.month = DATE_FORMAT(CAST(CURRENT_DATE() AS TIMESTAMP), 'yyyy-MM')",
+                "target.first_level_hierarchy = '货'",
+                "target.second_level_hierarchy = '大单品'",
+                "target.third_level_hierarchy REGEXP '<item_name>'",
+                "target.fourth_level_hierarchy = '整体'",
+                "target.target_type = '收入'",
+            ],
             "zero_income_orders_30d": common_execution_filters + ["exe_income = 0"],
             "unverified_amount_store_top10": ["a.dp = DATE_SUB(CURRENT_DATE(),1)", "left_num > 0"],
             "new_customer_payment_30d": ["dp = DATE_SUB(CURRENT_DATE(),1)", "is_paydate_cash = 0", "is_pay_new = 1"],
@@ -721,6 +766,8 @@ class QueryPlanner:
     # ------------------------------------------------------------------
 
     def _infer_cot_calculation(self, template_id: str, fields: list[str]) -> str:
+        if template_id == ITEM_INCOME_PROGRESS_TEMPLATE:
+            return "(actual_exe_income / target_exe_income) / (elapsed_days / month_days)"
         if template_id == "unverified_amount_store_top10":
             return "SUM(left_gmv)"
         if "payment" in template_id:

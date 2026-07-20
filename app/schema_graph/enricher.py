@@ -126,6 +126,20 @@ REQUIRED_FIELDS_BY_TEMPLATE: dict[str, list[tuple[str, str]]] = {
         ("dm_opt_qy_user_execution_record_all_d", "standard_name"),
         ("dm_opt_qy_user_execution_record_all_d", "customer_id"),
     ],
+    "item_income_progress_mtd": [
+        ("dm_opt_qy_user_execution_record_all_d", "dp"),
+        ("dm_opt_qy_user_execution_record_all_d", "is_valid"),
+        ("dm_opt_qy_user_execution_record_all_d", "executed_date"),
+        ("dm_opt_qy_user_execution_record_all_d", "exe_income"),
+        ("dm_opt_qy_user_execution_record_all_d", "standard_name"),
+        ("dim_channel_month_income_target", "month"),
+        ("dim_channel_month_income_target", "first_level_hierarchy"),
+        ("dim_channel_month_income_target", "second_level_hierarchy"),
+        ("dim_channel_month_income_target", "third_level_hierarchy"),
+        ("dim_channel_month_income_target", "fourth_level_hierarchy"),
+        ("dim_channel_month_income_target", "target_type"),
+        ("dim_channel_month_income_target", "target_absolute_value"),
+    ],
     "zero_income_orders_30d": [
         ("dm_opt_qy_user_execution_record_all_d", "dp"),
         ("dm_opt_qy_user_execution_record_all_d", "is_valid"),
@@ -285,6 +299,48 @@ _SYNTHETIC_FIELDS: dict[str, dict[str, Any]] = {
     },
 }
 
+_SYNTHETIC_TABLES: dict[str, dict[str, Any]] = {
+    "dim_channel_month_income_target": {
+        "database_name": "soyoung_dw",
+        "table_name": "dim_channel_month_income_target",
+        "full_name": "soyoung_dw.dim_channel_month_income_target",
+        "layer": "DIM",
+        "theme": "连锁目标",
+        "grain": "月份 x 目标层级 x 目标类型",
+        "business_description": "连锁月度收入目标维护表，用于目标完成率、时间进度达成率等指标。",
+    },
+}
+
+for _field_name, _business_name, _field_type in (
+    ("month", "目标月份", "date"),
+    ("first_level_hierarchy", "一级分层", "dimension"),
+    ("second_level_hierarchy", "二级分层", "dimension"),
+    ("third_level_hierarchy", "三级分层", "dimension"),
+    ("fourth_level_hierarchy", "四级分层", "dimension"),
+    ("target_type", "目标类型", "dimension"),
+    ("target_absolute_value", "目标绝对值", "amount"),
+):
+    _SYNTHETIC_FIELDS.setdefault(
+        f"dim_channel_month_income_target.{_field_name}",
+        {
+            "field_id": f"dim_channel_month_income_target.{_field_name}",
+            "database_name": "soyoung_dw",
+            "table_name": "dim_channel_month_income_target",
+            "field_name": _field_name,
+            "field_type": _field_type,
+            "field_description": _business_name,
+            "business_name": _business_name,
+            "caliber": "连锁月度目标表字段，用于目标完成率和时间进度达成率。",
+            "sample_values": [],
+            "value_range": [],
+            "filters": [],
+            "risk_notes": [],
+            "is_join_key": False,
+            "is_metric_field": _field_name == "target_absolute_value",
+            "is_dimension_field": _field_type == "dimension",
+        },
+    )
+
 
 def _compute_full_name(field_entry: dict[str, Any]) -> str:
     database_name = field_entry.get("database_name") or "soyoung_dw"
@@ -353,7 +409,7 @@ class SchemaGraphEnricher:
         merged_tables = list(schema_graph.tables)
         for table_name in existing_table_names:
             if table_name not in {t.get("table_name", "") for t in merged_tables}:
-                table_entry = self._indexes.table_by_name.get(table_name)
+                table_entry = self._indexes.table_by_name.get(table_name) or _SYNTHETIC_TABLES.get(table_name)
                 if table_entry:
                     merged_tables.append({**table_entry, "asset_type": "table",
                                           "derived_from": "enricher"})

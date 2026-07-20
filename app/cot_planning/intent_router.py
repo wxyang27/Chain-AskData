@@ -20,14 +20,6 @@ class IntentRouter:
         metric_ids = retrieval_context.top_metric_ids(limit=5)
         example_ids = retrieval_context.top_example_ids(limit=3)
 
-        if self._is_unknown(normalized, retrieval_context):
-            return IntentRouteResult(
-                intent="unknown",
-                confidence=0.7,
-                reason="\u5f53\u524d\u77e5\u8bc6\u5e93\u7f3a\u5c11\u53ef\u652f\u6491\u8be5\u95ee\u9898\u7684\u8868\u3001\u5b57\u6bb5\u6216\u6307\u6807\u8bc1\u636e",
-                evidence=[],
-            )
-
         if self._is_caliber_explain(normalized):
             return IntentRouteResult(
                 intent="caliber_explain",
@@ -42,6 +34,14 @@ class IntentRouter:
                 confidence=0.9,
                 reason="\u7528\u6237\u5728\u8be2\u95ee\u5b57\u6bb5\u3001\u8868\u6216 Schema \u6620\u5c04",
                 evidence=field_names,
+            )
+
+        if self._is_unknown(normalized, retrieval_context):
+            return IntentRouteResult(
+                intent="unknown",
+                confidence=0.7,
+                reason="\u5f53\u524d\u77e5\u8bc6\u5e93\u7f3a\u5c11\u53ef\u652f\u6491\u8be5\u95ee\u9898\u7684\u8868\u3001\u5b57\u6bb5\u6216\u6307\u6807\u8bc1\u636e",
+                evidence=[],
             )
 
         return IntentRouteResult(
@@ -77,6 +77,8 @@ class IntentRouter:
         )
 
     def _is_caliber_explain(self, normalized_question: str) -> bool:
+        if "standard_name" in normalized_question and "product_name" in normalized_question:
+            return True
         caliber_words = [
             "\u53e3\u5f84",
             "\u533a\u522b",
@@ -92,6 +94,7 @@ class IntentRouter:
             "如何算",
             "如何计算",
             "如何看",
+            "应该优先使用",
         ]
         metric_words = [
             "\u6838\u9500",
