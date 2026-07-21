@@ -93,5 +93,22 @@ class Settings:
     )
     odps_logview_host: str = os.getenv("ODPS_LOGVIEW_HOST", "")
 
+    # --- Feishu / Lark bot long-connection entry ---
+    feishu_app_id: str = os.getenv("FEISHU_APP_ID", os.getenv("LARK_APP_ID", ""))
+    feishu_app_secret: str = os.getenv("FEISHU_APP_SECRET", os.getenv("LARK_APP_SECRET", ""))
+    feishu_verification_token: str = os.getenv("FEISHU_VERIFICATION_TOKEN", "")
+    feishu_encrypt_key: str = os.getenv("FEISHU_ENCRYPT_KEY", "")
+    feishu_reply_enabled: bool = _env_bool("FEISHU_REPLY_ENABLED", True)
+    feishu_max_reply_chars: int = _env_int("FEISHU_MAX_REPLY_CHARS", 3500)
+    feishu_group_require_mention: bool = _env_bool("FEISHU_GROUP_REQUIRE_MENTION", True)
+    feishu_raw_event_log: bool = _env_bool("FEISHU_RAW_EVENT_LOG", False)
+    feishu_include_sql: bool = _env_bool("FEISHU_INCLUDE_SQL", False)
+    feishu_card_enabled: bool = _env_bool("FEISHU_CARD_ENABLED", True)
+    feishu_log_enabled: bool = _env_bool("FEISHU_LOG_ENABLED", True)
+    feishu_log_base_token: str = os.getenv("FEISHU_LOG_BASE_TOKEN", "")
+    feishu_log_table_id: str = os.getenv("FEISHU_LOG_TABLE_ID", "")
+    feishu_log_cli: str = os.getenv("FEISHU_LOG_CLI", "lark-cli")
+    feishu_log_identity: str = os.getenv("FEISHU_LOG_IDENTITY", "user")
+
 
 settings = Settings()

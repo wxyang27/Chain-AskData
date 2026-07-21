@@ -22,7 +22,7 @@ Chain-AskData 是一个面向新氧连锁医美经营分析场景的 **Agentic T
   - `本月新一代热玛吉核销收入时间进度达成率`
 - 该指标已完成从指标识别、QueryPlan、SchemaGraph 补证、template SQL、safety gate、前端展示到 MaxCompute 真实执行的闭环。
 - LLM SQL 目前默认作为影子模式：可以生成 SQL 供对比，但只有通过门禁才会被采用；否则最终采用 template SQL。
-- 飞书机器人入口暂未接入，计划在核心问数链路和指标资产治理稳定后作为 P2/MVP 入口接入。
+- 飞书 CatData 机器人入口已接入：支持飞书长连接收发消息、私聊/群聊 @ 触发、Card 2.0 图表回复、SQL 折叠展示，以及运行日志写入飞书多维表格。
 
 ---
 
@@ -248,6 +248,7 @@ app/
   execution/            SQL 执行层：disabled/mock/sqlite/maxcompute 执行路由
   feedback/             反馈层：结果校验、失败归因、修复/回退策略
   api/                  API 层：FastAPI 路由，核心入口 /api/query
+  feishu_bot/           飞书入口层：长连接机器人、意图分类、Card 2.0 回复、Base 日志写入
   web/                  Web 层：轻量调试页面
   answer/               响应组装层：把 PipelineRunResult 组装成 API 返回
   core/                 配置层：环境变量、模型开关、执行模式
@@ -322,6 +323,22 @@ python -m uvicorn app.main:app --host 127.0.0.1 --port 8001
 
 ```text
 http://127.0.0.1:8000
+```
+
+### 7.6 启动飞书 CatData 机器人
+
+当前飞书入口使用 **长连接模式**，不需要公网域名或回调 URL。配置好飞书应用的 App ID / App Secret 后，直接启动：
+
+```powershell
+python -m app.feishu_bot.runner
+```
+
+启动成功后，日志会显示 CatData 机器人身份和 WebSocket 连接信息。私聊会直接响应；群聊默认只响应明确 @CatData 的消息。
+
+停止进程：
+
+```powershell
+Get-Process python | Stop-Process
 ```
 
 ---
@@ -401,6 +418,48 @@ ODPS_ENDPOINT=http://service.cn-beijing.maxcompute.aliyun.com/api
 - 禁止 DDL / DML
 - 默认限制返回样例行
 - 凭证只从 `.env` 读取，不写入 README 或 `.env.example`
+
+### 8.4 飞书 CatData 机器人配置
+
+飞书入口需要在 `.env` 中配置以下变量：
+
+```env
+FEISHU_APP_ID=cli_xxx
+FEISHU_APP_SECRET=your_feishu_app_secret
+FEISHU_REPLY_ENABLED=true
+FEISHU_CARD_ENABLED=true
+FEISHU_GROUP_REQUIRE_MENTION=true
+FEISHU_RAW_EVENT_LOG=false
+```
+
+说明：
+
+- `FEISHU_APP_ID` / `FEISHU_APP_SECRET`：飞书应用的 App ID 和 App Secret，必须配置。
+- `FEISHU_CARD_ENABLED=true`：优先使用飞书 Card 2.0 回复；如果卡片发送失败，会自动回退为 Markdown。
+- `FEISHU_GROUP_REQUIRE_MENTION=true`：群聊中只有明确 @CatData 时才回复，避免机器人在群里误触发。
+- `FEISHU_RAW_EVENT_LOG=true`：仅用于排查收不到消息、@ 识别等问题，日常建议关闭。
+- 当前为长连接接入，不需要公网域名，也不需要配置 `https://域名/api/lark/events` 回调地址。
+
+可选：将运行日志写入飞书多维表格：
+
+```env
+FEISHU_LOG_ENABLED=true
+FEISHU_LOG_BASE_TOKEN=your_base_token
+FEISHU_LOG_TABLE_ID=your_table_id
+FEISHU_LOG_CLI=lark-cli
+FEISHU_LOG_IDENTITY=user
+```
+
+日志写入依赖 `lark-cli` 用户授权，至少需要 `base:record:create` scope。授权后，机器人会把时间、用户、对话类型、问题、意图、回复摘要、SQL、执行状态、耗时和错误信息写入 Base。
+
+### 8.5 飞书卡片展示策略
+
+CatData 的飞书回复使用 Card 2.0，并针对经营数据场景做了轻量展示：
+
+- TOP/排行类结果：优先用绿色横向条形图展示，长门店名在图表下方以紧凑明细保留。
+- SQL：放入 `SQL` 折叠面板，默认收起，并按 `SELECT / FROM / JOIN / WHERE / GROUP BY / ORDER BY / LIMIT` 等关键字格式化换行。
+- 闲聊或非问数问题：返回固定边界话术，说明 CatData 的定位和可支持的问题范围。
+- 卡片发送失败时：自动回退为 Markdown，保证用户仍能收到答案。
 
 ---
 
@@ -566,6 +625,9 @@ pytest tests/test_api.py tests/test_execution_layer.py tests/test_feedback_loop.
 
 # LLM SQL 专项测试
 pytest tests/test_llm_sql.py -v
+
+# 飞书 Card 2.0 展示结构测试
+pytest tests/test_feishu_cards.py -q
 ```
 
 ### 12.2 黄金评测集
@@ -718,6 +780,8 @@ Pydantic
 ChromaDB
 DashScope / 阿里云百炼 Qwen
 PyODPS / MaxCompute
+Feishu / Lark Card 2.0
+lark-channel-sdk
 BM25
 RRF
 Rerank

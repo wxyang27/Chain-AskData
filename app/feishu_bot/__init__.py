@@ -1,0 +1,2 @@
+"""Feishu CatData bot integration."""
+
