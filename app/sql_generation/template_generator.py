@@ -1,3 +1,5 @@
+import re
+
 from app.business.item_progress import (
     ITEM_INCOME_PROGRESS_TEMPLATE,
     extract_item_name,
@@ -324,7 +326,8 @@ class SqlGenerator:
             template_id,
             SQL_TEMPLATES["store_income_top10_30d"],
         )
-        return self._apply_time_overrides(sql, query_plan)
+        sql = self._apply_time_overrides(sql, query_plan)
+        return self._apply_question_overrides(sql, query_plan)
 
     def _specialized_template_id(self, query_plan: QueryPlan) -> str:
         question = query_plan.original_question
@@ -389,6 +392,135 @@ class SqlGenerator:
         for old, new in replacements.items():
             sql = sql.replace(old, new)
         return sql
+
+    def _apply_question_overrides(self, sql: str, query_plan: QueryPlan) -> str:
+        question = query_plan.original_question
+        sql = self._apply_city_filter(sql, question)
+        sql = self._apply_item_filter(sql, question)
+        sql = self._apply_channel_filter(sql, question)
+        sql = self._apply_top_n(sql, question)
+        return sql
+
+    def _apply_city_filter(self, sql: str, question: str) -> str:
+        city = self._named_city(question)
+        if not city:
+            return sql
+        if "city_name LIKE" in sql:
+            return re.sub(
+                r"city_name LIKE '%[^']+%'",
+                f"city_name LIKE '%{city}%'",
+                sql,
+                count=1,
+            )
+        if "dim_qy_tenant_info_all_d" not in sql or "GROUP BY" not in sql:
+            return sql
+        alias = "b." if " b\nON" in sql or " b\r\nON" in sql else ""
+        return sql.replace(
+            "GROUP BY",
+            f"AND     {alias}city_name LIKE '%{city}%'\nGROUP BY",
+            1,
+        )
+
+    def _apply_item_filter(self, sql: str, question: str) -> str:
+        item = self._named_item(question)
+        if not item:
+            return sql
+        if "standard_name REGEXP" in sql:
+            return re.sub(
+                r"standard_name REGEXP '[^']+'",
+                f"standard_name REGEXP '{item}'",
+                sql,
+                count=1,
+            )
+        if "GROUP BY" not in sql:
+            return sql
+        if (
+            "standard_name" not in sql
+            and "dm_opt_qy_user_execution_record_all_d" not in sql
+        ):
+            return sql
+        alias = "a." if "FROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d a" in sql else ""
+        return sql.replace(
+            "GROUP BY",
+            f"AND     {alias}standard_name REGEXP '{item}'\nGROUP BY",
+            1,
+        )
+
+    def _apply_channel_filter(self, sql: str, question: str) -> str:
+        channel = self._named_channel(question)
+        if not channel:
+            return sql
+        if "cx_first_channel = '" in sql:
+            return re.sub(
+                r"cx_first_channel = '[^']+'",
+                f"cx_first_channel = '{channel}'",
+                sql,
+                count=1,
+            )
+        if "cx_first_channel IN" in sql:
+            return re.sub(
+                r"cx_first_channel IN \([^)]+\)",
+                f"cx_first_channel = '{channel}'",
+                sql,
+                count=1,
+            )
+        if "GROUP BY" not in sql:
+            return sql
+        alias = "a." if "FROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d a" in sql else ""
+        return sql.replace(
+            "GROUP BY",
+            f"AND     {alias}cx_first_channel = '{channel}'\nGROUP BY",
+            1,
+        )
+
+    def _apply_top_n(self, sql: str, question: str) -> str:
+        top_n = self._top_n(question)
+        if top_n is None:
+            return sql
+        if re.search(r"\bLIMIT\s+\d+", sql, flags=re.IGNORECASE):
+            return re.sub(
+                r"\bLIMIT\s+\d+",
+                f"LIMIT {top_n}",
+                sql,
+                count=1,
+                flags=re.IGNORECASE,
+            )
+        if "ORDER BY" in sql:
+            return sql.rstrip().rstrip(";") + f"\nLIMIT {top_n};"
+        return sql
+
+    def _named_city(self, question: str) -> str:
+        for city in (
+            "北京", "上海", "广州", "深圳", "武汉", "杭州", "成都", "重庆",
+            "天津", "南京", "苏州", "西安", "郑州", "长沙", "青岛", "宁波",
+            "合肥", "佛山", "东莞",
+        ):
+            if city in question:
+                return city
+        return ""
+
+    def _named_item(self, question: str) -> str:
+        for item in ("奇迹胶原", "奇迹童颜", "BBL HERO", "新一代热玛吉", "热玛吉"):
+            if item.upper() in question.upper():
+                return item
+        return ""
+
+    def _named_channel(self, question: str) -> str:
+        for channel in ("私域", "公域", "老带新"):
+            if channel in question and not all(
+                term in question for term in ("私域", "公域", "老带新")
+            ):
+                return channel
+        return ""
+
+    def _top_n(self, question: str) -> int | None:
+        match = re.search(r"(?i)top\s*(\d+)", question)
+        if match:
+            return int(match.group(1))
+        match = re.search(r"前\s*(\d+)", question)
+        if match:
+            return int(match.group(1))
+        return None
 
     def _is_this_month_mtd(self, query_plan: QueryPlan) -> bool:
         if "本月MTD" in query_plan.time_range:

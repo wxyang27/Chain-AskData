@@ -22,6 +22,8 @@ class PipelineTrace:
     """End-to-end trace across all pipeline stages."""
 
     question: str
+    original_question: str = ""
+    resolved_question: str = ""
     stages: list[PipelineStageLog] = field(default_factory=list)
     final_sql_source: str = ""
     final_intent: str = ""
@@ -33,6 +35,8 @@ class PipelineTrace:
     def to_dict(self) -> dict[str, Any]:
         return {
             "question": self.question,
+            "original_question": self.original_question or self.question,
+            "resolved_question": self.resolved_question or self.question,
             "final_sql_source": self.final_sql_source,
             "final_intent": self.final_intent,
             "final_template_id": self.final_template_id,
@@ -78,3 +82,4 @@ class PipelineRunResult:
     execution_result: Any = None
     result_validation: Any = None
     repair_attempt: dict[str, Any] = field(default_factory=dict)
+    memory_resolution: Any = None

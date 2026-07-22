@@ -9,6 +9,7 @@ def _graph(query: str) -> SchemaGraph:
         tables=[
             {"table_name": "dm_opt_qy_user_execution_record_all_d"},
             {"table_name": "dm_opt_qy_order_info_all_d"},
+            {"table_name": "dim_qy_tenant_info_all_d"},
         ],
         fields=[
             {"table_name": "dm_opt_qy_user_execution_record_all_d", "field_name": "dp"},
@@ -23,6 +24,12 @@ def _graph(query: str) -> SchemaGraph:
             {"table_name": "dm_opt_qy_order_info_all_d", "field_name": "left_gmv"},
             {"table_name": "dm_opt_qy_order_info_all_d", "field_name": "left_num"},
             {"table_name": "dm_opt_qy_order_info_all_d", "field_name": "is_paydate_cash"},
+            {"table_name": "dm_opt_qy_user_execution_record_all_d", "field_name": "tenant_id"},
+            {"table_name": "dm_opt_qy_user_execution_record_all_d", "field_name": "standard_name"},
+            {"table_name": "dim_qy_tenant_info_all_d", "field_name": "tenant_id"},
+            {"table_name": "dim_qy_tenant_info_all_d", "field_name": "dp"},
+            {"table_name": "dim_qy_tenant_info_all_d", "field_name": "city_name"},
+            {"table_name": "dim_qy_tenant_info_all_d", "field_name": "sy_hospital_name"},
         ],
     )
 
@@ -180,3 +187,32 @@ AND is_valid = 1""",
     assert "新客核销人次占比" in result.sql
     assert "revenue_category = '大师团'" in result.sql
     assert "DATE_SUB(CURRENT_DATE(),7)" in result.sql
+
+
+def test_repairer_rewrites_named_city_and_item_exact_filters_to_regexp():
+    result = StaticSqlRepairer().repair(
+        sql="""SELECT b.sy_hospital_name, SUM(a.exe_income) AS execution_income
+FROM soyoung_dw.dm_opt_qy_user_execution_record_all_d a
+JOIN soyoung_dw.dim_qy_tenant_info_all_d b
+ON a.tenant_id = b.tenant_id
+WHERE a.dp = DATE_SUB(CURRENT_DATE(), 1)
+AND b.dp = DATE_SUB(CURRENT_DATE(), 1)
+AND a.is_valid = 1
+AND a.executed_date >= DATE_SUB(CURRENT_DATE(), 30)
+AND a.executed_date <= DATE_SUB(CURRENT_DATE(), 1)
+AND a.standard_name = '奇迹胶原'
+AND b.city_name = '杭州'
+GROUP BY b.sy_hospital_name
+ORDER BY execution_income DESC
+LIMIT 5""",
+        semantic_contract=SemanticContract(metrics=["execution_income"]),
+        schema_graph=_graph("最近30天杭州奇迹胶原核销收入 TOP5门店"),
+        errors=[
+            "city_filter_should_use_regexp_or_like:city_name",
+            "item_filter_should_use_regexp_or_like:standard_name",
+        ],
+    )
+
+    assert result.repaired is True
+    assert "b.city_name REGEXP '杭州'" in result.sql
+    assert "a.standard_name REGEXP '奇迹胶原'" in result.sql

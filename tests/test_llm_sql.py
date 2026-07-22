@@ -6,7 +6,7 @@ import pytest
 
 from app.sql_generation.llm_generator import LLMSqlGenerator, LLMSqlResult
 from app.sql.safety_gate import SqlSafetyGate, SqlSafetyResult
-from app.models.query import QueryPlanCoT
+from app.models.query import CoTSemantics, QueryPlanCoT, SemanticContract
 from app.schema_graph.graph import SchemaGraph
 
 
@@ -221,8 +221,8 @@ FROM soyoung_dw.dm_opt_qy_user_execution_record_all_d a
 LEFT JOIN soyoung_dw.dim_qy_tenant_info_all_d b
 ON a.tenant_id = b.tenant_id
 AND b.dp = DATE_SUB(CURRENT_DATE(), 1)
-WHERE a.standard_name = '奇迹胶原'
-AND b.city_name = '北京市'
+WHERE a.standard_name REGEXP '奇迹胶原'
+AND b.city_name REGEXP '北京'
 AND a.is_valid = 1
 AND a.executed_date >= DATE_SUB(CURRENT_DATE(), 30)
 AND a.executed_date <= DATE_SUB(CURRENT_DATE(), 1)
@@ -233,6 +233,28 @@ AND a.dp = DATE_SUB(CURRENT_DATE(), 1)"""
         assert result.passed is True
         assert result.errors == []
 
+    def test_rejects_named_city_query_with_exact_city_filter(self):
+        city_graph = replace(self.sg, query="最近30天杭州奇迹胶原核销收入 TOP5门店")
+        sql = """SELECT b.sy_hospital_name AS 门店, SUM(a.exe_income) AS 核销收入
+FROM soyoung_dw.dm_opt_qy_user_execution_record_all_d a
+LEFT JOIN soyoung_dw.dim_qy_tenant_info_all_d b
+ON a.tenant_id = b.tenant_id
+AND b.dp = DATE_SUB(CURRENT_DATE(), 1)
+WHERE a.standard_name REGEXP '奇迹胶原'
+AND b.city_name = '杭州'
+AND a.is_valid = 1
+AND a.executed_date >= DATE_SUB(CURRENT_DATE(), 30)
+AND a.executed_date <= DATE_SUB(CURRENT_DATE(), 1)
+AND a.dp = DATE_SUB(CURRENT_DATE(), 1)
+GROUP BY b.sy_hospital_name
+ORDER BY 核销收入 DESC
+LIMIT 5"""
+
+        result = self.gate.validate(sql, city_graph)
+
+        assert result.passed is False
+        assert "city_filter_should_use_regexp_or_like:city_name" in result.errors
+
     def test_rejects_this_month_as_last_30d(self):
         month_graph = replace(self.sg, query="本月北京地区奇迹胶原品项的核销收入")
         sql = """SELECT SUM(a.exe_income) AS 核销收入
@@ -240,8 +262,8 @@ FROM soyoung_dw.dm_opt_qy_user_execution_record_all_d a
 LEFT JOIN soyoung_dw.dim_qy_tenant_info_all_d b
 ON a.tenant_id = b.tenant_id
 AND b.dp = DATE_SUB(CURRENT_DATE(), 1)
-WHERE a.standard_name = '奇迹胶原'
-AND b.city_name = '北京市'
+WHERE a.standard_name REGEXP '奇迹胶原'
+AND b.city_name REGEXP '北京'
 AND a.is_valid = 1
 AND a.executed_date >= DATE_SUB(CURRENT_DATE(), 30)
 AND a.executed_date <= DATE_SUB(CURRENT_DATE(), 1)
@@ -259,8 +281,8 @@ FROM soyoung_dw.dm_opt_qy_user_execution_record_all_d a
 LEFT JOIN soyoung_dw.dim_qy_tenant_info_all_d b
 ON a.tenant_id = b.tenant_id
 AND b.dp = DATE_SUB(CURRENT_DATE(), 1)
-WHERE a.standard_name = '奇迹胶原'
-AND b.city_name = '北京市'
+WHERE a.standard_name REGEXP '奇迹胶原'
+AND b.city_name REGEXP '北京'
 AND a.is_valid = 1
 AND a.executed_date >= DATETRUNC(CURRENT_DATE(), 'MONTH')
 AND a.executed_date <= DATE_SUB(CURRENT_DATE(), 1)
@@ -330,7 +352,7 @@ AND t2.dp = DATE_SUB(CURRENT_DATE(), 1)
 AND t1.is_valid = 1
 AND t1.executed_date >= DATETRUNC(CURRENT_DATE(), 'MONTH')
 AND t1.executed_date <= DATE_SUB(CURRENT_DATE(), 1)
-AND t2.city_name = '北京市'"""
+AND t2.city_name REGEXP '北京'"""
 
         result = self.gate.validate(sql, item_graph)
 
@@ -347,8 +369,8 @@ AND t2.dp = DATE_SUB(CURRENT_DATE(), 1)
 AND t1.is_valid = 1
 AND t1.executed_date >= DATETRUNC(CURRENT_DATE(), 'MONTH')
 AND t1.executed_date <= DATE_SUB(CURRENT_DATE(), 1)
-AND t2.city_name = '北京市'
-AND t1.standard_name = '奇迹胶原'"""
+AND t2.city_name REGEXP '北京'
+AND t1.standard_name REGEXP '奇迹胶原'"""
 
         result = self.gate.validate(sql, item_graph)
 
@@ -450,6 +472,27 @@ AND executed_date <= DATE_SUB(CURRENT_DATE(), 1)"""
         assert result.passed is True
         assert result.errors == []
 
+    def test_rejects_top_n_limit_mismatch(self):
+        top_graph = replace(self.sg, query="最近30天北京奇迹胶原核销收入 TOP5门店")
+        sql = """SELECT b.sy_hospital_name AS 门店, SUM(a.exe_income) AS 核销收入
+FROM soyoung_dw.dm_opt_qy_user_execution_record_all_d a
+LEFT JOIN soyoung_dw.dim_qy_tenant_info_all_d b
+ON a.tenant_id = b.tenant_id
+AND b.dp = DATE_SUB(CURRENT_DATE(), 1)
+WHERE a.dp = DATE_SUB(CURRENT_DATE(), 1)
+AND a.is_valid = 1
+AND a.executed_date BETWEEN DATE_SUB(CURRENT_DATE(), 30) AND DATE_SUB(CURRENT_DATE(), 1)
+AND b.city_name LIKE '%北京%'
+AND a.standard_name REGEXP '奇迹胶原'
+GROUP BY b.sy_hospital_name
+ORDER BY 核销收入 DESC
+LIMIT 10"""
+
+        result = self.gate.validate(sql, top_graph)
+
+        assert result.passed is False
+        assert "top_n_semantics:limit_mismatch:expected_5_got_10" in result.errors
+
 
 # ---------------------------------------------------------------------------
 # LLMSqlGenerator tests
@@ -518,6 +561,38 @@ class TestLLMSqlGenerator:
         assert '"database"' not in user_prompt
         assert "processing_objects" in user_prompt
         assert "operation_instructions" in user_prompt
+
+    def test_sql_prompt_includes_resolved_question_and_hard_constraints(self):
+        client = FakeSqlClient(GOOD_SQL_PAYLOAD)
+        gen = LLMSqlGenerator(enabled=True, client=client)
+        cot_steps = _cot_steps()
+        cot_steps[0].query_semantics = CoTSemantics(
+            metrics=["execution_income"],
+            time_type="last_30d",
+            dimensions=["门店"],
+            filters=["city_name LIKE '%上海%'", "standard_name REGEXP '奇迹童颜'"],
+            top_n=5,
+        )
+
+        gen.generate(
+            cot_steps=cot_steps,
+            schema_graph=_execution_schema_graph(),
+            question="最近30天上海奇迹童颜核销收入 TOP5门店",
+            semantic_contract=SemanticContract(
+                metrics=["execution_income"],
+                dimensions=["sy_hospital_name"],
+                filters=["city_name LIKE '%上海%'", "standard_name REGEXP '奇迹童颜'"],
+                time_range="last_30d",
+            ),
+        )
+
+        user_prompt = client.calls[0]["messages"][1]["content"]
+        assert "# 补全后的用户问题" in user_prompt
+        assert "最近30天上海奇迹童颜核销收入 TOP5门店" in user_prompt
+        assert "# 必须落实的硬约束" in user_prompt
+        assert "- top_n: 5" in user_prompt
+        assert "city_name LIKE '%上海%'" in user_prompt
+        assert "standard_name REGEXP '奇迹童颜'" in user_prompt
 
     def test_handles_client_exception(self):
         client = FakeSqlClient(error=RuntimeError("qwen offline"))

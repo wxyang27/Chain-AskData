@@ -175,6 +175,7 @@ class SqlSafetyGate:
         # 8. ORDER BY must have LIMIT
         if "ORDER BY" in sql_upper and "LIMIT" not in sql_upper:
             errors.append("order_by_without_limit")
+        self._validate_top_n_semantics(sql, schema_graph, errors)
 
         # 9. Division without NULLIF guard
         div_pattern = re.compile(
@@ -370,6 +371,8 @@ class SqlSafetyGate:
         if city_roots:
             if not self._has_city_filter(sql):
                 errors.append("missing_city_filter:city_name")
+            elif not self._has_city_fuzzy_filter(sql):
+                errors.append("city_filter_should_use_regexp_or_like:city_name")
             elif not any(root in sql for root in city_roots):
                 errors.append("city_filter_value_mismatch:city_name")
 
@@ -384,6 +387,8 @@ class SqlSafetyGate:
         if item_roots:
             if not self._has_item_filter(sql):
                 errors.append("missing_item_filter:standard_name")
+            elif not self._has_item_fuzzy_filter(sql):
+                errors.append("item_filter_should_use_regexp_or_like:standard_name")
             elif not any(root in sql for root in item_roots):
                 errors.append("item_filter_value_mismatch:standard_name")
 
@@ -419,10 +424,28 @@ class SqlSafetyGate:
             )
         )
 
+    def _has_city_fuzzy_filter(self, sql: str) -> bool:
+        return bool(
+            re.search(
+                r"\b(?:\w+\.)?city_name\b\s*(?:LIKE\b|REGEXP\b|RLIKE\b)",
+                sql,
+                re.IGNORECASE,
+            )
+        )
+
     def _has_item_filter(self, sql: str) -> bool:
         return bool(
             re.search(
                 r"\b(?:\w+\.)?standard_name\b\s*(?:=|IN\b|LIKE\b|REGEXP\b|RLIKE\b)",
+                sql,
+                re.IGNORECASE,
+            )
+        )
+
+    def _has_item_fuzzy_filter(self, sql: str) -> bool:
+        return bool(
+            re.search(
+                r"\b(?:\w+\.)?standard_name\b\s*(?:LIKE\b|REGEXP\b|RLIKE\b)",
                 sql,
                 re.IGNORECASE,
             )
@@ -520,6 +543,36 @@ class SqlSafetyGate:
                 re.IGNORECASE,
             ):
                 errors.append("business_semantics:missing_private_channel_filter")
+
+    def _validate_top_n_semantics(
+        self,
+        sql: str,
+        schema_graph: SchemaGraph,
+        errors: list[str],
+    ) -> None:
+        top_n = self._query_top_n(schema_graph.query or "")
+        if top_n is None:
+            return
+
+        limit_match = re.search(r"\bLIMIT\s+(\d+)", sql, re.IGNORECASE)
+        if not limit_match:
+            errors.append(f"top_n_semantics:missing_limit:{top_n}")
+            return
+
+        actual_limit = int(limit_match.group(1))
+        if actual_limit != top_n:
+            errors.append(
+                f"top_n_semantics:limit_mismatch:expected_{top_n}_got_{actual_limit}"
+            )
+
+    def _query_top_n(self, query: str) -> int | None:
+        match = re.search(r"(?i)top\s*(\d+)", query)
+        if match:
+            return int(match.group(1))
+        match = re.search(r"前\s*(\d+)", query)
+        if match:
+            return int(match.group(1))
+        return None
 
     def _query_has_payment_metric(self, query: str) -> bool:
         return any(

@@ -47,4 +47,8 @@ def query(request: QueryRequest) -> QueryResponse:
     """自然语言取数接口，首版只生成 SQL 和口径说明。"""
 
     composer = AnswerComposer()
-    return composer.compose(request.question)
+    return composer.compose(
+        request.question,
+        session_id=request.session_id,
+        use_memory=request.use_memory,
+    )
