@@ -69,6 +69,14 @@ class StaticSqlRepairer:
         if fixed:
             fixes.append("add_channel_filter")
 
+        repaired_sql, fixed = self._repair_named_fuzzy_filters(
+            repaired_sql,
+            schema_graph,
+            errors,
+        )
+        if fixed:
+            fixes.append("rewrite_named_city_item_filters_to_regexp")
+
         repaired_sql, fixed = self._repair_zero_income_order_count(repaired_sql, semantic_contract)
         if fixed:
             fixes.append("fix_zero_income_order_count")
@@ -321,10 +329,67 @@ GROUP BY revenue_category"""
         )
         return repaired, repaired != sql
 
+    def _repair_named_fuzzy_filters(
+        self,
+        sql: str,
+        schema_graph: SchemaGraph,
+        errors: list[str],
+    ) -> tuple[str, bool]:
+        needs_repair = any(
+            error.startswith("city_filter_should_use_regexp_or_like")
+            or error.startswith("item_filter_should_use_regexp_or_like")
+            for error in errors
+        )
+        if not needs_repair:
+            return sql, False
+
+        repaired = sql
+        changed = False
+        city = self._named_city_root(schema_graph.query)
+        if city:
+            repaired, city_count = re.subn(
+                r"\b((?:\w+\.)?city_name)\s*=\s*'[^']+'",
+                rf"\1 REGEXP '{city}'",
+                repaired,
+                count=1,
+                flags=re.IGNORECASE,
+            )
+            changed = changed or bool(city_count)
+
+        item = self._named_item_root(schema_graph.query)
+        if item:
+            repaired, item_count = re.subn(
+                r"\b((?:\w+\.)?standard_name)\s*=\s*'[^']+'",
+                rf"\1 REGEXP '{item}'",
+                repaired,
+                count=1,
+                flags=re.IGNORECASE,
+            )
+            changed = changed or bool(item_count)
+
+        return repaired, changed
+
     def _alias_prefix_from_field(self, field: str) -> str:
         if "." not in field:
             return ""
         return field.split(".", 1)[0] + "."
+
+    def _named_city_root(self, query: str) -> str:
+        for city in (
+            "北京", "上海", "广州", "深圳", "武汉", "杭州", "成都", "重庆",
+            "天津", "南京", "苏州", "西安", "郑州", "长沙", "青岛", "宁波",
+            "合肥", "佛山", "东莞",
+        ):
+            if city in query:
+                return city
+        return ""
+
+    def _named_item_root(self, query: str) -> str:
+        upper_query = query.upper()
+        for item in ("奇迹胶原", "奇迹童颜", "BBL HERO", "新一代热玛吉", "热玛吉"):
+            if item.upper() in upper_query:
+                return item
+        return ""
 
     def _repair_business_date_range(
         self,

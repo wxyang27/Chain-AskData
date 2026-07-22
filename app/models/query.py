@@ -7,6 +7,8 @@ class QueryRequest(BaseModel):
     """自然语言取数请求。"""
 
     question: str = Field(..., min_length=1, description="用户自然语言问题")
+    session_id: str = Field("", description="会话 ID；传入后启用短期记忆")
+    use_memory: bool = Field(True, description="是否使用短期记忆补全追问")
 
 
 class MetricPlan(BaseModel):
@@ -199,6 +201,11 @@ class QueryResponse(BaseModel):
 
     project: str
     question_summary: str
+    original_question: str = ""
+    resolved_question: str = ""
+    session_id: str = ""
+    memory_used: bool = False
+    memory_resolution: dict[str, Any] = Field(default_factory=dict)
     query_plan: QueryPlan
     sql: str
     validation: ValidationResult

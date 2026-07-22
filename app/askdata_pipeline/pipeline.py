@@ -14,6 +14,9 @@ from app.execution.factory import create_sql_executor
 from app.execution.objects import SqlExecutionRequest, SqlExecutionResult
 from app.feedback.repair_policy import RepairPolicy
 from app.feedback.result_validator import ResultValidationResult, ResultValidator
+from app.memory.objects import ConversationState, MemoryResolution
+from app.memory.rewriter import QuestionRewriter
+from app.memory.store import InMemoryConversationStore, get_default_memory_store
 from app.cot_planning.intent_router import IntentRouter, IntentRouteResult
 from app.knowledge_indexer.retrieval_context import RetrievalContext
 from app.knowledge_indexer.service import KnowledgeSearchService
@@ -48,7 +51,11 @@ class AskDataPipeline:
     import-time coupling.
     """
 
-    def __init__(self):
+    def __init__(
+        self,
+        memory_store: InMemoryConversationStore | None = None,
+        question_rewriter: QuestionRewriter | None = None,
+    ):
         # --- services ---
         self.knowledge_search = KnowledgeSearchService()
         self.semantic_contract_builder = SemanticContractBuilder()
@@ -74,6 +81,8 @@ class AskDataPipeline:
         self.sql_repairer = StaticSqlRepairer()
         self.result_validator = ResultValidator()
         self.repair_policy = RepairPolicy()
+        self.memory_store = memory_store or get_default_memory_store()
+        self.question_rewriter = question_rewriter or QuestionRewriter()
 
         # --- SQL execution (disabled → mock/sqlite/maxcompute) ---
         self.executor = create_sql_executor()
@@ -82,18 +91,37 @@ class AskDataPipeline:
     # public entry point
     # ------------------------------------------------------------------
 
-    def run(self, question: str) -> PipelineRunResult:
-        trace = PipelineTrace(question=question)
+    def run(
+        self,
+        question: str,
+        *,
+        session_id: str = "",
+        use_memory: bool = True,
+    ) -> PipelineRunResult:
+        trace = PipelineTrace(
+            question=question,
+            original_question=question,
+            resolved_question=question,
+        )
+        memory_resolution = self._stage_memory_resolution(
+            question=question,
+            session_id=session_id,
+            use_memory=use_memory,
+            trace=trace,
+        )
+        working_question = memory_resolution.resolved_question
+        trace.question = working_question
+        trace.resolved_question = working_question
 
-        retrieval_context = self._stage_knowledge_retrieval(question, trace)
+        retrieval_context = self._stage_knowledge_retrieval(working_question, trace)
         semantic_contract = self._stage_semantic_contract(
-            question, retrieval_context, trace,
+            working_question, retrieval_context, trace,
         )
         schema_result, schema_graph = self._stage_schema_retrieval(
             retrieval_context, semantic_contract, trace,
         )
         route_result = self._stage_intent_route(
-            question, retrieval_context, semantic_contract, trace,
+            working_question, retrieval_context, semantic_contract, trace,
         )
 
         if route_result.intent != "nl2sql":
@@ -106,10 +134,11 @@ class AskDataPipeline:
                 schema_result=schema_result,
                 schema_graph=schema_graph,
                 trace=trace,
+                memory_resolution=memory_resolution,
             )
 
         query_plan = self._stage_query_plan(
-            question, retrieval_context, schema_graph, semantic_contract, trace,
+            working_question, retrieval_context, schema_graph, semantic_contract, trace,
         )
         template_sql = self._stage_template_sql(query_plan, schema_graph, trace)
         llm_sql, llm_sql_validation, llm_sql_detail = self._stage_llm_sql(
@@ -152,6 +181,14 @@ class AskDataPipeline:
             trace=trace,
         )
         validation = self.validator.validate(final_sql)
+        self._save_memory_state(
+            session_id=session_id,
+            original_question=question,
+            resolved_question=working_question,
+            query_plan=query_plan,
+            final_sql=final_sql,
+            use_memory=use_memory,
+        )
 
         trace.final_sql_source = sql_source
         trace.final_intent = route_result.intent
@@ -177,11 +214,52 @@ class AskDataPipeline:
             execution_result=execution_result,
             result_validation=result_validation,
             repair_attempt=repair_attempt,
+            memory_resolution=memory_resolution,
         )
 
     # ------------------------------------------------------------------
     # pipeline stages
     # ------------------------------------------------------------------
+
+    def _stage_memory_resolution(
+        self,
+        *,
+        question: str,
+        session_id: str,
+        use_memory: bool,
+        trace: PipelineTrace,
+    ) -> MemoryResolution:
+        t0 = _now_ms()
+        stage = PipelineStageLog(
+            name="memory_resolution",
+            inputs={
+                "session_id": session_id,
+                "use_memory": use_memory,
+                "question": question,
+            },
+        )
+        state_window = self.memory_store.get_window(session_id) if session_id else []
+        resolution = self.question_rewriter.resolve(
+            question,
+            state_window,
+            session_id=session_id,
+            enabled=use_memory,
+        )
+        stage.outputs = {
+            "used_memory": resolution.used_memory,
+            "is_follow_up": resolution.is_follow_up,
+            "resolved_question": resolution.resolved_question,
+            "reason": resolution.reason,
+            "memory_window_size": resolution.memory_window_size,
+            "selected_turn_id": resolution.selected_turn_id,
+            "has_previous_state": bool(state_window),
+        }
+        stage.summary = (
+            f"used={resolution.used_memory} follow_up={resolution.is_follow_up}"
+        )
+        stage.latency_ms = _now_ms() - t0
+        trace.add_stage(stage)
+        return resolution
 
     def _stage_knowledge_retrieval(
         self, question: str, trace: PipelineTrace,
@@ -389,6 +467,8 @@ class AskDataPipeline:
         result = self.llm_sql_generator.generate(
             cot_steps=query_plan.query_plan_cot,
             schema_graph=schema_graph,
+            question=query_plan.original_question,
+            semantic_contract=query_plan.semantic_contract,
         )
         validation = LlmSqlValidation()
         if result.generated:
@@ -726,6 +806,47 @@ class AskDataPipeline:
             if database:
                 return database
         return settings.odps_project_name or "soyoung_dw"
+
+    def _save_memory_state(
+        self,
+        *,
+        session_id: str,
+        original_question: str,
+        resolved_question: str,
+        query_plan: QueryPlan,
+        final_sql: str,
+        use_memory: bool,
+    ) -> None:
+        if not session_id or not use_memory or not query_plan:
+            return
+        state = ConversationState(
+            session_id=session_id,
+            last_question=original_question,
+            last_resolved_question=resolved_question,
+            time_range=query_plan.time_range,
+            metrics=[metric.canonical for metric in query_plan.metrics],
+            dimensions=[dimension.field for dimension in query_plan.dimensions],
+            filters=list(query_plan.filters),
+            top_n=self._extract_query_plan_top_n(query_plan, final_sql),
+            template_id=query_plan.template_id,
+            last_sql=final_sql,
+        )
+        self.memory_store.save(state)
+
+    def _extract_query_plan_top_n(
+        self,
+        query_plan: QueryPlan,
+        sql: str,
+    ) -> int | None:
+        for step in query_plan.query_plan_cot:
+            if step.query_semantics and step.query_semantics.top_n:
+                return step.query_semantics.top_n
+        import re
+
+        match = re.search(r"\bLIMIT\s+(\d+)", sql, re.IGNORECASE)
+        if match:
+            return int(match.group(1))
+        return None
 
     def _to_result_model(self, result: LLMSqlResult) -> LlmSqlResultModel:
         return LlmSqlResultModel(

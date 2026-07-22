@@ -27,8 +27,24 @@ class AnswerComposer:
         # Keep metric_registry reference for explain notes
         self.planner = self.pipeline.planner
 
-    def compose(self, question: str) -> QueryResponse:
-        result = self.pipeline.run(question)
+    def compose(
+        self,
+        question: str,
+        *,
+        session_id: str = "",
+        use_memory: bool = True,
+    ) -> QueryResponse:
+        result = self.pipeline.run(
+            question,
+            session_id=session_id,
+            use_memory=use_memory,
+        )
+        memory_resolution = result.memory_resolution
+        resolved_question = (
+            memory_resolution.resolved_question
+            if memory_resolution
+            else question
+        )
 
         # Non-nl2sql path (explain / reject)
         if result.intent_route and result.intent_route.intent != "nl2sql":
@@ -39,11 +55,23 @@ class AnswerComposer:
                 result.intent_route,
                 result.schema_result,
                 pipeline_trace=result.trace.to_dict() if result.trace else {},
+                session_id=session_id,
+                resolved_question=resolved_question,
+                memory_resolution=memory_resolution.to_dict() if memory_resolution else {},
             )
 
         return QueryResponse(
             project="Chain-AskData",
-            question_summary=f"你想查询：{question}",
+            question_summary=f"你想查询：{resolved_question}",
+            original_question=question,
+            resolved_question=resolved_question,
+            session_id=session_id,
+            memory_used=bool(memory_resolution and memory_resolution.used_memory),
+            memory_resolution=(
+                memory_resolution.to_dict()
+                if memory_resolution
+                else {}
+            ),
             query_plan=result.query_plan,
             sql=result.final_sql,
             validation=result.validation,
@@ -150,6 +178,9 @@ class AnswerComposer:
         route_result: IntentRouteResult,
         schema_result: dict,
         pipeline_trace: dict | None = None,
+        session_id: str = "",
+        resolved_question: str = "",
+        memory_resolution: dict | None = None,
     ) -> QueryResponse:
         notes = self._build_explain_notes(question, retrieval_context, route_result)
         validation = ValidationResult(
@@ -160,7 +191,12 @@ class AnswerComposer:
 
         return QueryResponse(
             project="Chain-AskData",
-            question_summary=f"你想了解：{question}",
+            question_summary=f"你想了解：{resolved_question or question}",
+            original_question=question,
+            resolved_question=resolved_question or question,
+            session_id=session_id,
+            memory_used=bool(memory_resolution and memory_resolution.get("used_memory")),
+            memory_resolution=memory_resolution or {},
             query_plan=QueryPlan(
                 intent=route_result.intent,
                 business_domain="连锁经管-口径与Schema解释",

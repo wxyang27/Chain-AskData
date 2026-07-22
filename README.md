@@ -8,7 +8,7 @@ Chain-AskData 是一个面向新氧连锁医美经营分析场景的 **Agentic T
 
 > 这不是一个“让大模型直接写 SQL”的工具，而是一条可观测、可执行、可回退的 Agentic Text2SQL Workflow。
 
-当前链路已经覆盖从业务问题理解、指标/字段召回、QueryPlanCoT、SQL 生成、安全门禁、MaxCompute 只读执行、结果校验到修复回退的闭环。LLM SQL 默认以受控方式参与：可以生成候选 SQL，但只有通过 Safety Gate、执行层和结果校验后才会被采纳；否则系统会继续使用规则修复或模板 SQL 兜底。飞书 CatData 机器人也已接入，支持私聊/群聊 @ 触发、Card 2.0 图表回复、SQL 折叠展示和运行日志写入飞书多维表格。
+当前链路已经覆盖从短期记忆追问补全、业务问题理解、指标/字段召回、QueryPlanCoT、SQL 生成、安全门禁、MaxCompute 只读执行、结果校验到修复回退的闭环。LLM SQL 默认以受控方式参与：可以生成候选 SQL，但只有通过 Safety Gate、执行层和结果校验后才会被采纳；否则系统会继续使用规则修复或模板 SQL 兜底。飞书 CatData 机器人也已接入，支持私聊/群聊 @ 触发、Card 2.0 图表回复、SQL 折叠展示和运行日志写入飞书多维表格。
 
 ---
 
@@ -38,6 +38,7 @@ Chain-AskData 是一个面向新氧连锁医美经营分析场景的 **Agentic T
 项目面向连锁经营分析中的自然语言取数需求，目标是把业务指标口径、数仓表结构、历史 SQL 经验和执行校验能力沉淀成一条稳定可复用的问数链路：
 
 - 让业务同事用自然语言描述问题，系统自动识别指标、维度、时间范围和过滤条件
+- 支持同一会话内的短追问补全，让“那上海呢”“top3”“本月呢”可以继承最近问题的指标和分析对象
 - 通过指标字典、schema 索引和样例 SQL 降低字段幻觉与口径混淆
 - 用 Keyword、BM25、Vector、RRF、Rerank 组合召回表、字段和指标证据
 - 用 Thinking / Coder 模型分工，把业务规划和 SQL 生成拆开治理
@@ -93,6 +94,7 @@ Chain-AskData 是一个面向新氧连锁医美经营分析场景的 **Agentic T
 - 支付发生类问题使用 `pay_date` 和 `is_paydate_cash`
 - 点名城市、品项、门店时必须保留对应字段和过滤条件
 - TOP 类问题必须包含 `ORDER BY + LIMIT`
+- 点名城市、品项等文本筛选时使用 `REGEXP` 或 `LIKE`，避免标准名称带后缀时精确等值无法命中
 - 禁止非 MaxCompute 语法函数
 
 ### 3.6 执行层闭环
@@ -136,20 +138,21 @@ maxcompute  通过 PyODPS 只读执行真实 MaxCompute SQL
 │                                                          │
 │  在线层（Online）                                        │
 │  User Question                                           │
-│    → Pipeline (13 observable stages)                     │
-│      1. knowledge_retrieval  (keyword + BM25 + vector + RRF + rerank) │
-│      2. semantic_contract    (业务语义归一)              │
-│      3. schema_retrieval     (SchemaGraph 构建)          │
-│      4. intent_route         (意图路由)                  │
-│      5. query_plan           (能力边界注入 + QueryPlanCoT 生成) │
-│      6. template_sql         (模板 SQL)                  │
-│      7. llm_sql              (Qwen SQL 生成 + 门禁)      │
-│      8. sql_selection        (受控切换)                  │
-│      9. sql_generation       (最终 SQL 归档)             │
-│     10. sql_safety_gate      (静态安全门禁)              │
-│     11. execution            (disabled/mock/sqlite/maxcompute) │
-│     12. result_validation    (结果形态校验)              │
-│     13. repair_attempt       (修复 / 模板回退)           │
+│    → Pipeline (14 observable stages)                     │
+│      1. memory_resolution   (短期记忆追问补全，可选)     │
+│      2. knowledge_retrieval (keyword + BM25 + vector + RRF + rerank) │
+│      3. semantic_contract   (业务语义归一)               │
+│      4. schema_retrieval    (SchemaGraph 构建)           │
+│      5. intent_route        (意图路由)                   │
+│      6. query_plan          (能力边界注入 + QueryPlanCoT 生成) │
+│      7. template_sql        (模板 SQL)                   │
+│      8. llm_sql             (Qwen SQL 生成 + 门禁)       │
+│      9. sql_selection       (受控切换)                   │
+│     10. sql_generation      (最终 SQL 归档)              │
+│     11. sql_safety_gate     (静态安全门禁)               │
+│     12. execution           (disabled/mock/sqlite/maxcompute) │
+│     13. result_validation   (结果形态校验)               │
+│     14. repair_attempt      (修复 / 模板回退)            │
 │    → QueryResponse (SQL + caliber + execution + trace)   │
 └─────────────────────────────────────────────────────────┘
 ```
@@ -159,6 +162,7 @@ maxcompute  通过 PyODPS 只读执行真实 MaxCompute SQL
 ```text
 API / Web
   -> AskDataPipeline
+  -> memory_resolution
   -> knowledge_retrieval
   -> semantic_contract
   -> schema_retrieval
@@ -227,6 +231,7 @@ RERANK_MODEL=qwen3-rerank
 ```text
 app/
   askdata_pipeline/     主编排层：串起 RAG、规划、SQL、执行、反馈，记录 Pipeline Trace
+  memory/               短期记忆层：保存最近 3 轮结构化状态，完成追问补全和回指选择
   cot_planning/         规划层：意图路由、语义契约、QueryPlan、QueryPlanCoT
   schema_indexing/      离线索引层：构建/加载 schema indexes，生成资产报告
   schema_retrieval/     在线检索层：召回字段/表/关系，组织 SchemaGraph 输入
@@ -325,7 +330,31 @@ python -m uvicorn app.main:app --host 127.0.0.1 --port 8001
 http://127.0.0.1:8000
 ```
 
-### 7.6 启动飞书 CatData 机器人
+### 7.6 终端调试短期记忆
+
+短期记忆使用进程内 dict 保存最近 3 轮结构化状态，形成轻量滑动窗口。传入同一个 `session_id` 后，可以支持换品项、换城市、换渠道、换排名和换时间等追问补全。
+
+默认情况下，短追问继承最近一轮；只有用户明确说“回到/还是/刚才第一个/北京那个”等回指表达时，才从窗口中选择更早的匹配轮次。
+
+```powershell
+python -m app.memory_cli --session local
+```
+
+示例：
+
+```text
+AskData> 最近30天北京奇迹胶原核销收入 TOP5门店
+AskData> 那上海呢
+AskData> top3
+AskData> 北京那个，换成奇迹童颜
+AskData> 本月
+```
+
+终端会输出原始问题、补全后的问题、是否使用记忆、窗口大小、继承轮次、template_id、sql_source 和最终 SQL。
+
+开启 `LLM_ENABLED=true` 后，补全后的用户问题和结构化硬约束会同步进入 LLM SQL prompt；Safety Gate 会继续检查城市、品项、渠道、本月时间窗和 TopN/LIMIT 是否被保留。城市和品项名称要求使用 `REGEXP` 或 `LIKE` 模糊匹配，避免 `city_name = '杭州'` 无法命中 `杭州市` 这类标准名称；只有通过门禁的 LLM SQL 才会被采纳。
+
+### 7.7 启动飞书 CatData 机器人
 
 当前飞书入口使用 **长连接模式**，不需要公网域名或回调 URL。配置好飞书应用的 App ID / App Secret 后，直接启动：
 
@@ -728,9 +757,10 @@ table_recall >= 85%
 短期：
 
 - 增加更多复杂组合问题到 golden eval
-- 强化 constraint-aware fallback，避免模板回退丢失用户约束
+- 将最近 3 轮短期记忆从终端调试入口逐步接入 Web/API 和飞书入口
+- 强化 LLM SQL 的 constraint-aware prompt、Safety Gate 和静态修复，持续提升可采纳率
 - 扩展 Result Validation 对诊断类问题、占比类问题、对比类问题的校验
-- 增强 SQL Prompt，使 Coder 模型稳定输出标准别名和保留 QueryPlan 约束
+- 丰富城市、品项、渠道、时间窗、TopN 等追问改写规则和回指识别样例
 
 中期：
 
@@ -738,12 +768,15 @@ table_recall >= 85%
 - 引入更多统计评估指标，如 Recall、Precision、MRR、Correctness
 - 将 MaxCompute 执行结果进一步接入解释层，支持结果摘要和异常诊断
 - 对 Weighted RRF、DashScope Embedding、DashScope Rerank 做 A/B 评估
+- 在 Capability Context 基础上扩展多数据源注册结构，为 `soyoung_analysis` 等受控数据源预留路由能力
+- 将真实问答日志、最终采用 SQL、修复轨迹和用户反馈沉淀为可复用评测集
 
 长期：
 
-- 支持多轮问数和上下文记忆
-- 支持更多数据源执行路由
-- 从当前 Agentic Workflow 演进为更完整的数据分析 Agent
+- 在最近 3 轮滑动窗口基础上补充摘要压缩、用户偏好和组织级指标记忆
+- 将 schema 检索、指标查询、SQL 校验、SQL 执行封装为标准化工具能力
+- 基于高质量问答与修复样例探索 SFT、偏好优化或小模型蒸馏
+- 从当前 Agentic Workflow 演进为可权限治理、可复盘、可持续学习的数据分析 Agent
 
 ---
 
@@ -758,9 +791,23 @@ table_recall >= 85%
 
 核心响应字段：
 
+请求示例：
+
+```json
+{
+  "question": "那上海呢",
+  "session_id": "local",
+  "use_memory": true
+}
+```
+
 ```json
 {
   "sql": "最终采用的 SQL",
+  "original_question": "用户原始问题",
+  "resolved_question": "短期记忆补全后的问题",
+  "session_id": "会话 ID",
+  "memory_used": true,
   "template_sql": "模板 SQL",
   "llm_sql": "LLM 生成 SQL",
   "llm_sql_adopted": true,
@@ -780,6 +827,9 @@ table_recall >= 85%
 
 ```text
 sql              最终采用 SQL，可能来自 template、LLM 或 fallback
+original_question 用户原始问题
+resolved_question  进入 Pipeline 的实际问题；无追问时等于原始问题
+memory_used        是否使用短期记忆完成追问补全
 template_sql     模板 SQL
 llm_sql          LLM 影子 SQL，用于对比和门禁评估
 llm_sql_adopted  LLM SQL 是否被最终采用

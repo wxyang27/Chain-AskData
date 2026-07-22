@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from app.llm.local_client import LocalLLMClient
-from app.models.query import QueryPlanCoT
+from app.models.query import QueryPlanCoT, SemanticContract
 from app.schema_graph.graph import SchemaGraph
 
 
@@ -48,13 +48,14 @@ MaxCompute 语法约束（严格禁止以下语法）：
 SQL_GENERATION_SYSTEM_PROMPT += """
 
 Additional business semantic rules:
-- If the question names a city such as Beijing, Shanghai, Wuhan, Hangzhou, or uses a city/region condition, join dim_qy_tenant_info_all_d through tenant_id and filter dim_qy_tenant_info_all_d.city_name. Do not ignore city filters.
+- If the question names a city such as 北京、上海、武汉、杭州, join dim_qy_tenant_info_all_d through tenant_id and filter dim_qy_tenant_info_all_d.city_name with REGEXP or LIKE, for example city_name REGEXP '杭州'. Do not use city_name = '杭州' because stored values may be '杭州市'.
 - city_name and area_name live on dim_qy_tenant_info_all_d for execution/order fact-table analysis unless SchemaGraph gives a more specific trusted table.
 - standard_name is an item/product dimension. Never alias standard_name as store; store display should use sy_hospital_name.
-- If the question names an item such as 奇迹胶原, BBL HERO, 奇迹童颜, or 热玛吉, filter by standard_name. Do not ignore named item filters.
+- If the question names an item such as 奇迹胶原, BBL HERO, 奇迹童颜, or 热玛吉, filter by standard_name with REGEXP or LIKE, for example standard_name REGEXP '奇迹童颜'. Do not use exact equality for named item filters.
 - If the question explicitly compares 私域/公域/老带新, add cx_first_channel IN ('私域','公域','老带新') instead of grouping all channels.
 - Business date windows for executed_date/pay_date must end at DATE_SUB(CURRENT_DATE(), 1). Never use executed_date <= CURRENT_DATE() or pay_date <= CURRENT_DATE().
 - For 本月 / this_month_mtd, business date windows must start at DATETRUNC(CURRENT_DATE(), 'MONTH') and end at DATE_SUB(CURRENT_DATE(), 1). Never translate 本月 as the last 30 days.
+- Short follow-ups that mention only a city/item/channel/time/TopN are already resolved into a complete question. Treat those values as hard filters, not optional grouping dimensions.
 """
 
 
@@ -90,6 +91,8 @@ class LLMSqlGenerator:
         *,
         cot_steps: list[QueryPlanCoT],
         schema_graph: SchemaGraph | None,
+        question: str = "",
+        semantic_contract: SemanticContract | None = None,
     ) -> LLMSqlResult:
         if not self.enabled:
             return LLMSqlResult(error="llm_disabled")
@@ -98,7 +101,12 @@ class LLMSqlGenerator:
         if not schema_graph:
             return LLMSqlResult(error="schema_graph_missing")
 
-        messages = self._build_messages(cot_steps, schema_graph)
+        messages = self._build_messages(
+            cot_steps,
+            schema_graph,
+            question=question or schema_graph.query,
+            semantic_contract=semantic_contract,
+        )
 
         try:
             payload = self.client.chat_json(
@@ -116,6 +124,9 @@ class LLMSqlGenerator:
         self,
         cot_steps: list[QueryPlanCoT],
         schema_graph: SchemaGraph,
+        *,
+        question: str = "",
+        semantic_contract: SemanticContract | None = None,
     ) -> list[dict[str, str]]:
         cot_text = json.dumps(
             [
@@ -129,6 +140,11 @@ class LLMSqlGenerator:
             ],
             ensure_ascii=False,
             indent=2,
+        )
+        hard_constraints = self._hard_constraints_text(
+            question=question or schema_graph.query,
+            cot_steps=cot_steps,
+            semantic_contract=semantic_contract,
         )
 
         user_prompt = f"""请生成 MaxCompute SQL。
@@ -144,6 +160,12 @@ class LLMSqlGenerator:
 # QueryPlanCoT
 {cot_text}
 
+# 补全后的用户问题
+{question or schema_graph.query}
+
+# 必须落实的硬约束
+{hard_constraints}
+
 # SchemaGraph
 {schema_graph.schema_graph_text}
 """
@@ -152,6 +174,43 @@ class LLMSqlGenerator:
             {"role": "system", "content": SQL_GENERATION_SYSTEM_PROMPT},
             {"role": "user", "content": user_prompt},
         ]
+
+    def _hard_constraints_text(
+        self,
+        *,
+        question: str,
+        cot_steps: list[QueryPlanCoT],
+        semantic_contract: SemanticContract | None,
+    ) -> str:
+        constraints: list[str] = []
+        if question:
+            constraints.append(f"- resolved_question: {question}")
+        if semantic_contract:
+            if semantic_contract.time_range:
+                constraints.append(f"- time_range: {semantic_contract.time_range}")
+            if semantic_contract.metrics:
+                constraints.append(f"- metrics: {semantic_contract.metrics}")
+            if semantic_contract.dimensions:
+                constraints.append(f"- dimensions: {semantic_contract.dimensions}")
+            if semantic_contract.filters:
+                constraints.append(f"- filters: {semantic_contract.filters}")
+        if cot_steps:
+            semantics = cot_steps[0].query_semantics
+            if semantics:
+                if semantics.time_type:
+                    constraints.append(f"- cot_time_type: {semantics.time_type}")
+                if semantics.metrics:
+                    constraints.append(f"- cot_metrics: {semantics.metrics}")
+                if semantics.dimensions:
+                    constraints.append(f"- cot_dimensions: {semantics.dimensions}")
+                if semantics.filters:
+                    constraints.append(f"- cot_filters: {semantics.filters}")
+                if semantics.top_n is not None:
+                    constraints.append(f"- top_n: {semantics.top_n}")
+        constraints.append(
+            "- 如果问题点名城市/品项/渠道/时间/TopN，SQL 必须保留对应 WHERE 条件和 LIMIT，不得改写或省略；城市和品项必须使用 REGEXP 或 LIKE 模糊匹配，不得使用等号精确匹配。"
+        )
+        return "\n".join(constraints)
 
     def _parse_result(self, payload: dict[str, Any]) -> LLMSqlResult:
         sql = str(payload.get("sql") or "").strip()
