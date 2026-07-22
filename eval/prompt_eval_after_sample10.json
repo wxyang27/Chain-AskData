@@ -1,0 +1,127 @@
+{
+  "summary": {
+    "label": "after_prompt_change",
+    "total": 10,
+    "llm_generated": 10,
+    "llm_adopted": 8,
+    "llm_gate_passed": 8,
+    "adoption_rate": 80.0,
+    "gate_pass_rate": 80.0
+  },
+  "results": [
+    {
+      "id": "P0V1_001",
+      "question": "昨天整体核销收入、核销GMV、核销人次、核销人数、核销客单价分别是多少？",
+      "sql_source": "llm",
+      "llm_generated": true,
+      "llm_adopted": true,
+      "llm_gate_passed": true,
+      "llm_errors": [],
+      "template_id": "execution_summary_yesterday",
+      "final_intent": "nl2sql"
+    },
+    {
+      "id": "P0V1_002",
+      "question": "2026年7月截至昨日，整体核销收入、核销人次、核销客单价分别是多少？",
+      "sql_source": "llm",
+      "llm_generated": true,
+      "llm_adopted": true,
+      "llm_gate_passed": true,
+      "llm_errors": [],
+      "template_id": "execution_summary_yesterday",
+      "final_intent": "nl2sql"
+    },
+    {
+      "id": "P0V1_003",
+      "question": "2026年7月截至昨日，按天统计核销收入、核销人次、核销客单价。",
+      "sql_source": "template",
+      "llm_generated": true,
+      "llm_adopted": false,
+      "llm_gate_passed": false,
+      "llm_errors": [
+        "order_by_without_limit"
+      ],
+      "template_id": "execution_summary_yesterday",
+      "final_intent": "nl2sql"
+    },
+    {
+      "id": "P0V1_004",
+      "question": "2026年7月截至昨日，核销收入较6月同期的差额和变化率分别是多少？",
+      "sql_source": "llm",
+      "llm_generated": true,
+      "llm_adopted": true,
+      "llm_gate_passed": true,
+      "llm_errors": [],
+      "template_id": "store_income_top10_30d",
+      "final_intent": "nl2sql"
+    },
+    {
+      "id": "P0V1_005",
+      "question": "2026年7月截至昨日，核销收入TOP10门店及其收入占比是多少？",
+      "sql_source": "template",
+      "llm_generated": true,
+      "llm_adopted": false,
+      "llm_gate_passed": false,
+      "llm_errors": [
+        "division_without_nullif:0 / SUM"
+      ],
+      "template_id": "store_income_top10_30d",
+      "final_intent": "nl2sql"
+    },
+    {
+      "id": "P0V1_006",
+      "question": "2026年7月截至昨日，新客和老客核销收入、核销人次、核销客单价分别是多少？",
+      "sql_source": "llm",
+      "llm_generated": true,
+      "llm_adopted": true,
+      "llm_gate_passed": true,
+      "llm_errors": [],
+      "template_id": "new_old_customer_execution_30d",
+      "final_intent": "nl2sql"
+    },
+    {
+      "id": "P0V1_007",
+      "question": "最近30天各城市核销收入TOP10是哪些？",
+      "sql_source": "llm",
+      "llm_generated": true,
+      "llm_adopted": true,
+      "llm_gate_passed": true,
+      "llm_errors": [],
+      "template_id": "store_income_top10_30d",
+      "final_intent": "nl2sql"
+    },
+    {
+      "id": "P0V1_008",
+      "question": "2026年7月北京市核销收入、核销人次、核销客单价分别是多少？",
+      "sql_source": "llm",
+      "llm_generated": true,
+      "llm_adopted": true,
+      "llm_gate_passed": true,
+      "llm_errors": [],
+      "template_id": "store_income_top10_30d",
+      "final_intent": "nl2sql"
+    },
+    {
+      "id": "P0V1_009",
+      "question": "2026年7月北京市核销收入较6月同期的差额和变化率分别是多少？",
+      "sql_source": "llm",
+      "llm_generated": true,
+      "llm_adopted": true,
+      "llm_gate_passed": true,
+      "llm_errors": [],
+      "template_id": "store_income_top10_30d",
+      "final_intent": "nl2sql"
+    },
+    {
+      "id": "P0V1_010",
+      "question": "2026年7月北京保利店核销收入、核销人次、核销客单价分别是多少？",
+      "sql_source": "llm",
+      "llm_generated": true,
+      "llm_adopted": true,
+      "llm_gate_passed": true,
+      "llm_errors": [],
+      "template_id": "store_income_top10_30d",
+      "final_intent": "nl2sql"
+    }
+  ]
+}

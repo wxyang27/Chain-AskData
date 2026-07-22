@@ -55,6 +55,17 @@ class MaxComputeSqlExecutor(SqlExecutor):
         start = perf_counter()
         sql = self._normalize_sql(request.sql)
 
+        if request.database and request.database != self.project:
+            return self._failed(
+                request,
+                sql,
+                (
+                    "maxcompute_database_not_registered: "
+                    f"{request.database} is not registered for this executor"
+                ),
+                start,
+            )
+
         if not self._has_credentials():
             return self._failed(
                 request,
@@ -96,6 +107,7 @@ class MaxComputeSqlExecutor(SqlExecutor):
                 enabled=True,
                 mode=self.mode,
                 status="success",
+                database=request.database,
                 sql=sql,
                 columns=columns,
                 sample_rows=rows,
@@ -175,6 +187,7 @@ class MaxComputeSqlExecutor(SqlExecutor):
             enabled=True,
             mode=self.mode,
             status="failed",
+            database=request.database,
             sql=sql or request.sql,
             error=error,
             execution_ms=self._elapsed_ms(start),

@@ -22,6 +22,7 @@ class DisabledSqlExecutor(SqlExecutor):
             enabled=False,
             mode=self.mode,
             status="skipped",
+            database=request.database,
             sql=request.sql,
             error="execution_disabled",
             dry_run=True,

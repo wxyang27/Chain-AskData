@@ -3,6 +3,10 @@ from dataclasses import dataclass, field
 from time import perf_counter
 from typing import Any
 
+from app.execution.capabilities import (
+    CapabilityContext,
+    create_default_capability_context,
+)
 from app.llm.local_client import LocalLLMClient
 from app.llm.prompts import build_query_plan_cot_messages
 from app.cot_planning.query_plan_cot_validator import QueryPlanCoTValidator
@@ -41,13 +45,17 @@ class LLMQueryPlanCoTGenerator:
         timeout_seconds: int = 30,
         client: LocalLLMClient | None = None,
         validator: QueryPlanCoTValidator | None = None,
+        capability_context: CapabilityContext | None = None,
         max_repairs: int = MAX_REPAIR_ATTEMPTS,
     ):
         self.enabled = enabled
         self.model = model
         self.timeout_seconds = timeout_seconds
         self.client = client or LocalLLMClient()
-        self.validator = validator or QueryPlanCoTValidator()
+        self.capability_context = capability_context or create_default_capability_context()
+        self.validator = validator or QueryPlanCoTValidator(
+            allowed_databases=self.capability_context.allowed_database_names()
+        )
         self.max_repairs = max_repairs
 
     def generate(
@@ -78,6 +86,7 @@ class LLMQueryPlanCoTGenerator:
         base_messages = build_query_plan_cot_messages(
             question=question,
             schema_graph_text=schema_graph.schema_graph_text,
+            capability_context_text=self.capability_context.to_prompt_context(),
         )
 
         # --- first attempt ---
@@ -194,7 +203,10 @@ class LLMQueryPlanCoTGenerator:
             steps.append(
                 QueryPlanCoT(
                     step=int(raw_step.get("step") or index),
-                    database=str(raw_step.get("database") or "soyoung_dw"),
+                    database=str(
+                        raw_step.get("database")
+                        or self.capability_context.default_database_name()
+                    ),
                     processing_objects=self._as_string_list(
                         raw_step.get("processing_objects")
                     ),

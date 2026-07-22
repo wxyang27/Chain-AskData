@@ -17,3 +17,7 @@ dependencies = [
 
 [tool.pyright]
 include = ["app", "tests"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

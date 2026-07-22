@@ -127,7 +127,10 @@ class AskDataPipeline:
         safety_result = self._stage_sql_safety_gate(final_sql, schema_graph, trace)
 
         # Stage 9: Execute SQL (disabled by default, mock/sqlite for demos)
-        execution_result = self._stage_sql_execution(final_sql, trace)
+        execution_database = self._query_plan_database(query_plan)
+        execution_result = self._stage_sql_execution(
+            final_sql, trace, database=execution_database,
+        )
         result_validation = self._stage_result_validation(
             final_sql, query_plan, execution_result, trace,
         )
@@ -507,18 +510,20 @@ class AskDataPipeline:
         return result
 
     def _stage_sql_execution(
-        self, sql: str, trace: PipelineTrace,
+        self, sql: str, trace: PipelineTrace, *, database: str = "soyoung_dw",
     ) -> SqlExecutionResult:
         t0 = _now_ms()
         stage = PipelineStageLog(
             name="execution",
             inputs={
+                "database": database,
                 "mode": self.executor.mode,
                 "enabled": self.executor.enabled,
             },
         )
         request = SqlExecutionRequest(
             sql=sql,
+            database=database,
             mode=self.executor.mode,
             timeout_seconds=settings.execution_timeout_seconds,
             max_rows=settings.execution_max_rows,
@@ -650,7 +655,10 @@ class AskDataPipeline:
                 "errors": repaired_safety.errors,
             }
             if repaired_safety.passed:
-                repaired_execution = self._execute_sql(repair.sql)
+                repaired_execution = self._execute_sql(
+                    repair.sql,
+                    database=self._query_plan_database(query_plan),
+                )
                 repaired_validation = self.result_validator.validate(
                     sql=repair.sql,
                     query_plan=query_plan,
@@ -668,7 +676,10 @@ class AskDataPipeline:
                     return repair.sql, repaired_source, repaired_execution, repaired_validation, payload
 
         if sql_source != "template" and template_sql:
-            fallback_execution = self._execute_sql(template_sql)
+            fallback_execution = self._execute_sql(
+                template_sql,
+                database=self._query_plan_database(query_plan),
+            )
             fallback_validation = self.result_validator.validate(
                 sql=template_sql,
                 query_plan=query_plan,
@@ -693,9 +704,12 @@ class AskDataPipeline:
         trace.add_stage(stage)
         return final_sql, sql_source, execution_result, result_validation, payload
 
-    def _execute_sql(self, sql: str) -> SqlExecutionResult:
+    def _execute_sql(
+        self, sql: str, *, database: str = "soyoung_dw",
+    ) -> SqlExecutionResult:
         request = SqlExecutionRequest(
             sql=sql,
+            database=database,
             mode=self.executor.mode,
             timeout_seconds=settings.execution_timeout_seconds,
             max_rows=settings.execution_max_rows,
@@ -705,6 +719,13 @@ class AskDataPipeline:
     # ------------------------------------------------------------------
     # helpers
     # ------------------------------------------------------------------
+
+    def _query_plan_database(self, query_plan: QueryPlan) -> str:
+        if query_plan.query_plan_cot:
+            database = query_plan.query_plan_cot[0].database.strip()
+            if database:
+                return database
+        return settings.odps_project_name or "soyoung_dw"
 
     def _to_result_model(self, result: LLMSqlResult) -> LlmSqlResultModel:
         return LlmSqlResultModel(
