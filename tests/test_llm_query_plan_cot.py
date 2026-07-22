@@ -1,5 +1,10 @@
 ﻿from app.cot_planning.query_plan_cot_generator import LLMQueryPlanCoTGenerator
 from app.llm.prompts import build_query_plan_cot_messages
+from app.execution.capabilities import (
+    CapabilityContext,
+    DatabaseCapability,
+    ToolCapability,
+)
 from app.models.query import QueryPlanCoT
 from app.cot_planning.planner import QueryPlanner
 from app.schema_graph.graph import SchemaGraph
@@ -29,6 +34,22 @@ def test_query_plan_cot_prompt_is_readable_chinese_and_schema_grounded():
     messages = build_query_plan_cot_messages(
         question="查询核销收入",
         schema_graph_text="Table: soyoung_dw.execution_record",
+        capability_context_text=CapabilityContext(
+            databases=[
+                DatabaseCapability(
+                    name="soyoung_dw",
+                    engine="maxcompute",
+                    description="默认数仓",
+                )
+            ],
+            tools=[
+                ToolCapability(
+                    name="sql_execution",
+                    description="只读执行",
+                    allowed_databases=["soyoung_dw"],
+                )
+            ],
+        ).to_prompt_context(),
     )
     prompt_text = "\n".join(message["content"] for message in messages)
 
@@ -36,6 +57,10 @@ def test_query_plan_cot_prompt_is_readable_chinese_and_schema_grounded():
     assert "不得编造" in prompt_text
     assert "查询核销收入" in prompt_text
     assert "soyoung_dw.execution_record" in prompt_text
+    assert "可用数据库与工具能力" in prompt_text
+    assert "Available Databases" in prompt_text
+    assert "sql_execution" in prompt_text
+    assert "do not invent database names" in prompt_text
 
 
 def test_llm_cot_generator_returns_disabled_result_without_calling_client():
@@ -149,6 +174,65 @@ def test_llm_cot_generator_rejects_objects_missing_from_schema_graph():
     assert result.steps == fallback
     assert result.validation_passed is False
     assert "unknown_field:invented_table.invented_field" in result.validation_errors
+
+
+def test_llm_cot_generator_rejects_database_not_exposed_by_capabilities():
+    fallback = [
+        QueryPlanCoT(
+            step=1,
+            database="soyoung_dw",
+            processing_objects=["execution_record.exe_income"],
+            operation_instructions=["先筛选，再聚合，最后输出"],
+            output_target="核销收入",
+        )
+    ]
+    client = FakeLLMClient(
+        {
+            "steps": [
+                {
+                    "step": 1,
+                    "database": "soyoung_analysis",
+                    "processing_objects": ["execution_record.exe_income"],
+                    "operation_instructions": ["先查询未暴露数据库"],
+                    "output_target": "核销收入",
+                }
+            ]
+        }
+    )
+    capability_context = CapabilityContext(
+        databases=[DatabaseCapability(name="soyoung_dw", engine="maxcompute")],
+        tools=[
+            ToolCapability(
+                name="sql_execution",
+                description="只读执行",
+                allowed_databases=["soyoung_dw"],
+            )
+        ],
+    )
+    generator = LLMQueryPlanCoTGenerator(
+        enabled=True,
+        client=client,
+        capability_context=capability_context,
+    )
+
+    result = generator.generate(
+        question="查询核销收入",
+        schema_graph=SchemaGraph(
+            query="查询核销收入",
+            fields=[
+                {
+                    "table_name": "execution_record",
+                    "field_name": "exe_income",
+                }
+            ],
+            schema_graph_text="Table: soyoung_dw.execution_record\nField: exe_income",
+        ),
+        fallback_steps=fallback,
+    )
+
+    assert result.adopted is False
+    assert result.steps == fallback
+    assert "unsupported_database:soyoung_analysis" in result.validation_errors
 
 
 def test_query_planner_falls_back_to_rule_cot_when_llm_fails():

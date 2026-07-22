@@ -29,6 +29,7 @@ def test_mock_executor_returns_sample_rows():
     assert result.enabled is True
     assert result.mode == "mock"
     assert result.status == "success"
+    assert result.database == "soyoung_dw"
     assert result.dry_run is True
     assert result.columns == ["门店", "核销收入"]
     assert result.row_count == 2
@@ -65,6 +66,26 @@ def test_maxcompute_executor_without_credentials_fails_as_dry_run():
     assert result.status == "failed"
     assert result.dry_run is True
     assert "maxcompute_not_configured" in result.error
+
+
+def test_maxcompute_executor_rejects_unregistered_database_before_credentials():
+    executor = MaxComputeSqlExecutor(
+        access_id="",
+        secret_access_key="",
+        project="soyoung_dw",
+    )
+
+    result = executor.execute(
+        SqlExecutionRequest(
+            database="soyoung_analysis",
+            sql="SELECT 1",
+            max_rows=10,
+        )
+    )
+
+    assert result.status == "failed"
+    assert result.database == "soyoung_analysis"
+    assert "maxcompute_database_not_registered" in result.error
 
 
 def test_maxcompute_executor_rejects_write_sql_before_network():

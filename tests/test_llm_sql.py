@@ -506,6 +506,19 @@ class TestLLMSqlGenerator:
         assert "dm_opt_qy_user_execution_record_all_d" in str(result.used_tables)
         assert "昨日核销收入汇总" in result.explanation
 
+    def test_sql_prompt_keeps_database_as_execution_routing_metadata(self):
+        client = FakeSqlClient(GOOD_SQL_PAYLOAD)
+        gen = LLMSqlGenerator(enabled=True, client=client)
+
+        gen.generate(cot_steps=_cot_steps(), schema_graph=_execution_schema_graph())
+
+        system_prompt = client.calls[0]["messages"][0]["content"]
+        user_prompt = client.calls[0]["messages"][1]["content"]
+        assert "database 是执行路由元信息" in system_prompt
+        assert '"database"' not in user_prompt
+        assert "processing_objects" in user_prompt
+        assert "operation_instructions" in user_prompt
+
     def test_handles_client_exception(self):
         client = FakeSqlClient(error=RuntimeError("qwen offline"))
         gen = LLMSqlGenerator(enabled=True, client=client)

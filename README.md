@@ -6,23 +6,9 @@ Chain-AskData 是一个面向新氧连锁医美经营分析场景的 **Agentic T
 
 一句话概括：
 
-> 这不是一个“让大模型直接写 SQL”的 Demo，而是一条可观测、可执行、可回退的 Agentic Text2SQL Workflow。
+> 这不是一个“让大模型直接写 SQL”的工具，而是一条可观测、可执行、可回退的 Agentic Text2SQL Workflow。
 
----
-
-## 当前里程碑（2026-07-20）
-
-- P0 补充评测集已从早期低命中状态迭代到可用基线，最近一轮 P0 overall 达到 84%。
-- 主链路已支持 `template SQL + LLM SQL 影子模式 + SQL Safety Gate + Result Validation + Repair/Fallback`。
-- MaxCompute 执行层已接入，支持通过 PyODPS 只读执行真实 SQL。
-- 新增“任意品项本月核销收入时间进度达成率”参数化指标模板：
-  - `本月奇迹胶原核销收入时间进度达成率`
-  - `本月奇迹童颜核销收入时间进度达成率`
-  - `本月BBL HERO核销收入时间进度达成率`
-  - `本月新一代热玛吉核销收入时间进度达成率`
-- 该指标已完成从指标识别、QueryPlan、SchemaGraph 补证、template SQL、safety gate、前端展示到 MaxCompute 真实执行的闭环。
-- LLM SQL 目前默认作为影子模式：可以生成 SQL 供对比，但只有通过门禁才会被采用；否则最终采用 template SQL。
-- 飞书 CatData 机器人入口已接入：支持飞书长连接收发消息、私聊/群聊 @ 触发、Card 2.0 图表回复、SQL 折叠展示，以及运行日志写入飞书多维表格。
+当前链路已经覆盖从业务问题理解、指标/字段召回、QueryPlanCoT、SQL 生成、安全门禁、MaxCompute 只读执行、结果校验到修复回退的闭环。LLM SQL 默认以受控方式参与：可以生成候选 SQL，但只有通过 Safety Gate、执行层和结果校验后才会被采纳；否则系统会继续使用规则修复或模板 SQL 兜底。飞书 CatData 机器人也已接入，支持私聊/群聊 @ 触发、Card 2.0 图表回复、SQL 折叠展示和运行日志写入飞书多维表格。
 
 ---
 
@@ -49,18 +35,15 @@ Chain-AskData 是一个面向新氧连锁医美经营分析场景的 **Agentic T
 
 ## 2. 项目目标
 
-当前项目更偏向面试作品与技术验证，不追求生产环境全量准确率，重点是把完整链路打通并能自圆其说：
+项目面向连锁经营分析中的自然语言取数需求，目标是把业务指标口径、数仓表结构、历史 SQL 经验和执行校验能力沉淀成一条稳定可复用的问数链路：
 
-- 展示 RAG 在 Text2SQL 中如何用于 schema / metric / example 召回
-- 展示 Keyword、BM25、Vector、RRF、Rerank 的多路召回与融合排序
-- 展示 Thinking / Coder 模型分工
-- 展示模板 SQL、规则修复 SQL、LLM SQL 三种 SQL 来源
-- 展示 SQL 静态安全门禁、真实执行、结果校验、修复回退闭环
-- 展示 Pipeline Trace，让每一步可观测、可解释、可复盘
-
-最终希望在面试中能够清楚讲出：
-
-> 我如何把自然语言取数拆成 RAG 检索、规划、SQL 生成、安全校验、执行反馈和结果修复几个阶段，并在真实错误中逐步完善系统可靠性。
+- 让业务同事用自然语言描述问题，系统自动识别指标、维度、时间范围和过滤条件
+- 通过指标字典、schema 索引和样例 SQL 降低字段幻觉与口径混淆
+- 用 Keyword、BM25、Vector、RRF、Rerank 组合召回表、字段和指标证据
+- 用 Thinking / Coder 模型分工，把业务规划和 SQL 生成拆开治理
+- 同时保留模板 SQL、规则修复 SQL、LLM SQL 三种来源，兼顾稳定性和泛化能力
+- 通过 SQL Safety Gate、真实执行、结果校验、修复回退闭环提升返回结果可信度
+- 保留 Pipeline Trace，让每一步可观测、可解释、可复盘
 
 ---
 
@@ -89,11 +72,14 @@ Chain-AskData 是一个面向新氧连锁医美经营分析场景的 **Agentic T
   - 处理对象
   - 操作指令
   - 输出目标
+- 在生成前注入当前可用数据库和工具能力，约束模型只能在已暴露能力范围内规划
+- `processing_objects` 要覆盖指标字段、筛选字段、分组/输出字段、业务日期字段、分区字段、口径字段和必要 join key
+- `operation_instructions` 按筛选、关联、聚合/计算、排序/截断、输出的顺序描述执行计划
 
 ### 3.4 Thinking / Coder 模型分工
 
 - Thinking Model：负责业务理解、口径规划、QueryPlanCoT
-- Coder Model：负责根据 QueryPlan 和 SchemaGraph 生成 SQL
+- Coder Model：负责根据 QueryPlan 和 SchemaGraph 生成 SQL，不决定数据库连接或执行路由
 - Embedding Model：负责 schema / metric / example 向量召回
 - Rerank Model：负责候选字段、表、指标重排
 
@@ -115,10 +101,12 @@ Chain-AskData 是一个面向新氧连锁医美经营分析场景的 **Agentic T
 
 ```text
 disabled    默认不执行，适合稳定演示
-mock        返回模拟结果，适合离线 Demo
-sqlite      预留本地 demo DB 执行
+mock        返回模拟结果，适合离线调试
+sqlite      预留本地样例 DB 执行
 maxcompute  通过 PyODPS 只读执行真实 MaxCompute SQL
 ```
+
+执行请求携带 `database` 作为路由元信息，当前默认暴露 `soyoung_dw`。SQL 生成模型只生成 SQL，执行层根据已校验的 `database` 和执行模式选择对应 executor；如果请求的数据库未注册，执行层会拒绝执行。
 
 ### 3.7 Result Validation / Repair / Fallback
 
@@ -153,7 +141,7 @@ maxcompute  通过 PyODPS 只读执行真实 MaxCompute SQL
 │      2. semantic_contract    (业务语义归一)              │
 │      3. schema_retrieval     (SchemaGraph 构建)          │
 │      4. intent_route         (意图路由)                  │
-│      5. query_plan           (QueryPlanCoT 生成)         │
+│      5. query_plan           (能力边界注入 + QueryPlanCoT 生成) │
 │      6. template_sql         (模板 SQL)                  │
 │      7. llm_sql              (Qwen SQL 生成 + 门禁)      │
 │      8. sql_selection        (受控切换)                  │
@@ -175,7 +163,7 @@ API / Web
   -> semantic_contract
   -> schema_retrieval
   -> intent_route
-  -> query_plan
+  -> query_plan      # 含可用数据库与工具能力注入
   -> template_sql
   -> llm_sql
   -> sql_selection
@@ -228,9 +216,9 @@ RERANK_PROVIDER=dashscope
 RERANK_MODEL=qwen3-rerank
 ```
 
-面试讲法：
+设计说明：
 
-> 我把大模型能力拆成四层：Embedding 负责找 schema 证据，Rerank 负责候选重排，Thinking 模型负责业务规划和口径拆解，Coder 模型负责 SQL 生成。后面再接 Safety Gate、Execution 和 Result Validation，所以不是让大模型直接裸写 SQL，而是一个可观测、可回退的 Agentic Workflow。
+本项目把大模型能力拆成四层：Embedding 负责找 schema 证据，Rerank 负责候选重排，Thinking 模型负责业务规划和口径拆解，Coder 模型负责 SQL 生成。后续再接 Safety Gate、Execution 和 Result Validation，因此系统不是让大模型直接裸写 SQL，而是通过可观测、可回退的 Agentic Workflow 控制查询风险。
 
 ---
 
@@ -261,7 +249,7 @@ app/
   llm/                  LLM 底层：OpenAI-compatible/Qwen client 与 prompt 基础设施
 
 knowledge/
-  examples/             Demo Query 资产
+  examples/             示例 Query 资产
   metrics/              核心指标口径资产
   schema/               核心字段定义资产
   relations/            表关系资产
@@ -286,6 +274,18 @@ docs/                   原始知识文档与项目过程文档
 ```powershell
 pip install -r requirements.txt
 ```
+
+### 7.1.1 Windows 终端中文显示
+
+本项目文档和源码统一使用 UTF-8。若在 Windows PowerShell 中看到中文乱码，可先执行：
+
+```powershell
+chcp 65001
+$OutputEncoding = [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new()
+Get-Content -Raw -Encoding UTF8 README.md
+```
+
+测试入口已在 `pyproject.toml` 中配置 `pythonpath = ["."]`，通常可直接运行 `pytest`。
 
 ### 7.2 配置环境变量
 
@@ -473,6 +473,8 @@ CatData 的飞书回复使用 Card 2.0，并针对经营数据场景做了轻量
 | 规则/修复 SQL | SQL 大体正确但缺字段、日期函数、口径过滤、别名或约束 | 能保留细粒度条件并补齐工程规则 | 只能处理确定性修复 |
 | LLM SQL | 条件组合复杂、模板覆盖不住的问题 | 泛化强，适合临时组合查询 | 可能漏字段、漏分组、别名不标准 |
 
+SQL 生成模型只负责把已校验的 QueryPlanCoT 和 SchemaGraph 转成 MaxCompute SQL，不决定连接哪个数据库。`database` 是执行路由元信息，由规划阶段在能力边界内给出，并由执行层校验和消费。
+
 LLM SQL 采纳链路：
 
 ```text
@@ -509,9 +511,9 @@ LLM SQL
   result_validation.passed = true
 ```
 
-面试讲法：
+设计说明：
 
-> 我的 SQL 生成不是只靠模板，也不是盲信 LLM。标准问题用模板保证稳定，复杂组合问题用 LLM 提升泛化，中间用规则层做修复和口径约束，最后由 Safety Gate、真实执行和 Result Validation 决定是否采纳。
+SQL 生成不是只靠模板，也不是盲信 LLM。标准问题用模板保证稳定，复杂组合问题用 LLM 提升泛化，中间用规则层做修复和口径约束，最后由 Safety Gate、真实执行和 Result Validation 决定是否采纳。
 
 ---
 
@@ -560,9 +562,9 @@ metric_closure  -> 指标级补全字段，如 main_order_id/customer_id
 final_fields    -> 最终进入 SchemaGraph 的字段
 ```
 
-面试讲法：
+设计说明：
 
-> 我没有只用向量检索，因为 Text2SQL 对字段精确性要求很高。我的做法是让 keyword 负责确定性字段名和业务术语，BM25 负责词法召回，Embedding 负责语义召回，再用 RRF 融合并 rerank。最后用业务闭包补齐 `dp`、`is_valid` 这类不容易被语义召回但 SQL 必需的字段。
+Text2SQL 对字段精确性要求很高，因此系统没有只依赖向量检索。Keyword 负责确定性字段名和业务术语，BM25 负责词法召回，Embedding 负责语义召回，再用 RRF 融合并 rerank。最后用业务闭包补齐 `dp`、`is_valid` 这类不容易被语义召回但 SQL 必需的字段。
 
 ---
 
@@ -644,7 +646,23 @@ python eval/run_eval.py --api http://localhost:8000 --output eval/eval_result_la
 - Critical Rules 是否通过
 - 口径说明是否覆盖关键业务术语
 
-### 12.3 Schema Retrieval 评测
+### 12.3 LLM SQL 采纳评估
+
+LLM SQL 的评估重点不是“是否生成了 SQL”，而是候选 SQL 能否通过 Safety Gate 并被最终采纳。Prompt 调整时建议使用同一批 golden case 做前后对比，关注：
+
+- `generated`：LLM 是否成功返回 SQL
+- `gate_passed`：SQL 是否通过静态安全门禁
+- `llm_sql_adopted`：候选 SQL 是否被最终链路采用
+- `sql_source`：最终采用 `llm`、`template`、`template_fallback` 还是 `*_repaired`
+
+最近一次只调整 QueryPlanCoT 和 SQL 生成提示词后，在 P0 前 10 条样本上，LLM SQL 生成保持 10/10，采纳从 6/10 提升到 8/10。对应报告保存在：
+
+```text
+eval/prompt_eval_before_sample10.json
+eval/prompt_eval_after_sample10.json
+```
+
+### 12.4 Schema Retrieval 评测
 
 ```powershell
 PYTHONPATH=. python eval/run_schema_retrieval_eval.py
@@ -669,7 +687,7 @@ table_recall >= 85%
 
 ---
 
-## 13. Demo 问题
+## 13. 示例问题
 
 ```text
 最近30天北京奇迹胶原核销收入 TOP5门店
@@ -725,7 +743,7 @@ table_recall >= 85%
 
 - 支持多轮问数和上下文记忆
 - 支持更多数据源执行路由
-- 从 Demo 型 Agentic Workflow 演进为更完整的数据分析 Agent
+- 从当前 Agentic Workflow 演进为更完整的数据分析 Agent
 
 ---
 
@@ -735,7 +753,7 @@ table_recall >= 85%
 |---|---|---|
 | `/api/query` | POST | 自然语言问数，返回 QueryPlan、SQL、执行结果、校验结果、Pipeline Trace |
 | `/api/health` | GET | 健康检查 |
-| `/api/demo-queries` | GET | Demo 问题列表 |
+| `/api/demo-queries` | GET | 示例问题列表 |
 | `/api/knowledge/search` | GET | 知识库检索 |
 
 核心响应字段：
