@@ -391,6 +391,15 @@ class QueryPlanner:
         if semantic_contract and semantic_contract.template_id in self.cases_by_template:
             return self.cases_by_template[semantic_contract.template_id]
         if semantic_contract and semantic_contract.template_id in {
+            "execution_income_summary_30d",
+            "standard_item_income_share_top20_30d",
+            "payment_gmv_store_topn_30d",
+            "payment_gmv_summary_30d",
+            "area_execution_30d",
+            "area_payment_30d",
+        }:
+            return self._delta_template_case(question, semantic_contract.template_id)
+        if semantic_contract and semantic_contract.template_id in {
             ITEM_INCOME_PROGRESS_TEMPLATE,
             "miracle_collagen_income_progress_mtd",
         }:
@@ -452,6 +461,129 @@ class QueryPlanner:
 
         return self.cases_by_template["store_income_top10_30d"]
 
+    def _delta_template_case(self, question: str, template_id: str) -> dict:
+        if template_id == "execution_income_summary_30d":
+            return {
+                "case_id": "Q_MEM_DELTA_OVERALL_INCOME",
+                "template_id": template_id,
+                "question": question,
+                "business_domain": "连锁经营-核销汇总",
+                "metrics": ["execution_income"],
+                "dimensions": [],
+                "source_tables": [
+                    "soyoung_dw.dm_opt_qy_user_execution_record_all_d",
+                ],
+                "risk_flags": [
+                    "整体汇总不按门店分组，不保留 TOP 排序",
+                ],
+            }
+        if template_id == "standard_item_income_share_top20_30d":
+            return {
+                "case_id": "Q_MEM_DELTA_ITEM_INCOME_SHARE",
+                "template_id": template_id,
+                "question": question,
+                "business_domain": "连锁经营-品项收入占比",
+                "metrics": ["execution_income"],
+                "dimensions": [
+                    {
+                        "field": "standard_name",
+                        "alias": "品项",
+                        "source_table": "soyoung_dw.dm_opt_qy_user_execution_record_all_d",
+                    }
+                ],
+                "source_tables": [
+                    "soyoung_dw.dm_opt_qy_user_execution_record_all_d",
+                ],
+                "risk_flags": [
+                    "收入占比必须使用 NULLIF 防止除零",
+                    "品项维度优先使用 standard_name",
+                ],
+            }
+        if template_id == "payment_gmv_summary_30d":
+            return {
+                "case_id": "Q_MEM_DELTA_PAYMENT_GMV_SUMMARY",
+                "template_id": template_id,
+                "question": question,
+                "business_domain": "连锁经营-支付汇总",
+                "metrics": ["payment_gmv"],
+                "dimensions": [],
+                "source_tables": [
+                    "soyoung_dw.dm_opt_qy_order_info_all_d",
+                ],
+                "risk_flags": [
+                    "整体支付GMV不按门店分组，不保留 TOP 排序",
+                    "支付 GMV 使用 pay_gmv/pay_date/is_paydate_cash",
+                ],
+            }
+        if template_id == "area_execution_30d":
+            return {
+                "case_id": "Q_AREA_EXECUTION_30D",
+                "template_id": template_id,
+                "question": question,
+                "business_domain": "连锁经营-大区核销",
+                "metrics": ["execution_income"],
+                "dimensions": [
+                    {
+                        "field": "area_name",
+                        "alias": "大区",
+                        "source_table": "soyoung_dw.dim_qy_tenant_info_all_d",
+                    }
+                ],
+                "source_tables": [
+                    "soyoung_dw.dm_opt_qy_user_execution_record_all_d",
+                    "soyoung_dw.dim_qy_tenant_info_all_d",
+                ],
+                "risk_flags": [
+                    "大区维度使用 dim_qy_tenant_info_all_d.area_name",
+                    "核销收入使用 exe_income/executed_date/is_valid",
+                ],
+            }
+        if template_id == "area_payment_30d":
+            return {
+                "case_id": "Q_AREA_PAYMENT_30D",
+                "template_id": template_id,
+                "question": question,
+                "business_domain": "连锁经营-大区支付",
+                "metrics": ["payment_gmv"],
+                "dimensions": [
+                    {
+                        "field": "area_name",
+                        "alias": "大区",
+                        "source_table": "soyoung_dw.dim_qy_tenant_info_all_d",
+                    }
+                ],
+                "source_tables": [
+                    "soyoung_dw.dm_opt_qy_order_info_all_d",
+                    "soyoung_dw.dim_qy_tenant_info_all_d",
+                ],
+                "risk_flags": [
+                    "大区维度使用 dim_qy_tenant_info_all_d.area_name",
+                    "支付 GMV 使用 pay_gmv/pay_date/is_paydate_cash",
+                ],
+            }
+        return {
+            "case_id": "Q_MEM_DELTA_PAYMENT_GMV_STORE_TOPN",
+            "template_id": template_id,
+            "question": question,
+            "business_domain": "连锁经营-支付门店排行",
+            "metrics": ["payment_gmv"],
+            "dimensions": [
+                {
+                    "field": "sy_hospital_name",
+                    "alias": "门店",
+                    "source_table": "soyoung_dw.dim_qy_tenant_info_all_d",
+                }
+            ],
+            "source_tables": [
+                "soyoung_dw.dm_opt_qy_order_info_all_d",
+                "soyoung_dw.dim_qy_tenant_info_all_d",
+            ],
+            "risk_flags": [
+                "支付 GMV 使用 pay_gmv/pay_date/is_paydate_cash",
+                "门店展示使用 sy_hospital_name，关联使用 tenant_id",
+            ],
+        }
+
     def _merge_contract_values(self, primary: list[str], contract_values: list[str]) -> list[str]:
         merged = list(primary)
         for value in contract_values:
@@ -502,6 +634,9 @@ class QueryPlanner:
             "new_old_customer_execution_30d": common_execution_filters,
             "revenue_category_execution_30d": common_execution_filters + ["revenue_category IN ('大单品','常规品','大师团')"],
             "standard_item_income_top20_30d": common_execution_filters,
+            "area_execution_30d": common_execution_filters,
+            "standard_item_income_share_top20_30d": common_execution_filters,
+            "execution_income_summary_30d": common_execution_filters + ["executed_date BETWEEN DATE_SUB(CURRENT_DATE(),30) AND DATE_SUB(CURRENT_DATE(),1)"],
             "standard_item_penetration_90d": common_execution_filters + ["standard_name REGEXP '奇迹胶原'"],
             ITEM_INCOME_PROGRESS_TEMPLATE: common_execution_filters + [
                 "standard_name REGEXP '<item_name>'",
@@ -516,6 +651,9 @@ class QueryPlanner:
             "zero_income_orders_30d": common_execution_filters + ["exe_income = 0"],
             "unverified_amount_store_top10": ["a.dp = DATE_SUB(CURRENT_DATE(),1)", "left_num > 0"],
             "new_customer_payment_30d": ["dp = DATE_SUB(CURRENT_DATE(),1)", "is_paydate_cash = 0", "is_pay_new = 1"],
+            "payment_gmv_summary_30d": ["dp = DATE_SUB(CURRENT_DATE(),1)", "is_paydate_cash = 0", "pay_date BETWEEN DATE_SUB(CURRENT_DATE(),30) AND DATE_SUB(CURRENT_DATE(),1)"],
+            "area_payment_30d": ["dp = DATE_SUB(CURRENT_DATE(),1)", "is_paydate_cash = 0", "pay_date BETWEEN DATE_SUB(CURRENT_DATE(),30) AND DATE_SUB(CURRENT_DATE(),1)"],
+            "payment_gmv_store_topn_30d": ["dp = DATE_SUB(CURRENT_DATE(),1)", "is_paydate_cash = 0", "pay_date BETWEEN DATE_SUB(CURRENT_DATE(),30) AND DATE_SUB(CURRENT_DATE(),1)"],
             "pay_to_verify_rate_30d": ["支付表 is_paydate_cash = 0", "核销表 is_valid = 1"],
             "upgrade_execution_30d": common_execution_filters + ["is_up = 1"],
         }

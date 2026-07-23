@@ -67,6 +67,22 @@ AND     a.executed_date BETWEEN DATE_SUB(CURRENT_DATE(),30) AND DATE_SUB(CURRENT
 GROUP BY b.sy_hospital_name
 ORDER BY 核销收入 DESC
 LIMIT 10;""",
+    "execution_income_summary_30d": """SELECT  SUM(exe_income) AS 核销收入
+FROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d
+WHERE   dp = DATE_SUB(CURRENT_DATE(),1)
+AND     is_valid = 1
+AND     executed_date BETWEEN DATE_SUB(CURRENT_DATE(),30) AND DATE_SUB(CURRENT_DATE(),1);""",
+    "area_execution_30d": """SELECT  b.area_name AS 大区,
+        SUM(a.exe_income) AS 核销收入
+FROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d a
+LEFT JOIN soyoung_dw.dim_qy_tenant_info_all_d b
+ON      a.tenant_id = b.tenant_id
+AND     b.dp = DATE_SUB(CURRENT_DATE(),1)
+WHERE   a.dp = DATE_SUB(CURRENT_DATE(),1)
+AND     a.is_valid = 1
+AND     a.executed_date BETWEEN DATE_SUB(CURRENT_DATE(),30) AND DATE_SUB(CURRENT_DATE(),1)
+GROUP BY b.area_name
+ORDER BY 核销收入 DESC;""",
     "private_new_customer_income_this_week": """SELECT  SUM(exe_income) AS 私域新客核销收入
 FROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d
 WHERE   dp = DATE_SUB(CURRENT_DATE(),1)
@@ -105,6 +121,16 @@ AND     revenue_category IN ('大单品','常规品','大师团')
 GROUP BY revenue_category;""",
     "standard_item_income_top20_30d": """SELECT  standard_name AS standard_item_name,
         SUM(exe_income) AS 核销收入
+FROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d
+WHERE   dp = DATE_SUB(CURRENT_DATE(),1)
+AND     is_valid = 1
+AND     executed_date BETWEEN DATE_SUB(CURRENT_DATE(),30) AND DATE_SUB(CURRENT_DATE(),1)
+GROUP BY standard_name
+ORDER BY 核销收入 DESC
+LIMIT 20;""",
+    "standard_item_income_share_top20_30d": """SELECT  standard_name AS standard_item_name,
+        SUM(exe_income) AS 核销收入,
+        SUM(exe_income) / NULLIF(SUM(SUM(exe_income)) OVER(),0) AS 核销收入占比
 FROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d
 WHERE   dp = DATE_SUB(CURRENT_DATE(),1)
 AND     is_valid = 1
@@ -251,6 +277,34 @@ WHERE   dp = DATE_SUB(CURRENT_DATE(),1)
 AND     is_paydate_cash = 0
 AND     is_pay_new = 1
 AND     pay_date BETWEEN DATE_SUB(CURRENT_DATE(),30) AND DATE_SUB(CURRENT_DATE(),1);""",
+    "payment_gmv_summary_30d": """SELECT  SUM(pay_gmv) AS 支付GMV
+FROM    soyoung_dw.dm_opt_qy_order_info_all_d
+WHERE   dp = DATE_SUB(CURRENT_DATE(),1)
+AND     is_paydate_cash = 0
+AND     pay_date BETWEEN DATE_SUB(CURRENT_DATE(),30) AND DATE_SUB(CURRENT_DATE(),1);""",
+    "area_payment_30d": """SELECT  b.area_name AS 大区,
+        SUM(a.pay_gmv) AS 支付GMV
+FROM    soyoung_dw.dm_opt_qy_order_info_all_d a
+LEFT JOIN soyoung_dw.dim_qy_tenant_info_all_d b
+ON      a.tenant_id = b.tenant_id
+AND     b.dp = DATE_SUB(CURRENT_DATE(),1)
+WHERE   a.dp = DATE_SUB(CURRENT_DATE(),1)
+AND     a.is_paydate_cash = 0
+AND     a.pay_date BETWEEN DATE_SUB(CURRENT_DATE(),30) AND DATE_SUB(CURRENT_DATE(),1)
+GROUP BY b.area_name
+ORDER BY 支付GMV DESC;""",
+    "payment_gmv_store_topn_30d": """SELECT  b.sy_hospital_name AS 门店,
+        SUM(a.pay_gmv) AS 支付GMV
+FROM    soyoung_dw.dm_opt_qy_order_info_all_d a
+LEFT JOIN soyoung_dw.dim_qy_tenant_info_all_d b
+ON      a.tenant_id = b.tenant_id
+AND     b.dp = DATE_SUB(CURRENT_DATE(),1)
+WHERE   a.dp = DATE_SUB(CURRENT_DATE(),1)
+AND     a.is_paydate_cash = 0
+AND     a.pay_date BETWEEN DATE_SUB(CURRENT_DATE(),30) AND DATE_SUB(CURRENT_DATE(),1)
+GROUP BY b.sy_hospital_name
+ORDER BY 支付GMV DESC
+LIMIT 10;""",
     "pay_to_verify_rate_30d": """WITH pay_base AS (
     SELECT  main_order_id,
             uid,
@@ -396,6 +450,8 @@ class SqlGenerator:
     def _apply_question_overrides(self, sql: str, query_plan: QueryPlan) -> str:
         question = query_plan.original_question
         sql = self._apply_city_filter(sql, question)
+        sql = self._apply_area_filter(sql, question)
+        sql = self._apply_store_filter(sql, question)
         sql = self._apply_item_filter(sql, question)
         sql = self._apply_channel_filter(sql, question)
         sql = self._apply_top_n(sql, question)
@@ -412,14 +468,118 @@ class SqlGenerator:
                 sql,
                 count=1,
             )
-        if "dim_qy_tenant_info_all_d" not in sql or "GROUP BY" not in sql:
+        if "city_name REGEXP" in sql:
+            return re.sub(
+                r"city_name REGEXP '[^']+'",
+                f"city_name REGEXP '{city}'",
+                sql,
+                count=1,
+            )
+        if "dim_qy_tenant_info_all_d" in sql:
+            alias = "b." if " b\nON" in sql or " b\r\nON" in sql else ""
+            return self._add_where_condition(sql, f"{alias}city_name LIKE '%{city}%'")
+
+        if (
+            "dm_opt_qy_user_execution_record_all_d" not in sql
+            and "dm_opt_qy_order_info_all_d" not in sql
+        ):
             return sql
-        alias = "b." if " b\nON" in sql or " b\r\nON" in sql else ""
-        return sql.replace(
-            "GROUP BY",
-            f"AND     {alias}city_name LIKE '%{city}%'\nGROUP BY",
-            1,
-        )
+
+        table_alias = self._primary_table_alias(sql)
+        if table_alias:
+            city_condition = (
+                "EXISTS ("
+                "SELECT 1 FROM soyoung_dw.dim_qy_tenant_info_all_d b "
+                f"WHERE b.tenant_id = {table_alias}.tenant_id "
+                "AND b.dp = DATE_SUB(CURRENT_DATE(),1) "
+                f"AND b.city_name LIKE '%{city}%')"
+            )
+        else:
+            city_condition = (
+                "tenant_id IN ("
+                "SELECT b.tenant_id FROM soyoung_dw.dim_qy_tenant_info_all_d b "
+                "WHERE b.dp = DATE_SUB(CURRENT_DATE(),1) "
+                f"AND b.city_name LIKE '%{city}%')"
+            )
+        return self._add_where_condition(sql, city_condition)
+
+    def _apply_area_filter(self, sql: str, question: str) -> str:
+        area = self._named_area(question)
+        if not area:
+            return sql
+        if "area_name LIKE" in sql:
+            return re.sub(
+                r"area_name LIKE '%[^']+%'",
+                f"area_name LIKE '%{area}%'",
+                sql,
+                count=1,
+            )
+        if "dim_qy_tenant_info_all_d" in sql:
+            alias = "b." if " b\nON" in sql or " b\r\nON" in sql else ""
+            return self._add_where_condition(sql, f"{alias}area_name LIKE '%{area}%'")
+
+        if (
+            "dm_opt_qy_user_execution_record_all_d" not in sql
+            and "dm_opt_qy_order_info_all_d" not in sql
+        ):
+            return sql
+
+        table_alias = self._primary_table_alias(sql)
+        if table_alias:
+            area_condition = (
+                "EXISTS ("
+                "SELECT 1 FROM soyoung_dw.dim_qy_tenant_info_all_d b "
+                f"WHERE b.tenant_id = {table_alias}.tenant_id "
+                "AND b.dp = DATE_SUB(CURRENT_DATE(),1) "
+                f"AND b.area_name LIKE '%{area}%')"
+            )
+        else:
+            area_condition = (
+                "tenant_id IN ("
+                "SELECT b.tenant_id FROM soyoung_dw.dim_qy_tenant_info_all_d b "
+                "WHERE b.dp = DATE_SUB(CURRENT_DATE(),1) "
+                f"AND b.area_name LIKE '%{area}%')"
+            )
+        return self._add_where_condition(sql, area_condition)
+
+    def _apply_store_filter(self, sql: str, question: str) -> str:
+        store = self._named_store(question)
+        if not store:
+            return sql
+        if "sy_hospital_name LIKE" in sql:
+            return re.sub(
+                r"sy_hospital_name LIKE '%[^']+%'",
+                f"sy_hospital_name LIKE '%{store}%'",
+                sql,
+                count=1,
+            )
+        if "dim_qy_tenant_info_all_d" in sql:
+            alias = "b." if " b\nON" in sql or " b\r\nON" in sql else ""
+            return self._add_where_condition(sql, f"{alias}sy_hospital_name LIKE '%{store}%'")
+
+        if (
+            "dm_opt_qy_user_execution_record_all_d" not in sql
+            and "dm_opt_qy_order_info_all_d" not in sql
+        ):
+            return sql
+
+        table_alias = self._primary_table_alias(sql)
+        if table_alias:
+            store_condition = (
+                "EXISTS ("
+                "SELECT 1 FROM soyoung_dw.dim_qy_tenant_info_all_d b "
+                f"WHERE b.tenant_id = {table_alias}.tenant_id "
+                "AND b.dp = DATE_SUB(CURRENT_DATE(),1) "
+                f"AND b.sy_hospital_name LIKE '%{store}%')"
+            )
+        else:
+            store_condition = (
+                "tenant_id IN ("
+                "SELECT b.tenant_id FROM soyoung_dw.dim_qy_tenant_info_all_d b "
+                "WHERE b.dp = DATE_SUB(CURRENT_DATE(),1) "
+                f"AND b.sy_hospital_name LIKE '%{store}%')"
+            )
+        return self._add_where_condition(sql, store_condition)
 
     def _apply_item_filter(self, sql: str, question: str) -> str:
         item = self._named_item(question)
@@ -432,19 +592,17 @@ class SqlGenerator:
                 sql,
                 count=1,
             )
-        if "GROUP BY" not in sql:
-            return sql
         if (
             "standard_name" not in sql
             and "dm_opt_qy_user_execution_record_all_d" not in sql
+            and "dm_opt_qy_order_info_all_d" not in sql
         ):
             return sql
-        alias = "a." if "FROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d a" in sql else ""
-        return sql.replace(
-            "GROUP BY",
-            f"AND     {alias}standard_name REGEXP '{item}'\nGROUP BY",
-            1,
-        )
+        alias = "a." if (
+            "FROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d a" in sql
+            or "FROM    soyoung_dw.dm_opt_qy_order_info_all_d a" in sql
+        ) else ""
+        return self._add_where_condition(sql, f"{alias}standard_name REGEXP '{item}'")
 
     def _apply_channel_filter(self, sql: str, question: str) -> str:
         channel = self._named_channel(question)
@@ -464,14 +622,10 @@ class SqlGenerator:
                 sql,
                 count=1,
             )
-        if "GROUP BY" not in sql:
+        if "dm_opt_qy_user_execution_record_all_d" not in sql:
             return sql
         alias = "a." if "FROM    soyoung_dw.dm_opt_qy_user_execution_record_all_d a" in sql else ""
-        return sql.replace(
-            "GROUP BY",
-            f"AND     {alias}cx_first_channel = '{channel}'\nGROUP BY",
-            1,
-        )
+        return self._add_where_condition(sql, f"{alias}cx_first_channel = '{channel}'")
 
     def _apply_top_n(self, sql: str, question: str) -> str:
         top_n = self._top_n(question)
@@ -513,6 +667,31 @@ class SqlGenerator:
                 return channel
         return ""
 
+    def _named_area(self, question: str) -> str:
+        for area in ("华北", "华东", "华南", "华中"):
+            if area in question:
+                return area
+        return ""
+
+    def _named_store(self, question: str) -> str:
+        if any(term in question for term in ("各门店", "各店", "门店TOP", "门店排行")):
+            return ""
+        if "保利" in question:
+            return "保利"
+        cleaned = question
+        for city in (
+            "北京", "上海", "广州", "深圳", "武汉", "杭州", "成都", "重庆",
+            "天津", "南京", "苏州", "西安", "郑州", "长沙", "青岛", "宁波",
+            "合肥", "佛山", "东莞",
+        ):
+            cleaned = cleaned.replace(city, "")
+        cleaned = re.sub(r"(想看|看一下|看下|只看|单看|那|那个|如果是|换成|改成|呢|的)", "", cleaned)
+        match = re.search(r"([\u4e00-\u9fa5A-Za-z0-9 ]{2,20})店", cleaned)
+        if not match:
+            return ""
+        store = match.group(1).strip()
+        return store if store and store not in {"门", "门店"} else ""
+
     def _top_n(self, question: str) -> int | None:
         match = re.search(r"(?i)top\s*(\d+)", question)
         if match:
@@ -540,3 +719,41 @@ class SqlGenerator:
             step.query_semantics.time_type == "this_week"
             for step in query_plan.query_plan_cot
         )
+
+    def _primary_table_alias(self, sql: str) -> str:
+        pattern = re.compile(
+            r"FROM\s+soyoung_dw\.(?:dm_opt_qy_user_execution_record_all_d|dm_opt_qy_order_info_all_d)\s+(?:AS\s+)?(\w+)",
+            re.IGNORECASE,
+        )
+        match = pattern.search(sql)
+        if not match:
+            return ""
+        alias = match.group(1)
+        if alias.upper() in {"WHERE", "GROUP", "ORDER", "LIMIT", "LEFT", "RIGHT", "INNER"}:
+            return ""
+        return alias
+
+    def _add_where_condition(self, sql: str, condition: str) -> str:
+        if not condition or condition in sql:
+            return sql
+
+        stripped = sql.rstrip()
+        semicolon = ";" if stripped.endswith(";") else ""
+        if semicolon:
+            stripped = stripped[:-1].rstrip()
+
+        boundary = re.search(
+            r"\b(GROUP\s+BY|ORDER\s+BY|HAVING|LIMIT)\b",
+            stripped,
+            re.IGNORECASE,
+        )
+        insert_at = boundary.start() if boundary else len(stripped)
+        head = stripped[:insert_at].rstrip()
+        tail = stripped[insert_at:].lstrip()
+
+        if re.search(r"\bWHERE\b", head, re.IGNORECASE):
+            head = f"{head}\nAND     {condition}"
+        else:
+            head = f"{head}\nWHERE   {condition}"
+
+        return f"{head}\n{tail}".rstrip() + semicolon

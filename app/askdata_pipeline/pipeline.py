@@ -115,7 +115,7 @@ class AskDataPipeline:
 
         retrieval_context = self._stage_knowledge_retrieval(working_question, trace)
         semantic_contract = self._stage_semantic_contract(
-            working_question, retrieval_context, trace,
+            working_question, retrieval_context, trace, memory_resolution=memory_resolution,
         )
         schema_result, schema_graph = self._stage_schema_retrieval(
             retrieval_context, semantic_contract, trace,
@@ -309,17 +309,30 @@ class AskDataPipeline:
         question: str,
         retrieval_context: RetrievalContext,
         trace: PipelineTrace,
+        memory_resolution: MemoryResolution | None = None,
     ):
         t0 = _now_ms()
         stage = PipelineStageLog(
             name="semantic_contract",
             inputs={"question": question},
         )
-        contract = self.semantic_contract_builder.build(question, retrieval_context)
+        previous_state = (
+            memory_resolution.previous_state
+            if memory_resolution and memory_resolution.used_memory
+            else None
+        )
+        contract = self.semantic_contract_builder.build(
+            question,
+            retrieval_context,
+            delta=memory_resolution.delta if memory_resolution else None,
+            previous_state=previous_state,
+        )
         stage.outputs = {
             "intent": contract.intent,
             "metrics": contract.metrics,
             "dimensions": contract.dimensions,
+            "filters": contract.filters,
+            "time_range": contract.time_range,
             "template_id": contract.template_id or "",
         }
         stage.summary = f"intent={contract.intent} metrics={contract.metrics}"

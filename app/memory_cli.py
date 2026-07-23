@@ -54,6 +54,9 @@ def main() -> None:
         print(f"使用记忆: {response.memory_used}")
         print(f"窗口大小: {response.memory_resolution.get('memory_window_size', 0)}")
         print(f"继承轮次: {response.memory_resolution.get('selected_turn_id', '')}")
+        delta = response.memory_resolution.get("delta") or {}
+        if delta:
+            print(f"delta: {delta}")
         print(f"template_id: {response.query_plan.template_id}")
         print(f"sql_source: {response.sql_source}")
         print(f"llm_generated: {response.llm_sql_detail.generated}")

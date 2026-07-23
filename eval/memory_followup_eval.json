@@ -1,0 +1,720 @@
+{
+  "meta": {
+    "name": "Chain-AskData short-term memory follow-up eval",
+    "version": "0.1.0",
+    "created": "2026-07-23",
+    "purpose": "Validate short-term structured memory for multi-turn Text2SQL follow-up resolution before wiring memory into Feishu.",
+    "source_questions": "Derived from README demo questions and the 2026-07-22 project diary.",
+    "execution_mode": "disabled",
+    "llm_enabled_recommended": true,
+    "primary_metrics": [
+      "resolved_question_accuracy",
+      "memory_used_accuracy",
+      "selected_turn_accuracy",
+      "sql_constraint_retention_rate",
+      "llm_gate_pass_rate",
+      "llm_adoption_rate"
+    ],
+    "turn_assertion_policy": {
+      "expected_resolved": "Exact match for memory rewrite correctness.",
+      "expected_memory_used": "Whether this turn should consume previous conversation state.",
+      "expected_selected_turn_id": "The turn_id that should be inherited when memory is used.",
+      "required_sql_contains": "All listed tokens should appear in the final SQL.",
+      "required_sql_any_of": "At least one token group should be fully present in the final SQL.",
+      "forbidden_sql_contains": "None of these tokens should appear in the final SQL."
+    },
+    "priority_def": {
+      "p0_current": "Current short-term memory should pass these cases first.",
+      "p1_next": "Next iteration cases for semantic state patching beyond simple string replacement."
+    }
+  },
+  "cases": [
+    {
+      "id": "MEM_P0_001",
+      "priority": "p0_current",
+      "category": "latest_turn_inheritance",
+      "base_demo_question": "最近30天北京奇迹胶原核销收入 TOP5门店",
+      "purpose": "Default third-turn follow-up should inherit the latest turn, not the first turn.",
+      "turns": [
+        {
+          "question": "最近30天北京奇迹胶原核销收入 TOP5门店",
+          "expected_resolved": "最近30天北京奇迹胶原核销收入 TOP5门店",
+          "expected_memory_used": false,
+          "required_sql_contains": [
+            "city_name",
+            "北京",
+            "standard_name",
+            "奇迹胶原",
+            "sy_hospital_name",
+            "LIMIT 5"
+          ]
+        },
+        {
+          "question": "那上海呢",
+          "expected_resolved": "最近30天上海奇迹胶原核销收入 TOP5门店",
+          "expected_memory_used": true,
+          "expected_selected_turn_id": 1,
+          "required_sql_contains": [
+            "city_name",
+            "上海",
+            "standard_name",
+            "奇迹胶原",
+            "LIMIT 5"
+          ],
+          "required_sql_any_of": [
+            [
+              "city_name LIKE",
+              "上海"
+            ],
+            [
+              "city_name REGEXP",
+              "上海"
+            ],
+            [
+              "city_name RLIKE",
+              "上海"
+            ]
+          ]
+        },
+        {
+          "question": "那奇迹童颜呢",
+          "expected_resolved": "最近30天上海奇迹童颜核销收入 TOP5门店",
+          "expected_memory_used": true,
+          "expected_selected_turn_id": 2,
+          "required_sql_contains": [
+            "city_name",
+            "上海",
+            "standard_name",
+            "奇迹童颜",
+            "LIMIT 5"
+          ],
+          "required_sql_any_of": [
+            [
+              "standard_name REGEXP",
+              "奇迹童颜"
+            ],
+            [
+              "standard_name LIKE",
+              "奇迹童颜"
+            ],
+            [
+              "standard_name RLIKE",
+              "奇迹童颜"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "MEM_P0_002",
+      "priority": "p0_current",
+      "category": "explicit_historical_reference",
+      "base_demo_question": "最近30天北京奇迹胶原核销收入 TOP5门店",
+      "purpose": "Explicit reference should select an earlier turn from the sliding window.",
+      "turns": [
+        {
+          "question": "最近30天北京奇迹胶原核销收入 TOP5门店",
+          "expected_resolved": "最近30天北京奇迹胶原核销收入 TOP5门店",
+          "expected_memory_used": false
+        },
+        {
+          "question": "那上海呢",
+          "expected_resolved": "最近30天上海奇迹胶原核销收入 TOP5门店",
+          "expected_memory_used": true,
+          "expected_selected_turn_id": 1
+        },
+        {
+          "question": "北京那个，换成奇迹童颜",
+          "expected_resolved": "最近30天北京奇迹童颜核销收入 TOP5门店",
+          "expected_memory_used": true,
+          "expected_selected_turn_id": 1,
+          "required_sql_contains": [
+            "city_name",
+            "北京",
+            "standard_name",
+            "奇迹童颜",
+            "LIMIT 5"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "MEM_P0_003",
+      "priority": "p0_current",
+      "category": "topn_and_time_patch",
+      "base_demo_question": "最近30天各门店核销收入 TOP10",
+      "purpose": "Follow-up should update TopN and then time window while preserving the store ranking intent.",
+      "turns": [
+        {
+          "question": "最近30天各门店核销收入 TOP10",
+          "expected_resolved": "最近30天各门店核销收入 TOP10",
+          "expected_memory_used": false,
+          "required_sql_contains": [
+            "sy_hospital_name",
+            "SUM(exe_income)",
+            "ORDER BY",
+            "LIMIT 10"
+          ]
+        },
+        {
+          "question": "top3",
+          "expected_resolved": "最近30天各门店核销收入 TOP3",
+          "expected_memory_used": true,
+          "expected_selected_turn_id": 1,
+          "required_sql_contains": [
+            "sy_hospital_name",
+            "SUM(exe_income)",
+            "ORDER BY",
+            "LIMIT 3"
+          ]
+        },
+        {
+          "question": "本月",
+          "expected_resolved": "本月各门店核销收入 TOP3",
+          "expected_memory_used": true,
+          "expected_selected_turn_id": 2,
+          "required_sql_contains": [
+            "sy_hospital_name",
+            "SUM(exe_income)",
+            "ORDER BY",
+            "LIMIT 3"
+          ],
+          "required_sql_any_of": [
+            [
+              "DATETRUNC",
+              "CURRENT_DATE"
+            ],
+            [
+              "DATE_FORMAT",
+              "yyyy-MM-01"
+            ],
+            [
+              "yyyy-MM-01",
+              "DATE_SUB(CURRENT_DATE(),1)"
+            ]
+          ],
+          "forbidden_sql_contains": [
+            "DATE_SUB(CURRENT_DATE(),30)"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "MEM_P0_004",
+      "priority": "p0_current",
+      "category": "channel_patch",
+      "base_demo_question": "最近30天新客和老客核销收入、人次、客单价分别是多少？",
+      "purpose": "A channel follow-up should append the channel filter without losing new/old customer comparison.",
+      "turns": [
+        {
+          "question": "最近30天新客和老客核销收入、人次、客单价分别是多少？",
+          "expected_resolved": "最近30天新客和老客核销收入、人次、客单价分别是多少？",
+          "expected_memory_used": false,
+          "required_sql_contains": [
+            "is_new",
+            "SUM(exe_income)",
+            "COUNT(DISTINCT verify_date_id)",
+            "NULLIF"
+          ],
+          "forbidden_sql_contains": [
+            "is_pay_new"
+          ]
+        },
+        {
+          "question": "那私域呢",
+          "expected_resolved": "最近30天新客和老客核销收入、人次、客单价分别是多少？，私域",
+          "expected_memory_used": true,
+          "expected_selected_turn_id": 1,
+          "required_sql_contains": [
+            "is_new",
+            "cx_first_channel",
+            "私域",
+            "SUM(exe_income)",
+            "COUNT(DISTINCT verify_date_id)",
+            "NULLIF"
+          ],
+          "forbidden_sql_contains": [
+            "is_pay_new"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "MEM_P0_005",
+      "priority": "p0_current",
+      "category": "item_ranking_topn_time_patch",
+      "base_demo_question": "最近30天品项核销收入 TOP20",
+      "purpose": "Item ranking follow-up should preserve standard_name grouping and update TopN/time.",
+      "turns": [
+        {
+          "question": "最近30天品项核销收入 TOP20",
+          "expected_resolved": "最近30天品项核销收入 TOP20",
+          "expected_memory_used": false,
+          "required_sql_contains": [
+            "standard_name",
+            "SUM(exe_income)",
+            "ORDER BY",
+            "LIMIT 20"
+          ],
+          "forbidden_sql_contains": [
+            "product_name"
+          ]
+        },
+        {
+          "question": "top5",
+          "expected_resolved": "最近30天品项核销收入 TOP5",
+          "expected_memory_used": true,
+          "expected_selected_turn_id": 1,
+          "required_sql_contains": [
+            "standard_name",
+            "SUM(exe_income)",
+            "ORDER BY",
+            "LIMIT 5"
+          ],
+          "forbidden_sql_contains": [
+            "product_name"
+          ]
+        },
+        {
+          "question": "本月呢",
+          "expected_resolved": "本月品项核销收入 TOP5",
+          "expected_memory_used": true,
+          "expected_selected_turn_id": 2,
+          "required_sql_contains": [
+            "standard_name",
+            "SUM(exe_income)",
+            "ORDER BY",
+            "LIMIT 5"
+          ],
+          "forbidden_sql_contains": [
+            "product_name",
+            "DATE_SUB(CURRENT_DATE(),30)"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "MEM_P0_006",
+      "priority": "p0_current",
+      "category": "item_filter_and_time_patch",
+      "base_demo_question": "最近90天奇迹胶原品项渗透率是多少？",
+      "purpose": "Penetration-rate follow-up should replace item and time while preserving the penetration metric.",
+      "turns": [
+        {
+          "question": "最近90天奇迹胶原品项渗透率是多少？",
+          "expected_resolved": "最近90天奇迹胶原品项渗透率是多少？",
+          "expected_memory_used": false,
+          "required_sql_contains": [
+            "standard_name",
+            "奇迹胶原",
+            "customer_id",
+            "NULLIF"
+          ]
+        },
+        {
+          "question": "那奇迹童颜呢",
+          "expected_resolved": "最近90天奇迹童颜品项渗透率是多少？",
+          "expected_memory_used": true,
+          "expected_selected_turn_id": 1,
+          "required_sql_contains": [
+            "standard_name",
+            "奇迹童颜",
+            "customer_id",
+            "NULLIF"
+          ]
+        },
+        {
+          "question": "最近30天呢",
+          "expected_resolved": "最近30天奇迹童颜品项渗透率是多少？",
+          "expected_memory_used": true,
+          "expected_selected_turn_id": 2,
+          "required_sql_contains": [
+            "standard_name",
+            "奇迹童颜",
+            "customer_id",
+            "NULLIF"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "MEM_P0_007",
+      "priority": "p0_current",
+      "category": "payment_domain_time_patch",
+      "base_demo_question": "最近30天新客支付GMV、支付人数、支付客单价是多少？",
+      "purpose": "Payment-domain follow-up should preserve payment fields and not drift into execution-domain fields.",
+      "turns": [
+        {
+          "question": "最近30天新客支付GMV、支付人数、支付客单价是多少？",
+          "expected_resolved": "最近30天新客支付GMV、支付人数、支付客单价是多少？",
+          "expected_memory_used": false,
+          "required_sql_contains": [
+            "pay_gmv",
+            "pay_date",
+            "is_paydate_cash",
+            "is_pay_new",
+            "NULLIF"
+          ],
+          "forbidden_sql_contains": [
+            "is_new = 1",
+            "executed_date"
+          ]
+        },
+        {
+          "question": "本月呢",
+          "expected_resolved": "本月新客支付GMV、支付人数、支付客单价是多少？",
+          "expected_memory_used": true,
+          "expected_selected_turn_id": 1,
+          "required_sql_contains": [
+            "pay_gmv",
+            "pay_date",
+            "is_paydate_cash",
+            "is_pay_new",
+            "NULLIF"
+          ],
+          "forbidden_sql_contains": [
+            "is_new = 1",
+            "executed_date",
+            "DATE_SUB(CURRENT_DATE(),30)"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "MEM_P0_008",
+      "priority": "p0_current",
+      "category": "unverified_topn_city_patch",
+      "base_demo_question": "截至昨天各门店待核销金额 TOP10",
+      "purpose": "Unverified inventory follow-up should preserve snapshot semantics while updating TopN/city.",
+      "turns": [
+        {
+          "question": "截至昨天各门店待核销金额 TOP10",
+          "expected_resolved": "截至昨天各门店待核销金额 TOP10",
+          "expected_memory_used": false,
+          "required_sql_contains": [
+            "left_gmv",
+            "left_num > 0",
+            "dp",
+            "sy_hospital_name",
+            "LIMIT 10"
+          ],
+          "forbidden_sql_contains": [
+            "pay_date",
+            "executed_date"
+          ]
+        },
+        {
+          "question": "top5",
+          "expected_resolved": "截至昨天各门店待核销金额 TOP5",
+          "expected_memory_used": true,
+          "expected_selected_turn_id": 1,
+          "required_sql_contains": [
+            "left_gmv",
+            "left_num > 0",
+            "LIMIT 5"
+          ],
+          "forbidden_sql_contains": [
+            "pay_date",
+            "executed_date"
+          ]
+        },
+        {
+          "question": "那上海呢",
+          "expected_resolved": "截至昨天各门店待核销金额 TOP5，上海",
+          "expected_memory_used": true,
+          "expected_selected_turn_id": 2,
+          "required_sql_contains": [
+            "left_gmv",
+            "left_num > 0",
+            "city_name",
+            "上海",
+            "LIMIT 5"
+          ],
+          "forbidden_sql_contains": [
+            "pay_date",
+            "executed_date"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "MEM_P0_009",
+      "priority": "p0_current",
+      "category": "zero_income_time_city_patch",
+      "base_demo_question": "最近30天0元单数量和核销人数是多少？",
+      "purpose": "Zero-income follow-up should preserve exe_income = 0 and customer count semantics.",
+      "turns": [
+        {
+          "question": "最近30天0元单数量和核销人数是多少？",
+          "expected_resolved": "最近30天0元单数量和核销人数是多少？",
+          "expected_memory_used": false,
+          "required_sql_contains": [
+            "exe_income = 0",
+            "main_order_id",
+            "customer_id",
+            "is_valid = 1"
+          ],
+          "forbidden_sql_contains": [
+            "pay_gmv = 0"
+          ]
+        },
+        {
+          "question": "本月",
+          "expected_resolved": "本月0元单数量和核销人数是多少？",
+          "expected_memory_used": true,
+          "expected_selected_turn_id": 1,
+          "required_sql_contains": [
+            "exe_income = 0",
+            "main_order_id",
+            "customer_id"
+          ],
+          "forbidden_sql_contains": [
+            "pay_gmv = 0",
+            "DATE_SUB(CURRENT_DATE(),30)"
+          ]
+        },
+        {
+          "question": "那杭州呢",
+          "expected_resolved": "本月0元单数量和核销人数是多少？，杭州",
+          "expected_memory_used": true,
+          "expected_selected_turn_id": 2,
+          "required_sql_contains": [
+            "exe_income = 0",
+            "city_name",
+            "杭州",
+            "customer_id"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "MEM_P0_010",
+      "priority": "p0_current",
+      "category": "progress_item_patch",
+      "base_demo_question": "本月奇迹胶原核销收入时间进度达成率",
+      "purpose": "Progress follow-up should replace item while preserving target-table progress logic.",
+      "turns": [
+        {
+          "question": "本月奇迹胶原核销收入时间进度达成率",
+          "expected_resolved": "本月奇迹胶原核销收入时间进度达成率",
+          "expected_memory_used": false,
+          "required_sql_contains": [
+            "dim_channel_month_income_target",
+            "target_absolute_value",
+            "奇迹胶原",
+            "time_progress_achievement_rate"
+          ]
+        },
+        {
+          "question": "那奇迹童颜呢",
+          "expected_resolved": "本月奇迹童颜核销收入时间进度达成率",
+          "expected_memory_used": true,
+          "expected_selected_turn_id": 1,
+          "required_sql_contains": [
+            "dim_channel_month_income_target",
+            "target_absolute_value",
+            "奇迹童颜",
+            "time_progress_achievement_rate"
+          ]
+        },
+        {
+          "question": "那BBL HERO呢",
+          "expected_resolved": "本月BBL HERO核销收入时间进度达成率",
+          "expected_memory_used": true,
+          "expected_selected_turn_id": 2,
+          "required_sql_contains": [
+            "dim_channel_month_income_target",
+            "target_absolute_value",
+            "BBL HERO",
+            "time_progress_achievement_rate"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "MEM_P0_011",
+      "priority": "p0_current",
+      "category": "standalone_question_should_reset_context",
+      "base_demo_question": "最近30天北京奇迹胶原核销收入 TOP5门店",
+      "purpose": "A complete new question should not be rewritten using previous memory.",
+      "turns": [
+        {
+          "question": "最近30天北京奇迹胶原核销收入 TOP5门店",
+          "expected_resolved": "最近30天北京奇迹胶原核销收入 TOP5门店",
+          "expected_memory_used": false
+        },
+        {
+          "question": "最近30天升单人数、升单核销人次、升单核销收入是多少？",
+          "expected_resolved": "最近30天升单人数、升单核销人次、升单核销收入是多少？",
+          "expected_memory_used": false,
+          "required_sql_contains": [
+            "is_up = 1",
+            "SUM(exe_income)",
+            "COUNT(DISTINCT verify_date_id)"
+          ],
+          "forbidden_sql_contains": [
+            "奇迹胶原",
+            "city_name LIKE '%北京%'",
+            "city_name REGEXP '北京'"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "MEM_P0_012",
+      "priority": "p0_current",
+      "category": "rolling_window_eviction",
+      "base_demo_question": "最近30天北京奇迹胶原核销收入 TOP5门店",
+      "purpose": "Only the latest three states should remain in the short-term sliding window.",
+      "expected_final_window_turn_ids": [
+        2,
+        3,
+        4
+      ],
+      "turns": [
+        {
+          "question": "最近30天北京奇迹胶原核销收入 TOP5门店",
+          "expected_resolved": "最近30天北京奇迹胶原核销收入 TOP5门店",
+          "expected_memory_used": false
+        },
+        {
+          "question": "那上海呢",
+          "expected_resolved": "最近30天上海奇迹胶原核销收入 TOP5门店",
+          "expected_memory_used": true,
+          "expected_selected_turn_id": 1
+        },
+        {
+          "question": "top3",
+          "expected_resolved": "最近30天上海奇迹胶原核销收入 TOP3门店",
+          "expected_memory_used": true,
+          "expected_selected_turn_id": 2
+        },
+        {
+          "question": "本月",
+          "expected_resolved": "本月上海奇迹胶原核销收入 TOP3门店",
+          "expected_memory_used": true,
+          "expected_selected_turn_id": 3
+        }
+      ]
+    },
+    {
+      "id": "MEM_P1_001",
+      "priority": "p1_next",
+      "category": "channel_narrowing",
+      "base_demo_question": "最近30天私域、公域、老带新的核销收入、人次、客单价对比",
+      "purpose": "Next iteration: support narrowing from channel comparison to one named channel.",
+      "turns": [
+        {
+          "question": "最近30天私域、公域、老带新的核销收入、人次、客单价对比",
+          "expected_resolved": "最近30天私域、公域、老带新的核销收入、人次、客单价对比",
+          "expected_memory_used": false
+        },
+        {
+          "question": "只看私域呢",
+          "expected_resolved": "最近30天私域核销收入、人次、客单价",
+          "expected_memory_used": true,
+          "expected_selected_turn_id": 1,
+          "required_sql_contains": [
+            "cx_first_channel",
+            "私域",
+            "SUM(exe_income)",
+            "COUNT(DISTINCT verify_date_id)"
+          ],
+          "forbidden_sql_contains": [
+            "公域",
+            "老带新"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "MEM_P1_002",
+      "priority": "p1_next",
+      "category": "dimension_removal",
+      "base_demo_question": "最近30天各门店核销收入 TOP10",
+      "purpose": "Next iteration: support removing a grouping dimension and switching from ranking to overall summary.",
+      "turns": [
+        {
+          "question": "最近30天各门店核销收入 TOP10",
+          "expected_resolved": "最近30天各门店核销收入 TOP10",
+          "expected_memory_used": false
+        },
+        {
+          "question": "不要门店了，看整体",
+          "expected_resolved": "最近30天整体核销收入是多少？",
+          "expected_memory_used": true,
+          "expected_selected_turn_id": 1,
+          "required_sql_contains": [
+            "SUM(exe_income)"
+          ],
+          "forbidden_sql_contains": [
+            "sy_hospital_name",
+            "GROUP BY",
+            "ORDER BY",
+            "LIMIT"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "MEM_P1_003",
+      "priority": "p1_next",
+      "category": "metric_switch_to_ratio",
+      "base_demo_question": "最近30天品项核销收入 TOP20",
+      "purpose": "Next iteration: support switching metric from amount ranking to revenue share.",
+      "turns": [
+        {
+          "question": "最近30天品项核销收入 TOP20",
+          "expected_resolved": "最近30天品项核销收入 TOP20",
+          "expected_memory_used": false
+        },
+        {
+          "question": "换成收入占比",
+          "expected_resolved": "最近30天品项核销收入占比 TOP20",
+          "expected_memory_used": true,
+          "expected_selected_turn_id": 1,
+          "required_sql_contains": [
+            "standard_name",
+            "SUM(exe_income)",
+            "NULLIF",
+            "LIMIT 20"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "MEM_P1_004",
+      "priority": "p1_next",
+      "category": "business_domain_switch",
+      "base_demo_question": "最近30天北京奇迹胶原核销收入 TOP5门店",
+      "purpose": "Next iteration: support switching from execution income to payment GMV while preserving city/item/store constraints when valid.",
+      "turns": [
+        {
+          "question": "最近30天北京奇迹胶原核销收入 TOP5门店",
+          "expected_resolved": "最近30天北京奇迹胶原核销收入 TOP5门店",
+          "expected_memory_used": false
+        },
+        {
+          "question": "那支付GMV呢",
+          "expected_resolved": "最近30天北京奇迹胶原支付GMV TOP5门店",
+          "expected_memory_used": true,
+          "expected_selected_turn_id": 1,
+          "required_sql_contains": [
+            "pay_gmv",
+            "pay_date",
+            "is_paydate_cash",
+            "city_name",
+            "北京",
+            "standard_name",
+            "奇迹胶原",
+            "LIMIT 5"
+          ],
+          "forbidden_sql_contains": [
+            "SUM(exe_income)",
+            "executed_date"
+          ]
+        }
+      ]
+    }
+  ]
+}
