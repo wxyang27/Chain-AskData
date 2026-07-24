@@ -110,6 +110,92 @@ def test_question_rewriter_uses_delta_for_p1_semantic_switches():
     assert weekly_payment.delta is not None
     assert weekly_payment.delta.set_time_range == "本周"
 
+    execution_income = rewriter.resolve(
+        "核销收入呢",
+        ConversationState(
+            session_id="delta-execution-income",
+            turn_id=1,
+            last_resolved_question="本月整体支付GMV是多少？",
+        ),
+        session_id="delta-execution-income",
+    )
+    assert execution_income.resolved_question == "本月整体核销收入是多少？"
+    assert execution_income.delta is not None
+    assert "domain_switch_to_execution" in execution_income.delta.operations
+
+    service_point = rewriter.resolve(
+        "本周的核销服务点呢",
+        ConversationState(
+            session_id="delta-service-point",
+            turn_id=1,
+            last_resolved_question="最近30天北京保利店核销收入",
+        ),
+        session_id="delta-service-point",
+    )
+    assert service_point.resolved_question == "本周北京保利店核销服务点数"
+    assert service_point.delta is not None
+    assert "metric_switch" in service_point.delta.operations
+    assert "execution_service_point_count" in service_point.delta.set_metrics
+
+    unverified_point = rewriter.resolve(
+        "待核销服务点呢",
+        ConversationState(
+            session_id="delta-unverified-point",
+            turn_id=1,
+            last_resolved_question="截至昨天各门店待核销金额 TOP10",
+        ),
+        session_id="delta-unverified-point",
+    )
+    assert unverified_point.resolved_question == "截至昨天各门店待核销服务点数 TOP10"
+    assert unverified_point.delta is not None
+    assert "unverified_service_point_count" in unverified_point.delta.set_metrics
+
+
+def test_question_rewriter_handles_composite_remove_and_add_dimension_followups():
+    rewriter = QuestionRewriter()
+
+    payment_area = ConversationState(
+        session_id="composite-payment-area",
+        turn_id=1,
+        last_resolved_question="本月华东大区支付GMV",
+    )
+    store = rewriter.resolve("不看大区，看一下各门店吧", payment_area, session_id="composite-payment-area")
+    assert store.used_memory is True
+    assert store.resolved_question == "本月各门店支付GMV"
+    assert store.delta is not None
+    assert "filter_removal" in store.delta.operations
+    assert "dimension_addition" in store.delta.operations
+    assert store.delta.remove_filters == ["area_name"]
+    assert store.delta.remove_dimensions == ["area_name"]
+    assert store.delta.add_dimensions == ["sy_hospital_name"]
+
+    city_item = ConversationState(
+        session_id="composite-city-area",
+        turn_id=1,
+        last_resolved_question="最近30天北京奇迹胶原核销收入",
+    )
+    area = rewriter.resolve("不要城市，看各大区", city_item, session_id="composite-city-area")
+    assert area.resolved_question == "最近30天奇迹胶原各大区核销收入"
+    assert area.delta is not None
+    assert area.delta.remove_filters == ["city_name"]
+    assert area.delta.add_dimensions == ["area_name"]
+
+    store_top = ConversationState(
+        session_id="composite-store-item",
+        turn_id=1,
+        last_resolved_question="最近30天各门店核销服务点数 TOP10",
+    )
+    item = rewriter.resolve("去掉门店，按品项", store_top, session_id="composite-store-item")
+    assert item.resolved_question == "最近30天各品项核销服务点数 TOP10"
+    assert item.delta is not None
+    assert item.delta.remove_dimensions == ["sy_hospital_name"]
+    assert item.delta.add_dimensions == ["standard_name"]
+
+    overall = rewriter.resolve("不按门店，分整体", store_top, session_id="composite-store-item")
+    assert overall.resolved_question == "最近30天整体核销服务点数是多少？"
+    assert overall.delta is not None
+    assert overall.delta.output_grain == "overall"
+
 
 def test_answer_composer_saves_latest_state_and_resolves_follow_up():
     session_id = "memory-composer-case"

@@ -17,27 +17,23 @@ from app.models.query import QueryResponse
 Card = dict[str, Any]
 
 
-def build_processing_card(question: str) -> Card:
+def build_processing_card(question: str, resolved_question: str = "") -> Card:
+    lines = [f"收到你的问题啦：{_md(_clip(question, 120))}"]
+    if resolved_question and resolved_question != question:
+        lines.append(f"补齐问题：{_md(_clip(resolved_question, 160))}")
+    lines.append("<font color='grey'>我先按经营口径看一下，稍后把结果回复在这里~</font>")
     return _base_card(
-        title="CatData",
-        subtitle="正在查询连锁经营数据",
+        title=" ",
+        subtitle="",
         tag_text="处理中",
-        body=[
-            _plain_markdown(
-                "**收到，正在查询**\n"
-                f"{_md(_clip(question, 120))}\n"
-                "<font color='grey'>稍等一下，结果会直接回复在这里。</font>"
-            )
-        ],
+        body=[_plain_markdown("\n".join(lines))],
         header_template="default",
     )
 
 
 def build_query_card(response: QueryResponse) -> Card:
     question = response.query_plan.original_question or response.question_summary
-    success = response.execution_status == "success"
-    tag_text = "查询完成" if success else "查询异常"
-    subtitle = f"{response.execution_mode} · {response.sql_source}"
+    tag_text, tag_color, subtitle = _query_card_state(response)
 
     elements: list[Card] = []
     status_text = _status_text(response)
@@ -54,13 +50,14 @@ def build_query_card(response: QueryResponse) -> Card:
         title=_one_line(question, 42),
         subtitle=subtitle,
         tag_text=tag_text,
-        tag_color="green" if success else "red",
+        tag_color=tag_color,
+        header_template="default",
         body=elements,
     )
 
 
 def build_greeting_card() -> Card:
-    return _bot_info_card("CatData 可以帮你查什么", BOT_SCOPE_TEXT)
+    return _bot_info_card("你好~ 我是 CatData", BOT_SCOPE_TEXT)
 
 
 def build_help_card() -> Card:
@@ -68,11 +65,20 @@ def build_help_card() -> Card:
 
 
 def build_unsupported_card(question: str) -> Card:
-    return _bot_info_card(
-        "这个问题不在问数范围内",
-        f"你刚才问：{_md(_clip(question, 120))}\n\n{BOT_BOUNDARY_TEXT}",
-        tag_text="无法回答",
-        tag_color="yellow",
+    examples = _example_lines()
+    return _base_card(
+        title="我先不强行回答这个问题",
+        subtitle="新氧连锁经营数据问数助手",
+        tag_text="提示",
+        tag_color="grey",
+        header_template="default",
+        body=[
+            _plain_markdown(
+                f"收到你的问题：**{_md(_clip(question, 120))}** 啦。\n\n"
+                f"{_md(BOT_BOUNDARY_TEXT)}"
+            ),
+            _plain_markdown("**你可以这样问**\n" + examples),
+        ],
     )
 
 
@@ -91,16 +97,25 @@ def build_error_card(question: str, error: Exception) -> Card:
 
 
 def _bot_info_card(title: str, intro: str, tag_text: str = "帮助", tag_color: str = "green") -> Card:
-    examples = "\n".join(f"- {_md(line[2:])}" for line in BOT_EXAMPLES.splitlines() if line.startswith("- "))
+    examples = _example_lines()
     return _base_card(
         title=title,
         subtitle="新氧连锁经营数据问数助手",
         tag_text=tag_text,
         tag_color=tag_color,
+        header_template="default",
         body=[
-            _notice_block(_md(intro)),
-            _notice_block("**你可以这样问**\n" + examples, color="grey"),
+            _plain_markdown(_md(intro)),
+            _plain_markdown("**你可以这样问**\n" + examples),
         ],
+    )
+
+
+def _example_lines() -> str:
+    return "\n".join(
+        f"- {_md(line[2:])}"
+        for line in BOT_EXAMPLES.splitlines()
+        if line.startswith("- ")
     )
 
 
@@ -111,9 +126,9 @@ def _base_card(
     tag_text: str,
     body: list[Card],
     tag_color: str = "green",
-    header_template: str = "green",
+    header_template: str = "default",
 ) -> Card:
-    return {
+    card = {
         "schema": "2.0",
         "config": {
             "update_multi": True,
@@ -121,7 +136,7 @@ def _base_card(
             "summary": {"content": title},
             "style": {
                 "text_size": {
-                    "title": {"default": "heading-2", "pc": "heading-2", "mobile": "heading-3"},
+                    "title": {"default": "heading-3", "pc": "heading-3", "mobile": "heading-3"},
                     "body": {"default": "normal", "pc": "normal", "mobile": "normal"},
                     "caption": {"default": "notation", "pc": "notation", "mobile": "notation"},
                 },
@@ -139,7 +154,6 @@ def _base_card(
         },
         "header": {
             "title": {"tag": "plain_text", "content": title},
-            "subtitle": {"tag": "plain_text", "content": subtitle},
             "template": header_template,
             "text_tag_list": [
                 {
@@ -156,6 +170,18 @@ def _base_card(
             "elements": body,
         },
     }
+    if subtitle:
+        card["header"]["subtitle"] = {"tag": "plain_text", "content": subtitle}
+    return card
+
+
+def _query_card_state(response: QueryResponse) -> tuple[str, str, str]:
+    sql_source = response.sql_source or "unknown"
+    if response.execution_status == "success":
+        return "查询完成", "green", f"已执行 · {sql_source}"
+    if not response.execution_enabled or response.execution_status == "skipped":
+        return "已生成", "grey", f"SQL 生成 · {sql_source}"
+    return "查询异常", "red", f"{response.execution_mode or 'unknown'} · {sql_source}"
 
 
 def _summary_metrics(response: QueryResponse) -> Card:
@@ -193,7 +219,7 @@ def _status_text(response: QueryResponse) -> str:
             return f"**查询执行异常**\n{_md(_clip(response.execution_error, 500))}"
         return f"**查询执行状态：** {_md(response.execution_status)}"
 
-    return "**已生成 SQL，当前没有执行真实查询。**"
+    return "**已生成 SQL，当前为测试模式，未执行真实查询。**"
 
 
 def _result_blocks(rows: list[dict[str, Any]]) -> list[Card]:

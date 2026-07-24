@@ -9,6 +9,44 @@ from app.business.item_progress import (
 from app.models.query import QueryPlan
 
 
+EXECUTION_METRIC_EXPRESSIONS = {
+    "execution_income": ("SUM(a.exe_income)", "核销收入"),
+    "execution_gmv": ("SUM(a.exe_amount)", "核销GMV"),
+    "execution_service_point_count": ("SUM(a.exe_cnt)", "核销服务点数"),
+    "execution_order_count": ("COUNT(DISTINCT a.main_order_id)", "核销订单数"),
+    "execution_user_count": ("COUNT(DISTINCT a.customer_id)", "核销人数"),
+    "execution_visit_count": ("COUNT(DISTINCT a.verify_date_id)", "核销人次"),
+    "execution_aov_by_visit": (
+        "SUM(a.exe_income) / NULLIF(COUNT(DISTINCT a.verify_date_id),0)",
+        "核销客单价",
+    ),
+    "income_per_service_point": (
+        "SUM(a.exe_income) / NULLIF(SUM(a.exe_cnt),0)",
+        "单服务点收入",
+    ),
+    "service_points_per_user": (
+        "SUM(a.exe_cnt) / NULLIF(COUNT(DISTINCT a.customer_id),0)",
+        "人均核销服务点",
+    ),
+}
+
+PAYMENT_METRIC_EXPRESSIONS = {
+    "payment_gmv": ("SUM(a.pay_gmv)", "支付GMV"),
+    "payment_order_count": ("COUNT(DISTINCT a.main_order_id)", "支付订单数"),
+    "payment_user_count": ("COUNT(DISTINCT a.uid)", "支付人数"),
+    "payment_aov_by_user_day": (
+        "SUM(a.pay_gmv) / NULLIF(COUNT(DISTINCT CONCAT(CAST(a.pay_date AS STRING), '_', CAST(a.uid AS STRING))),0)",
+        "支付客单价",
+    ),
+}
+
+UNVERIFIED_METRIC_EXPRESSIONS = {
+    "unverified_amount": ("SUM(a.left_gmv)", "待核销金额"),
+    "unverified_service_point_count": ("SUM(a.left_num)", "待核销服务点数"),
+    "unverified_order_count": ("COUNT(DISTINCT a.main_order_id)", "待核销订单数"),
+}
+
+
 SQL_TEMPLATES = {
     "miracle_collagen_income_progress_mtd": """WITH actual_income AS (
     SELECT  DATE_FORMAT(CAST(CURRENT_DATE() AS TIMESTAMP), 'yyyy-MM') AS month,
@@ -376,6 +414,14 @@ class SqlGenerator:
         template_id = self._specialized_template_id(query_plan)
         if template_id == ITEM_INCOME_PROGRESS_TEMPLATE:
             return item_income_progress_sql(extract_item_name(query_plan.original_question))
+        if template_id in {
+            "execution_metric_summary_30d",
+            "payment_metric_summary_30d",
+            "unverified_inventory_summary",
+        }:
+            sql = self._generate_semantic_metric_sql(query_plan, template_id)
+            sql = self._apply_time_overrides(sql, query_plan)
+            return self._apply_question_overrides(sql, query_plan)
         sql = SQL_TEMPLATES.get(
             template_id,
             SQL_TEMPLATES["store_income_top10_30d"],
@@ -409,6 +455,102 @@ class SqlGenerator:
         if "升单" in question and "北京" in question and "门店" in question and "TOP" in question:
             return "upgrade_beijing_store_income_top10_mtd"
         return query_plan.template_id
+
+    def _generate_semantic_metric_sql(self, query_plan: QueryPlan, template_id: str) -> str:
+        contract = query_plan.semantic_contract
+        metrics = list(contract.metrics or [])
+        dimensions = list(contract.dimensions or [])
+
+        if template_id == "payment_metric_summary_30d":
+            table = "soyoung_dw.dm_opt_qy_order_info_all_d"
+            expressions = PAYMENT_METRIC_EXPRESSIONS
+            base_filters = [
+                "a.dp = DATE_SUB(CURRENT_DATE(),1)",
+                "a.is_paydate_cash = 0",
+                "pay_date BETWEEN DATE_SUB(CURRENT_DATE(),30) AND DATE_SUB(CURRENT_DATE(),1)",
+            ]
+            default_metric = "payment_gmv"
+            order_metric_alias = "支付GMV"
+        elif template_id == "unverified_inventory_summary":
+            table = "soyoung_dw.dm_opt_qy_order_info_all_d"
+            expressions = UNVERIFIED_METRIC_EXPRESSIONS
+            base_filters = [
+                "a.dp = DATE_SUB(CURRENT_DATE(),1)",
+                "a.left_num > 0",
+            ]
+            default_metric = "unverified_amount"
+            order_metric_alias = "待核销金额"
+        else:
+            table = "soyoung_dw.dm_opt_qy_user_execution_record_all_d"
+            expressions = EXECUTION_METRIC_EXPRESSIONS
+            base_filters = [
+                "a.dp = DATE_SUB(CURRENT_DATE(),1)",
+                "a.is_valid = 1",
+                "executed_date BETWEEN DATE_SUB(CURRENT_DATE(),30) AND DATE_SUB(CURRENT_DATE(),1)",
+            ]
+            default_metric = "execution_income"
+            order_metric_alias = "核销收入"
+
+        selected_metrics = [metric for metric in metrics if metric in expressions]
+        if not selected_metrics:
+            selected_metrics = [default_metric]
+
+        select_parts, group_by_parts, needs_tenant_dim = self._dimension_select_parts(dimensions)
+        for metric in selected_metrics:
+            expression, alias = expressions[metric]
+            select_parts.append(f"{expression} AS {alias}")
+        first_metric_alias = expressions[selected_metrics[0]][1] if selected_metrics else order_metric_alias
+
+        sql_lines = [
+            "SELECT  " + ",\n        ".join(select_parts),
+            f"FROM    {table} a",
+        ]
+        if needs_tenant_dim:
+            sql_lines.extend([
+                "LEFT JOIN soyoung_dw.dim_qy_tenant_info_all_d b",
+                "ON      a.tenant_id = b.tenant_id",
+                "AND     b.dp = DATE_SUB(CURRENT_DATE(),1)",
+            ])
+        sql_lines.append("WHERE   " + "\nAND     ".join(base_filters))
+        if group_by_parts:
+            sql_lines.append("GROUP BY " + ", ".join(group_by_parts))
+            sql_lines.append(f"ORDER BY {first_metric_alias} DESC")
+            limit = getattr(contract, "top_n", None) or self._top_n(query_plan.original_question)
+            if limit or self._looks_like_ranking(query_plan.original_question):
+                sql_lines.append(f"LIMIT {limit or 10}")
+        return "\n".join(sql_lines) + ";"
+
+    def _dimension_select_parts(self, dimensions: list[str]) -> tuple[list[str], list[str], bool]:
+        select_parts: list[str] = []
+        group_by_parts: list[str] = []
+        needs_tenant_dim = False
+        dimension_map = {
+            "sy_hospital_name": ("b.sy_hospital_name AS 门店", "b.sy_hospital_name"),
+            "area_name": ("b.area_name AS 大区", "b.area_name"),
+            "city_name": ("b.city_name AS 城市", "b.city_name"),
+        }
+        for dimension in dimensions:
+            if dimension in dimension_map:
+                select_expr, group_expr = dimension_map[dimension]
+                select_parts.append(select_expr)
+                group_by_parts.append(group_expr)
+                needs_tenant_dim = True
+            elif dimension == "cx_first_channel":
+                select_parts.append("a.cx_first_channel AS 渠道")
+                group_by_parts.append("a.cx_first_channel")
+            elif dimension == "is_new":
+                select_parts.append("CASE WHEN a.is_new = 1 THEN '新客' ELSE '老客' END AS 新老客类型")
+                group_by_parts.append("CASE WHEN a.is_new = 1 THEN '新客' ELSE '老客' END")
+            elif dimension == "standard_name":
+                select_parts.append("a.standard_name AS 品项")
+                group_by_parts.append("a.standard_name")
+            elif dimension == "revenue_category":
+                select_parts.append("a.revenue_category AS 品类")
+                group_by_parts.append("a.revenue_category")
+        return select_parts, group_by_parts, needs_tenant_dim
+
+    def _looks_like_ranking(self, question: str) -> bool:
+        return any(term in question for term in ("TOP", "top", "前", "排行", "排名"))
 
     def _apply_time_overrides(self, sql: str, query_plan: QueryPlan) -> str:
         if self._is_this_week(query_plan):
@@ -486,21 +628,13 @@ class SqlGenerator:
             return sql
 
         table_alias = self._primary_table_alias(sql)
-        if table_alias:
-            city_condition = (
-                "EXISTS ("
-                "SELECT 1 FROM soyoung_dw.dim_qy_tenant_info_all_d b "
-                f"WHERE b.tenant_id = {table_alias}.tenant_id "
-                "AND b.dp = DATE_SUB(CURRENT_DATE(),1) "
-                f"AND b.city_name LIKE '%{city}%')"
-            )
-        else:
-            city_condition = (
-                "tenant_id IN ("
-                "SELECT b.tenant_id FROM soyoung_dw.dim_qy_tenant_info_all_d b "
-                "WHERE b.dp = DATE_SUB(CURRENT_DATE(),1) "
-                f"AND b.city_name LIKE '%{city}%')"
-            )
+        tenant_field = f"{table_alias}.tenant_id" if table_alias else "tenant_id"
+        city_condition = (
+            f"{tenant_field} IN ("
+            "SELECT b.tenant_id FROM soyoung_dw.dim_qy_tenant_info_all_d b "
+            "WHERE b.dp = DATE_SUB(CURRENT_DATE(),1) "
+            f"AND b.city_name LIKE '%{city}%')"
+        )
         return self._add_where_condition(sql, city_condition)
 
     def _apply_area_filter(self, sql: str, question: str) -> str:
@@ -525,21 +659,13 @@ class SqlGenerator:
             return sql
 
         table_alias = self._primary_table_alias(sql)
-        if table_alias:
-            area_condition = (
-                "EXISTS ("
-                "SELECT 1 FROM soyoung_dw.dim_qy_tenant_info_all_d b "
-                f"WHERE b.tenant_id = {table_alias}.tenant_id "
-                "AND b.dp = DATE_SUB(CURRENT_DATE(),1) "
-                f"AND b.area_name LIKE '%{area}%')"
-            )
-        else:
-            area_condition = (
-                "tenant_id IN ("
-                "SELECT b.tenant_id FROM soyoung_dw.dim_qy_tenant_info_all_d b "
-                "WHERE b.dp = DATE_SUB(CURRENT_DATE(),1) "
-                f"AND b.area_name LIKE '%{area}%')"
-            )
+        tenant_field = f"{table_alias}.tenant_id" if table_alias else "tenant_id"
+        area_condition = (
+            f"{tenant_field} IN ("
+            "SELECT b.tenant_id FROM soyoung_dw.dim_qy_tenant_info_all_d b "
+            "WHERE b.dp = DATE_SUB(CURRENT_DATE(),1) "
+            f"AND b.area_name LIKE '%{area}%')"
+        )
         return self._add_where_condition(sql, area_condition)
 
     def _apply_store_filter(self, sql: str, question: str) -> str:
@@ -564,21 +690,13 @@ class SqlGenerator:
             return sql
 
         table_alias = self._primary_table_alias(sql)
-        if table_alias:
-            store_condition = (
-                "EXISTS ("
-                "SELECT 1 FROM soyoung_dw.dim_qy_tenant_info_all_d b "
-                f"WHERE b.tenant_id = {table_alias}.tenant_id "
-                "AND b.dp = DATE_SUB(CURRENT_DATE(),1) "
-                f"AND b.sy_hospital_name LIKE '%{store}%')"
-            )
-        else:
-            store_condition = (
-                "tenant_id IN ("
-                "SELECT b.tenant_id FROM soyoung_dw.dim_qy_tenant_info_all_d b "
-                "WHERE b.dp = DATE_SUB(CURRENT_DATE(),1) "
-                f"AND b.sy_hospital_name LIKE '%{store}%')"
-            )
+        tenant_field = f"{table_alias}.tenant_id" if table_alias else "tenant_id"
+        store_condition = (
+            f"{tenant_field} IN ("
+            "SELECT b.tenant_id FROM soyoung_dw.dim_qy_tenant_info_all_d b "
+            "WHERE b.dp = DATE_SUB(CURRENT_DATE(),1) "
+            f"AND b.sy_hospital_name LIKE '%{store}%')"
+        )
         return self._add_where_condition(sql, store_condition)
 
     def _apply_item_filter(self, sql: str, question: str) -> str:
@@ -674,7 +792,11 @@ class SqlGenerator:
         return ""
 
     def _named_store(self, question: str) -> str:
-        if any(term in question for term in ("各门店", "各店", "门店TOP", "门店排行")):
+        if (
+            any(term in question for term in ("各门店", "各店", "门店TOP", "门店排行"))
+            or re.search(r"(?i)top\s*\d+\s*门店", question)
+            or re.search(r"前\s*\d+\s*门店", question)
+        ):
             return ""
         if "保利" in question:
             return "保利"
@@ -690,6 +812,8 @@ class SqlGenerator:
         if not match:
             return ""
         store = match.group(1).strip()
+        if any(term in store for term in ("本周", "本月", "最近", "核销", "支付", "收入", "GMV", "TOP", "top")):
+            return ""
         return store if store and store not in {"门", "门店"} else ""
 
     def _top_n(self, question: str) -> int | None:

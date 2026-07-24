@@ -53,7 +53,9 @@ class FollowUpDelta:
 
     operations: list[str] = field(default_factory=list)
     set_filters: dict[str, str] = field(default_factory=dict)
+    remove_filters: list[str] = field(default_factory=list)
     remove_dimensions: list[str] = field(default_factory=list)
+    add_dimensions: list[str] = field(default_factory=list)
     set_metrics: list[str] = field(default_factory=list)
     set_time_range: str = ""
     set_top_n: int | None = None
@@ -64,7 +66,9 @@ class FollowUpDelta:
         return bool(
             self.operations
             or self.set_filters
+            or self.remove_filters
             or self.remove_dimensions
+            or self.add_dimensions
             or self.set_metrics
             or self.set_time_range
             or self.set_top_n is not None
@@ -76,7 +80,9 @@ class FollowUpDelta:
         return {
             "operations": self.operations,
             "set_filters": self.set_filters,
+            "remove_filters": self.remove_filters,
             "remove_dimensions": self.remove_dimensions,
+            "add_dimensions": self.add_dimensions,
             "set_metrics": self.set_metrics,
             "set_time_range": self.set_time_range,
             "set_top_n": self.set_top_n,

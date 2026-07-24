@@ -250,9 +250,14 @@ class QueryPlanner:
             if metric not in augmented:
                 augmented.append(metric)
 
-        payment_context = any(term in question for term in ("支付", "付了", "付的", "GMV"))
+        payment_context = any(term in question for term in ("支付", "付了", "付的", "GMV", "付款", "下单"))
         if "待核销" in question or "没核销" in question:
-            add("unverified_amount")
+            if any(term in question for term in ("服务点", "点数", "多少点")):
+                add("unverified_service_point_count")
+            elif any(term in question for term in ("订单数", "订单量", "单量", "多少单")):
+                add("unverified_order_count")
+            else:
+                add("unverified_amount")
         if "渗透率" in question:
             add("standard_item_penetration")
         if "0元单" in question or "0 元单" in question:
@@ -265,6 +270,8 @@ class QueryPlanner:
             add("payment_gmv")
         if payment_context and any(term in question for term in ("支付人数", "多少人付", "付的人")):
             add("payment_user_count")
+        if payment_context and any(term in question for term in ("支付订单数", "支付单量", "成交订单数", "下单数")):
+            add("payment_order_count")
         if payment_context and any(term in question for term in ("客单价", "人均")):
             add("payment_aov_by_user_day")
 
@@ -280,6 +287,14 @@ class QueryPlanner:
             "收入" in question and "支付" not in question
         ):
             add("execution_income")
+        if any(term in question for term in ("核销服务点", "核销点数", "消耗点数", "服务点", "点数")) and "待核销" not in question:
+            add("execution_service_point_count")
+        if any(term in question for term in ("核销订单数", "核销单量", "消耗订单数", "核销了多少单")):
+            add("execution_order_count")
+        if any(term in question for term in ("单服务点收入", "点均收入", "每个服务点收入", "服务点收入")):
+            add("income_per_service_point")
+        if any(term in question for term in ("人均核销服务点", "人均服务点", "人均消耗点数", "人均点数")):
+            add("service_points_per_user")
         if "核销GMV" in question:
             add("execution_gmv")
         if "人次" in question:
@@ -397,6 +412,9 @@ class QueryPlanner:
             "payment_gmv_summary_30d",
             "area_execution_30d",
             "area_payment_30d",
+            "execution_metric_summary_30d",
+            "payment_metric_summary_30d",
+            "unverified_inventory_summary",
         }:
             return self._delta_template_case(question, semantic_contract.template_id)
         if semantic_contract and semantic_contract.template_id in {
@@ -462,6 +480,57 @@ class QueryPlanner:
         return self.cases_by_template["store_income_top10_30d"]
 
     def _delta_template_case(self, question: str, template_id: str) -> dict:
+        if template_id == "execution_metric_summary_30d":
+            return {
+                "case_id": "Q_SEMANTIC_EXECUTION_METRIC_SUMMARY",
+                "template_id": template_id,
+                "question": question,
+                "business_domain": "连锁经营-核销指标汇总",
+                "metrics": self._augment_metrics_from_question(question, []),
+                "dimensions": self._semantic_dimensions_from_question(question),
+                "source_tables": [
+                    "soyoung_dw.dm_opt_qy_user_execution_record_all_d",
+                    "soyoung_dw.dim_qy_tenant_info_all_d",
+                ],
+                "risk_flags": [
+                    "核销指标使用 executed_date + is_valid = 1",
+                    "服务点使用 exe_cnt，订单数使用 main_order_id，人数使用 customer_id，人次使用 verify_date_id",
+                ],
+            }
+        if template_id == "payment_metric_summary_30d":
+            return {
+                "case_id": "Q_SEMANTIC_PAYMENT_METRIC_SUMMARY",
+                "template_id": template_id,
+                "question": question,
+                "business_domain": "连锁经营-支付指标汇总",
+                "metrics": self._augment_metrics_from_question(question, []),
+                "dimensions": self._semantic_dimensions_from_question(question),
+                "source_tables": [
+                    "soyoung_dw.dm_opt_qy_order_info_all_d",
+                    "soyoung_dw.dim_qy_tenant_info_all_d",
+                ],
+                "risk_flags": [
+                    "支付指标使用 pay_date + is_paydate_cash = 0",
+                    "支付订单数使用 main_order_id，支付人数使用 uid",
+                ],
+            }
+        if template_id == "unverified_inventory_summary":
+            return {
+                "case_id": "Q_SEMANTIC_UNVERIFIED_INVENTORY",
+                "template_id": template_id,
+                "question": question,
+                "business_domain": "连锁经营-待核销库存",
+                "metrics": self._augment_metrics_from_question(question, []),
+                "dimensions": self._semantic_dimensions_from_question(question),
+                "source_tables": [
+                    "soyoung_dw.dm_opt_qy_order_info_all_d",
+                    "soyoung_dw.dim_qy_tenant_info_all_d",
+                ],
+                "risk_flags": [
+                    "待核销是 T-1 库存快照，不按 pay_date 或 executed_date 框发生期",
+                    "待核销服务点使用 left_num，待核销金额使用 left_gmv",
+                ],
+            }
         if template_id == "execution_income_summary_30d":
             return {
                 "case_id": "Q_MEM_DELTA_OVERALL_INCOME",
@@ -591,6 +660,28 @@ class QueryPlanner:
                 merged.append(value)
         return merged
 
+    def _semantic_dimensions_from_question(self, question: str) -> list[dict]:
+        dimension_specs = []
+        if any(term in question for term in ("各门店", "按门店", "门店TOP", "门店排行", "门店")):
+            dimension_specs.append({
+                "field": "sy_hospital_name",
+                "alias": "门店",
+                "source_table": "soyoung_dw.dim_qy_tenant_info_all_d",
+            })
+        if any(term in question for term in ("各大区", "按大区", "分大区", "大区对比")):
+            dimension_specs.append({
+                "field": "area_name",
+                "alias": "大区",
+                "source_table": "soyoung_dw.dim_qy_tenant_info_all_d",
+            })
+        if any(term in question for term in ("各城市", "按城市", "分城市", "城市对比")):
+            dimension_specs.append({
+                "field": "city_name",
+                "alias": "城市",
+                "source_table": "soyoung_dw.dim_qy_tenant_info_all_d",
+            })
+        return dimension_specs
+
     def _semantics_time_label(self, time_type: str) -> str:
         """Convert query_semantics time_type to display label."""
         return {
@@ -637,6 +728,7 @@ class QueryPlanner:
             "area_execution_30d": common_execution_filters,
             "standard_item_income_share_top20_30d": common_execution_filters,
             "execution_income_summary_30d": common_execution_filters + ["executed_date BETWEEN DATE_SUB(CURRENT_DATE(),30) AND DATE_SUB(CURRENT_DATE(),1)"],
+            "execution_metric_summary_30d": common_execution_filters + ["executed_date BETWEEN DATE_SUB(CURRENT_DATE(),30) AND DATE_SUB(CURRENT_DATE(),1)"],
             "standard_item_penetration_90d": common_execution_filters + ["standard_name REGEXP '奇迹胶原'"],
             ITEM_INCOME_PROGRESS_TEMPLATE: common_execution_filters + [
                 "standard_name REGEXP '<item_name>'",
@@ -652,8 +744,10 @@ class QueryPlanner:
             "unverified_amount_store_top10": ["a.dp = DATE_SUB(CURRENT_DATE(),1)", "left_num > 0"],
             "new_customer_payment_30d": ["dp = DATE_SUB(CURRENT_DATE(),1)", "is_paydate_cash = 0", "is_pay_new = 1"],
             "payment_gmv_summary_30d": ["dp = DATE_SUB(CURRENT_DATE(),1)", "is_paydate_cash = 0", "pay_date BETWEEN DATE_SUB(CURRENT_DATE(),30) AND DATE_SUB(CURRENT_DATE(),1)"],
+            "payment_metric_summary_30d": ["dp = DATE_SUB(CURRENT_DATE(),1)", "is_paydate_cash = 0", "pay_date BETWEEN DATE_SUB(CURRENT_DATE(),30) AND DATE_SUB(CURRENT_DATE(),1)"],
             "area_payment_30d": ["dp = DATE_SUB(CURRENT_DATE(),1)", "is_paydate_cash = 0", "pay_date BETWEEN DATE_SUB(CURRENT_DATE(),30) AND DATE_SUB(CURRENT_DATE(),1)"],
             "payment_gmv_store_topn_30d": ["dp = DATE_SUB(CURRENT_DATE(),1)", "is_paydate_cash = 0", "pay_date BETWEEN DATE_SUB(CURRENT_DATE(),30) AND DATE_SUB(CURRENT_DATE(),1)"],
+            "unverified_inventory_summary": ["dp = DATE_SUB(CURRENT_DATE(),1)", "left_num > 0"],
             "pay_to_verify_rate_30d": ["支付表 is_paydate_cash = 0", "核销表 is_valid = 1"],
             "upgrade_execution_30d": common_execution_filters + ["is_up = 1"],
         }

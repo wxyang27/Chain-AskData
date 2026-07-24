@@ -11,3 +11,5 @@ data/
 logs/
 *.log
 .workbuddy/
+eval/eval_result_*.json
+eval/memory_eval_result_*.json

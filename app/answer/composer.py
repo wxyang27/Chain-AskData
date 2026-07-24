@@ -8,6 +8,7 @@ from app.models.query import (
     ValidationResult,
 )
 from app.askdata_pipeline.pipeline import AskDataPipeline
+from app.memory.objects import ConversationState
 from app.schema_graph.graph import SchemaGraph
 
 
@@ -33,11 +34,13 @@ class AnswerComposer:
         *,
         session_id: str = "",
         use_memory: bool = True,
+        memory_states_override: list[ConversationState] | None = None,
     ) -> QueryResponse:
         result = self.pipeline.run(
             question,
             session_id=session_id,
             use_memory=use_memory,
+            memory_states_override=memory_states_override,
         )
         memory_resolution = result.memory_resolution
         resolved_question = (
@@ -137,6 +140,16 @@ class AnswerComposer:
             )
 
         # --- 核销人数/人次 ---
+        if "execution_service_point_count" in metrics_set:
+            notes.append(
+                "核销服务点数 = SUM(exe_cnt)，核销域必须过滤 is_valid = 1，"
+                "业务日期使用 executed_date；它不同于待核销服务点 left_num。"
+            )
+        if "execution_order_count" in metrics_set:
+            notes.append(
+                "核销订单数 = COUNT(DISTINCT main_order_id)，"
+                "不要与核销人次 verify_date_id 或支付订单数混用。"
+            )
         if "execution_user_count" in metrics_set and "execution_visit_count" in metrics_set:
             notes.append(
                 "核销人数 = COUNT(DISTINCT customer_id)；"
@@ -148,6 +161,25 @@ class AnswerComposer:
                 "核销人次 = COUNT(DISTINCT verify_date_id)。"
                 "涉及新客核销人次占比时，分子为新客核销人次，分母为总核销人次，"
                 "并用 NULLIF 防止除零。"
+            )
+
+        if "payment_order_count" in metrics_set:
+            notes.append(
+                "支付订单数 = COUNT(DISTINCT main_order_id)，"
+                "支付域必须过滤 is_paydate_cash = 0，业务日期使用 pay_date。"
+            )
+
+        if "unverified_service_point_count" in metrics_set or "unverified_order_count" in metrics_set:
+            notes.append(
+                "待核销是 T-1 库存快照口径，使用订单表 left_num > 0；"
+                "待核销服务点 = SUM(left_num)，待核销订单数 = COUNT(DISTINCT main_order_id)，"
+                "不按 pay_date 或 executed_date 框发生期。"
+            )
+
+        if "income_per_service_point" in metrics_set or "service_points_per_user" in metrics_set:
+            notes.append(
+                "单服务点收入 = SUM(exe_income) / NULLIF(SUM(exe_cnt),0)；"
+                "人均核销服务点 = SUM(exe_cnt) / NULLIF(COUNT(DISTINCT customer_id),0)。"
             )
 
         if "execution_income" in metrics_set and "revenue_category" in semantic_contract.dimensions:

@@ -19,6 +19,11 @@ from app.models.query import SemanticContract
 
 
 AREA_NAMES = ("华北", "华东", "华南", "华中")
+EXECUTION_SERVICE_POINT_TERMS = ("核销服务点", "核销点数", "消耗点数", "消耗服务点", "服务点数", "服务点", "点数")
+UNVERIFIED_SERVICE_POINT_TERMS = ("待核销服务点", "未核销服务点", "剩余服务点", "待消耗点数", "未消耗点数", "还剩多少点", "剩余点数")
+EXECUTION_ORDER_TERMS = ("核销订单数", "核销单量", "消耗订单数", "核销了多少单")
+PAYMENT_ORDER_TERMS = ("支付订单数", "支付单量", "成交订单数", "下单数")
+UNVERIFIED_ORDER_TERMS = ("待核销订单数", "未核销订单数", "剩余订单数")
 
 
 @dataclass
@@ -110,6 +115,15 @@ class SemanticContractBuilder:
             top_n = None
 
         filters = self._filters(question, metrics)
+        if previous_state and delta and self._has_state_delta(delta):
+            metrics, dimensions, filters, top_n = self._apply_follow_up_delta(
+                metrics=metrics,
+                dimensions=dimensions,
+                filters=filters,
+                top_n=top_n,
+                delta=delta,
+                previous_state=previous_state,
+            )
         state = SemanticState(
             domain=self._domain(metrics, filters),
             metrics=metrics,
@@ -183,8 +197,14 @@ class SemanticContractBuilder:
         if is_item_income_progress_question(question):
             add(ITEM_INCOME_PROGRESS_METRIC)
 
-        if "待核销" in question or "没核销" in question or "未核销" in question:
-            add("unverified_amount")
+        unverified_context = self._unverified_context(question)
+        if unverified_context:
+            if self._has_unverified_service_point_metric(question):
+                add("unverified_service_point_count")
+            elif any(term in question for term in UNVERIFIED_ORDER_TERMS):
+                add("unverified_order_count")
+            elif any(term in question for term in ("金额", "GMV", "收入", "钱", "余额")) or not metrics:
+                add("unverified_amount")
 
         if "0元单" in question or "0 元单" in question or "0元核销" in question or "0 元核销" in question:
             add("zero_income_order_count")
@@ -211,10 +231,20 @@ class SemanticContractBuilder:
                 add("payment_gmv")
             if any(term in question for term in ("支付人数", "多少人付", "付的", "人付")):
                 add("payment_user_count")
+            if any(term in question for term in PAYMENT_ORDER_TERMS):
+                add("payment_order_count")
             if any(term in question for term in ("客单价", "人均")):
                 add("payment_aov_by_user_day")
 
         if execution_context:
+            if any(term in question for term in EXECUTION_SERVICE_POINT_TERMS) and not unverified_context:
+                add("execution_service_point_count")
+            if any(term in question for term in EXECUTION_ORDER_TERMS):
+                add("execution_order_count")
+            if any(term in question for term in ("单服务点收入", "点均收入", "每个服务点收入", "服务点收入")):
+                add("income_per_service_point")
+            if any(term in question for term in ("人均核销服务点", "人均服务点", "人均消耗点数", "人均点数")):
+                add("service_points_per_user")
             if any(term in question for term in ("核销收入", "核销了多少钱", "核销金额", "消耗金额", "业绩", "成交后收入", "按核销日")):
                 add("execution_income")
             if "收入" in question and not payment_context:
@@ -260,13 +290,22 @@ class SemanticContractBuilder:
             if filter_text not in filters:
                 filters.append(filter_text)
 
-        if any(metric.startswith("execution_") or metric in {"zero_income_order_count", "standard_item_penetration"} for metric in metrics):
+        if any(
+            metric.startswith("execution_")
+            or metric in {
+                "zero_income_order_count",
+                "standard_item_penetration",
+                "income_per_service_point",
+                "service_points_per_user",
+            }
+            for metric in metrics
+        ):
             add("is_valid = 1")
         if any(metric.startswith("payment_") for metric in metrics):
             add("is_paydate_cash = 0")
         if "新客" in question:
             add("is_pay_new = 1" if any(metric.startswith("payment_") for metric in metrics) else "is_new = 1")
-        if "待核销" in question or "没核销" in question or "未核销" in question:
+        if self._unverified_context(question):
             add("left_num > 0")
         if all(term in question for term in ("大单品", "常规品", "大师团")):
             add("revenue_category IN ('大单品','常规品','大师团')")
@@ -315,6 +354,8 @@ class SemanticContractBuilder:
                 "left_num", "is_paydate_cash", "revenue_category", "is_pay_new",
                 "is_new", "exe_income", "city_name", "area_name", "standard_name",
                 "sy_hospital_name", "cx_first_channel", "pay_gmv", "pay_date",
+                "exe_cnt", "main_order_id", "uid", "customer_id", "verify_date_id",
+                "left_gmv",
             ):
                 if field_name in filter_text:
                     add(field_name)
@@ -414,7 +455,7 @@ class SemanticContractBuilder:
             return "pay_to_verify_rate_30d"
         if any(term in question for term in ("本周", "这周")) and "私域" in question and "新客" in question:
             return "private_new_customer_income_this_week"
-        if "unverified_amount" in metrics:
+        if any(metric.startswith("unverified_") for metric in metrics):
             return "unverified_amount_store_top10"
         if "payment_gmv" in metrics and "execution_income" in metrics:
             return "pay_to_verify_rate_30d"
@@ -450,16 +491,25 @@ class SemanticContractBuilder:
             return ITEM_INCOME_PROGRESS_TEMPLATE
         if state.calculation == "conversion_rate":
             return "pay_to_verify_rate_30d"
-        if "unverified_amount" in metrics:
-            return "unverified_amount_store_top10"
+        if any(metric.startswith("unverified_") for metric in metrics):
+            if set(metrics) == {"unverified_amount"}:
+                return "unverified_amount_store_top10"
+            return "unverified_inventory_summary"
         if "payment_gmv" in metrics and "execution_income" in metrics:
             return "pay_to_verify_rate_30d"
         if state.domain == "payment":
+            if any(metric in metrics for metric in ("payment_order_count", "payment_user_count", "payment_aov_by_user_day")) and not (
+                ("is_pay_new = 1" in state.filters or "新客" in question)
+                and "payment_order_count" not in metrics
+            ):
+                return "payment_metric_summary_30d"
             if "area_name" in state.dimensions:
                 return "area_payment_30d"
             if "sy_hospital_name" in state.dimensions and state.top_n:
                 return "payment_gmv_store_topn_30d"
-            if "is_pay_new = 1" in state.filters or "新客" in question:
+            if state.dimensions:
+                return "payment_metric_summary_30d"
+            if ("is_pay_new = 1" in state.filters or "新客" in question) and "payment_order_count" not in metrics:
                 return "new_customer_payment_30d"
             return "payment_gmv_summary_30d"
         if "standard_item_penetration" in metrics:
@@ -468,6 +518,16 @@ class SemanticContractBuilder:
             return "zero_income_orders_30d"
         if "升单" in question:
             return "upgrade_execution_30d"
+        if any(
+            metric in metrics
+            for metric in (
+                "execution_service_point_count",
+                "execution_order_count",
+                "income_per_service_point",
+                "service_points_per_user",
+            )
+        ):
+            return "execution_metric_summary_30d"
         if "revenue_category" in state.dimensions:
             return "revenue_category_execution_30d"
         if "area_name" in state.dimensions:
@@ -484,6 +544,21 @@ class SemanticContractBuilder:
             return "new_old_customer_execution_30d"
         if "cx_first_channel" in state.dimensions:
             return "channel_execution_30d"
+        if state.dimensions and "execution_income" in metrics:
+            return "execution_metric_summary_30d"
+        if any(
+            metric in metrics
+            for metric in (
+                "execution_service_point_count",
+                "execution_order_count",
+                "income_per_service_point",
+                "service_points_per_user",
+                "execution_user_count",
+                "execution_visit_count",
+                "execution_aov_by_visit",
+            )
+        ):
+            return "execution_metric_summary_30d"
         if state.grain == "overall" and "execution_income" in metrics:
             return "execution_income_summary_30d"
         return self._template_hint(question, metrics)
@@ -534,10 +609,69 @@ class SemanticContractBuilder:
             for term in ("不要门店", "不用门店", "不看门店", "去掉门店", "不按门店")
         )
 
+    def _has_state_delta(self, delta: Any) -> bool:
+        return bool(
+            getattr(delta, "remove_filters", [])
+            or getattr(delta, "remove_dimensions", [])
+            or getattr(delta, "add_dimensions", [])
+            or getattr(delta, "output_grain", "")
+        )
+
+    def _apply_follow_up_delta(
+        self,
+        *,
+        metrics: list[str],
+        dimensions: list[str],
+        filters: list[str],
+        top_n: int | None,
+        delta: Any,
+        previous_state: Any,
+    ) -> tuple[list[str], list[str], list[str], int | None]:
+        remove_fields = set(getattr(delta, "remove_filters", []) or [])
+        remove_fields.update(getattr(delta, "remove_dimensions", []) or [])
+        add_dimensions = list(getattr(delta, "add_dimensions", []) or [])
+
+        if not metrics:
+            metrics = list(getattr(previous_state, "metrics", []) or [])
+
+        previous_filters = list(getattr(previous_state, "filters", []) or [])
+        filters = self._merge_unique(
+            self._remove_filters_by_fields(filters, remove_fields),
+            self._remove_filters_by_fields(previous_filters, remove_fields),
+        )
+
+        if not dimensions:
+            dimensions = list(getattr(previous_state, "dimensions", []) or [])
+        dimensions = [dim for dim in dimensions if dim not in remove_fields]
+        for dimension in add_dimensions:
+            if dimension not in dimensions:
+                dimensions.append(dimension)
+
+        if getattr(delta, "output_grain", "") == "overall":
+            dimensions = []
+            top_n = None
+
+        return metrics, dimensions, filters, top_n
+
+    def _remove_filters_by_fields(self, filters: list[str], fields: set[str]) -> list[str]:
+        if not fields:
+            return list(filters)
+        return [
+            filter_text for filter_text in filters
+            if not any(field in filter_text for field in fields)
+        ]
+
+    def _merge_unique(self, primary: list[str], secondary: list[str]) -> list[str]:
+        result = list(primary)
+        for item in secondary:
+            if item not in result:
+                result.append(item)
+        return result
+
     def _domain(self, metrics: list[str], filters: list[str]) -> str:
         has_payment = any(metric.startswith("payment_") for metric in metrics)
         has_execution = any(metric.startswith("execution_") for metric in metrics)
-        if "unverified_amount" in metrics:
+        if any(metric.startswith("unverified_") for metric in metrics):
             return "unverified_inventory"
         if has_payment and has_execution:
             return "payment_execution_mixed"
@@ -548,7 +682,7 @@ class SemanticContractBuilder:
         return "chain_business"
 
     def _payment_context(self, question: str) -> bool:
-        return self._has_payment_alias(question) or any(term in question for term in ("付了", "付的", "人均", "按支付日"))
+        return self._has_payment_alias(question) or any(term in question for term in ("付了", "付的", "人均", "按支付日", *PAYMENT_ORDER_TERMS))
 
     def _has_payment_alias(self, question: str) -> bool:
         return any(
@@ -560,11 +694,20 @@ class SemanticContractBuilder:
         )
 
     def _execution_context(self, question: str) -> bool:
-        if any(term in question for term in ("待核销", "没核销", "未核销")):
+        if self._unverified_context(question):
             return False
         return any(
             term in question
-            for term in ("核销", "消耗", "业绩", "成交后", "按核销日", "收入", "0元单", "升单")
+            for term in ("核销", "消耗", "业绩", "成交后", "按核销日", "收入", "0元单", "升单", "服务点", "点数")
+        )
+
+    def _unverified_context(self, question: str) -> bool:
+        return any(term in question for term in ("待核销", "没核销", "未核销", "待消耗", "未消耗", "剩余"))
+
+    def _has_unverified_service_point_metric(self, question: str) -> bool:
+        return any(term in question for term in UNVERIFIED_SERVICE_POINT_TERMS) or (
+            self._unverified_context(question)
+            and any(term in question for term in ("服务点", "点数", "多少点"))
         )
 
     def _named_city(self, question: str) -> str:
@@ -638,13 +781,20 @@ _FIELDS_BY_METRIC = {
     ],
     "execution_income": ["exe_income", "executed_date", "dp", "is_valid"],
     "execution_gmv": ["exe_amount", "executed_date", "dp", "is_valid"],
+    "execution_service_point_count": ["exe_cnt", "executed_date", "dp", "is_valid"],
+    "execution_order_count": ["main_order_id", "executed_date", "dp", "is_valid"],
     "execution_visit_count": ["verify_date_id", "executed_date", "dp", "is_valid"],
     "execution_user_count": ["customer_id", "executed_date", "dp", "is_valid"],
     "execution_aov_by_visit": ["exe_income", "verify_date_id", "executed_date", "dp", "is_valid"],
+    "income_per_service_point": ["exe_income", "exe_cnt", "executed_date", "dp", "is_valid"],
+    "service_points_per_user": ["exe_cnt", "customer_id", "executed_date", "dp", "is_valid"],
     "payment_gmv": ["pay_gmv", "pay_date", "dp", "is_paydate_cash"],
+    "payment_order_count": ["main_order_id", "pay_date", "dp", "is_paydate_cash"],
     "payment_user_count": ["uid", "pay_date", "dp", "is_paydate_cash"],
     "payment_aov_by_user_day": ["pay_gmv", "uid", "pay_date", "dp", "is_paydate_cash"],
     "zero_income_order_count": ["main_order_id", "exe_income", "customer_id", "executed_date", "dp", "is_valid"],
     "standard_item_penetration": ["standard_name", "customer_id", "executed_date", "dp", "is_valid"],
     "unverified_amount": ["left_gmv", "left_num", "dp"],
+    "unverified_service_point_count": ["left_num", "dp"],
+    "unverified_order_count": ["main_order_id", "left_num", "dp"],
 }

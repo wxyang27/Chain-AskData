@@ -1,6 +1,8 @@
 ﻿from app.cot_planning.semantic_contract import SemanticContractBuilder
 
 
+from app.memory.objects import ConversationState, FollowUpDelta
+
 def test_contract_maps_unverified_synonym_to_inventory_metric():
     contract = SemanticContractBuilder().build("各机构还有多少没核销的金额，排个前十")
 
@@ -108,6 +110,51 @@ def test_contract_maps_oral_payment_income_to_overall_payment_summary():
     assert "is_pay_new = 1" not in contract.filters
 
 
+def test_contract_routes_dimension_breakdown_without_top_to_dynamic_templates():
+    builder = SemanticContractBuilder()
+
+    payment = builder.build("本月各门店支付GMV")
+    assert payment.template_id == "payment_metric_summary_30d"
+    assert payment.domain == "payment"
+    assert payment.time_range == "this_month_mtd"
+    assert payment.metrics == ["payment_gmv"]
+    assert payment.dimensions == ["sy_hospital_name"]
+
+    execution = builder.build("本月各门店核销收入")
+    assert execution.template_id == "execution_metric_summary_30d"
+    assert execution.metrics == ["execution_income"]
+    assert execution.dimensions == ["sy_hospital_name"]
+
+
+def test_contract_applies_composite_follow_up_delta_to_remove_previous_filters():
+    delta = FollowUpDelta(
+        operations=["filter_removal", "dimension_removal", "dimension_addition"],
+        remove_filters=["area_name"],
+        remove_dimensions=["area_name"],
+        add_dimensions=["sy_hospital_name"],
+        preserve=["time_range", "metrics", "filters"],
+    )
+    previous = ConversationState(
+        session_id="semantic-delta",
+        metrics=["payment_gmv"],
+        filters=["is_paydate_cash = 0", "area_name LIKE '%华东%'"],
+        dimensions=[],
+        time_range="this_month_mtd",
+    )
+
+    contract = SemanticContractBuilder().build(
+        "本月各门店支付GMV",
+        delta=delta,
+        previous_state=previous,
+    )
+
+    assert contract.template_id == "payment_metric_summary_30d"
+    assert contract.metrics == ["payment_gmv"]
+    assert contract.dimensions == ["sy_hospital_name"]
+    assert "area_name LIKE '%华东%'" not in contract.filters
+    assert "is_paydate_cash = 0" in contract.filters
+
+
 def test_contract_extracts_named_store_filter_without_store_grouping():
     contract = SemanticContractBuilder().build("本周整体支付GMV是多少？，北京保利店")
 
@@ -140,6 +187,56 @@ def test_contract_maps_area_breakdown_to_area_dimension():
     assert payment_contract.template_id == "area_payment_30d"
     assert payment_contract.domain == "payment"
     assert "area_name" in payment_contract.dimensions
+
+
+def test_contract_maps_p0_metric_clusters():
+    builder = SemanticContractBuilder()
+
+    execution_service = builder.build("本周北京保利店核销服务点是多少？")
+    assert execution_service.template_id == "execution_metric_summary_30d"
+    assert execution_service.metrics == ["execution_service_point_count"]
+    assert "exe_cnt" in execution_service.required_fields
+    assert "is_valid = 1" in execution_service.filters
+    assert "city_name LIKE '%北京%'" in execution_service.filters
+    assert "sy_hospital_name LIKE '%保利%'" in execution_service.filters
+
+    execution_order = builder.build("最近30天核销订单数是多少？")
+    assert execution_order.template_id == "execution_metric_summary_30d"
+    assert "execution_order_count" in execution_order.metrics
+    assert "main_order_id" in execution_order.required_fields
+
+    payment_order = builder.build("最近30天各门店支付订单数 TOP10")
+    assert payment_order.template_id == "payment_metric_summary_30d"
+    assert "payment_order_count" in payment_order.metrics
+    assert "sy_hospital_name" in payment_order.dimensions
+    assert "is_paydate_cash = 0" in payment_order.filters
+
+    unverified_service = builder.build("截至昨天各城市待核销服务点排行TOP5")
+    assert unverified_service.template_id == "unverified_inventory_summary"
+    assert "unverified_service_point_count" in unverified_service.metrics
+    assert "city_name" in unverified_service.dimensions
+    assert "left_num > 0" in unverified_service.filters
+
+    unverified_order = builder.build("截至昨天各门店待核销订单数 TOP10")
+    assert unverified_order.template_id == "unverified_inventory_summary"
+    assert "unverified_order_count" in unverified_order.metrics
+    assert "main_order_id" in unverified_order.required_fields
+
+
+def test_contract_maps_p1_efficiency_metric_clusters():
+    builder = SemanticContractBuilder()
+
+    income_per_point = builder.build("最近30天各大区单服务点收入")
+    assert income_per_point.template_id == "execution_metric_summary_30d"
+    assert "income_per_service_point" in income_per_point.metrics
+    assert "area_name" in income_per_point.dimensions
+    assert {"exe_income", "exe_cnt"}.issubset(set(income_per_point.required_fields))
+
+    points_per_user = builder.build("本月北京人均核销服务点是多少？")
+    assert points_per_user.template_id == "execution_metric_summary_30d"
+    assert "service_points_per_user" in points_per_user.metrics
+    assert "customer_id" in points_per_user.required_fields
+    assert points_per_user.time_range == "this_month_mtd"
 
 
 def test_contract_routes_membership_question_to_schema_explain():

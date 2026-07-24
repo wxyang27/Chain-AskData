@@ -21,6 +21,27 @@ INTENT_LABELS = {
 }
 
 
+FEISHU_LOG_FIELD_IDS = {
+    "时间": "fldDHZ621M",
+    "用户ID": "fldxpqTz6C",
+    "用户名称": "fldUco9Pbj",
+    "对话类型": "flda9KNpYl",
+    "群聊ID": "fldItYx3od",
+    "群聊名称": "fldkX1eDkL",
+    "用户问题": "fldHjSpT3I",
+    "意图": "fldtaHCxza",
+    "回复摘要": "fldoe96P6A",
+    "SQL": "fld2FixjpH",
+    "SQL来源": "fldimv81jG",
+    "处理状态": "fldqTTi9mW",
+    "执行模式": "fld7ZlLvLv",
+    "执行状态": "fldnkt6alS",
+    "行数": "fldS8Pv72o",
+    "耗时": "fldeNgmCiy",
+    "错误信息": "fldLx5DJdW",
+}
+
+
 @dataclass
 class FeishuLogEntry:
     message_id: str = ""
@@ -52,6 +73,7 @@ class FeishuBaseLogger:
         "用户名称",
         "对话类型",
         "群聊ID",
+        "群聊名称",
         "用户问题",
         "意图",
         "回复摘要",
@@ -60,6 +82,7 @@ class FeishuBaseLogger:
         "处理状态",
         "执行模式",
         "执行状态",
+        "行数",
         "耗时",
         "错误信息",
     ]
@@ -75,7 +98,7 @@ class FeishuBaseLogger:
         if not self.enabled:
             return
 
-        body = {"fields": self.fields, "rows": [self._row(entry)]}
+        body = {"fields": self._field_ids(), "rows": [self._row(entry)]}
         cmd = [
             _resolve_cli_command(settings.feishu_log_cli),
             "base",
@@ -115,6 +138,7 @@ class FeishuBaseLogger:
             _clip(entry.sender_name, 500),
             _chat_type_label(entry.chat_type),
             _clip(entry.chat_id, 500),
+            _clip(entry.chat_name, 500),
             _clip(entry.question, 2000),
             INTENT_LABELS.get(entry.intent, entry.intent or "错误"),
             _clip(entry.reply_summary, 2000),
@@ -123,9 +147,13 @@ class FeishuBaseLogger:
             entry.status,
             entry.execution_mode or "unknown",
             entry.execution_status or "unknown",
+            int(entry.row_count or 0),
             round(float(entry.elapsed_seconds or 0), 2),
             _clip(entry.error, 2000),
         ]
+
+    def _field_ids(self) -> list[str]:
+        return [FEISHU_LOG_FIELD_IDS.get(field, field) for field in self.fields]
 
 
 def build_log_entry(message, question: str) -> FeishuLogEntry:

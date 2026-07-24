@@ -715,6 +715,87 @@
           ]
         }
       ]
+    },
+    {
+      "id": "MEM_P1_005",
+      "priority": "p1_next",
+      "category": "composite_dimension_patch",
+      "base_demo_question": "本月华东大区支付GMV",
+      "purpose": "Next iteration: support composite follow-ups that remove one filter or grouping dimension and add another grouping dimension.",
+      "turns": [
+        {
+          "question": "本月华东大区支付GMV",
+          "expected_resolved": "本月华东大区支付GMV",
+          "expected_memory_used": false
+        },
+        {
+          "question": "不看大区，看一下各门店吧",
+          "expected_resolved": "本月各门店支付GMV",
+          "expected_memory_used": true,
+          "expected_selected_turn_id": 1,
+          "required_sql_contains": [
+            "b.sy_hospital_name AS 门店",
+            "SUM(a.pay_gmv) AS 支付GMV",
+            "pay_date BETWEEN DATETRUNC(CURRENT_DATE(), 'MONTH')",
+            "GROUP BY b.sy_hospital_name"
+          ],
+          "forbidden_sql_contains": [
+            "area_name LIKE '%华东%'",
+            "SUM(exe_income)",
+            "executed_date",
+            "LIMIT"
+          ]
+        },
+        {
+          "question": "去掉门店，按品项",
+          "expected_resolved": "本月各品项支付GMV",
+          "expected_memory_used": true,
+          "expected_selected_turn_id": 2,
+          "required_sql_contains": [
+            "a.standard_name AS 品项",
+            "SUM(a.pay_gmv) AS 支付GMV",
+            "GROUP BY a.standard_name"
+          ],
+          "forbidden_sql_contains": [
+            "b.sy_hospital_name AS 门店",
+            "area_name LIKE '%华东%'",
+            "SUM(exe_income)",
+            "executed_date"
+          ]
+        },
+        {
+          "question": "不按品项，分整体",
+          "expected_resolved": "本月整体支付GMV是多少？",
+          "expected_memory_used": true,
+          "expected_selected_turn_id": 3,
+          "required_sql_contains": [
+            "SUM(pay_gmv) AS 支付GMV",
+            "pay_date BETWEEN DATETRUNC(CURRENT_DATE(), 'MONTH')"
+          ],
+          "forbidden_sql_contains": [
+            "GROUP BY",
+            "area_name LIKE '%华东%'",
+            "SUM(exe_income)",
+            "executed_date"
+          ]
+        },
+        {
+          "question": "核销收入呢",
+          "expected_resolved": "本月整体核销收入是多少？",
+          "expected_memory_used": true,
+          "expected_selected_turn_id": 4,
+          "required_sql_contains": [
+            "SUM(exe_income) AS 核销收入",
+            "executed_date BETWEEN DATETRUNC(CURRENT_DATE(), 'MONTH')"
+          ],
+          "forbidden_sql_contains": [
+            "pay_gmv",
+            "pay_date",
+            "GROUP BY",
+            "area_name LIKE '%华东%'"
+          ]
+        }
+      ]
     }
   ]
 }

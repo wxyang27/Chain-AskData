@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from app.feishu_bot.cards import build_query_card
+from app.feishu_bot.cards import build_processing_card, build_query_card, build_unsupported_card
 from app.models.query import QueryPlan, QueryResponse, ValidationResult
 
 
@@ -88,3 +88,28 @@ def test_query_card_formats_sql_block_for_readability():
     assert "\nWHERE a.is_valid" in sql_markdown
     assert "\n  AND a.executed_date" in sql_markdown
     assert "\nGROUP BY b.sy_hospital_name" in sql_markdown
+
+
+def test_unsupported_card_uses_simple_markdown_without_stacked_color_blocks():
+    card = build_unsupported_card("下午好")
+    elements = card["body"]["elements"]
+
+    assert card["header"]["template"] == "default"
+    assert all(element["tag"] == "markdown" for element in elements)
+    assert "收到你的问题" in elements[0]["content"]
+    assert "本月华东大区支付GMV" in elements[1]["content"]
+
+
+def test_processing_card_is_minimal_and_shows_resolved_question():
+    card = build_processing_card("那top3呢", "本周北京奇迹胶原核销收入TOP3门店")
+    content = card["body"]["elements"][0]["content"]
+
+    assert card["header"]["template"] == "default"
+    assert card["header"]["title"]["content"] == " "
+    assert "subtitle" not in card["header"]
+    assert card["header"]["text_tag_list"][0]["text"]["content"] == "处理中"
+    assert "CatData" not in content
+    assert "新氧连锁经营数据问数助手" not in content
+    assert "收到你的问题啦：那top3呢" in content
+    assert "补齐问题：本周北京奇迹胶原核销收入TOP3门店" in content
+    assert "我先按经营口径看一下，稍后把结果回复在这里~" in content

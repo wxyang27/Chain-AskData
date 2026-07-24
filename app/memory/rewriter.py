@@ -21,6 +21,30 @@ PAYMENT_METRIC_ALIASES = (
     "收款金额", "收款", "流水", "付款金额", "付款额", "付了多少",
 )
 EXECUTION_INCOME_ALIASES = ("核销收入", "核销金额", "消耗收入", "消耗金额")
+METRIC_SWITCH_ALIASES = {
+    "execution_service_point_count": ("核销服务点", "核销点数", "消耗点数", "消耗服务点", "服务点数", "服务点", "点数"),
+    "execution_order_count": ("核销订单数", "核销单量", "消耗订单数", "核销了多少单"),
+    "payment_order_count": ("支付订单数", "支付单量", "成交订单数", "下单数"),
+    "unverified_service_point_count": ("待核销服务点", "未核销服务点", "剩余服务点", "待消耗点数", "未消耗点数", "还剩多少点", "剩余点数"),
+    "unverified_order_count": ("待核销订单数", "未核销订单数", "剩余订单数"),
+    "income_per_service_point": ("单服务点收入", "点均收入", "每个服务点收入", "服务点收入"),
+    "service_points_per_user": ("人均核销服务点", "人均服务点", "人均消耗点数", "人均点数"),
+}
+METRIC_LABELS = {
+    "execution_service_point_count": "核销服务点数",
+    "execution_order_count": "核销订单数",
+    "payment_order_count": "支付订单数",
+    "unverified_service_point_count": "待核销服务点数",
+    "unverified_order_count": "待核销订单数",
+    "income_per_service_point": "单服务点收入",
+    "service_points_per_user": "人均核销服务点",
+}
+REPLACEABLE_METRIC_LABELS = (
+    "核销收入占比", "核销收入", "支付GMV", "支付金额", "支付收入",
+    "待核销金额", "核销服务点数", "核销服务点", "服务点数", "服务点",
+    "核销订单数", "支付订单数", "待核销服务点数", "待核销服务点",
+    "待核销订单数", "单服务点收入", "人均核销服务点",
+)
 TIME_PHRASES = (
     "本月", "这个月", "当月", "本周", "这周", "昨天", "截至昨天",
     "最近7天", "近7天", "最近30天", "近30天", "最近60天", "近60天",
@@ -30,6 +54,31 @@ FOLLOW_UP_PREFIXES = (
     "那", "那么", "换成", "改成", "再看", "再", "继续", "同样",
     "回到", "回看", "还是", "刚才",
 )
+DIMENSION_ALIASES = {
+    "sy_hospital_name": ("门店", "机构", "医院", "各门店", "各店", "店铺"),
+    "area_name": ("大区", "地区", "区域", "战区", "各大区", "各地区", "各区域", "各战区"),
+    "city_name": ("城市", "各城市"),
+    "standard_name": ("品项", "项目", "各品项", "各项目"),
+    "cx_first_channel": ("渠道", "私域", "公域", "老带新", "各渠道"),
+    "is_new": ("新老客", "新客老客", "新客和老客"),
+    "revenue_category": ("品类", "大单品", "常规品", "大师团", "各品类"),
+}
+DIMENSION_PHRASES = {
+    "sy_hospital_name": "各门店",
+    "area_name": "各大区",
+    "city_name": "各城市",
+    "standard_name": "各品项",
+    "cx_first_channel": "各渠道",
+    "is_new": "新客和老客",
+    "revenue_category": "各品类",
+}
+METRIC_PHRASE_CANDIDATES = tuple(dict.fromkeys((
+    *REPLACEABLE_METRIC_LABELS,
+    *PAYMENT_METRIC_ALIASES,
+    *EXECUTION_INCOME_ALIASES,
+    "核销GMV", "核销人次", "核销人数", "核销客单价",
+    "支付人数", "支付客单价", "待核销金额",
+)))
 
 
 class QuestionRewriter:
@@ -161,6 +210,7 @@ class QuestionRewriter:
             or any(term in q for term in ("换成", "改成", "改看", "那", "呢"))
         )
         delta = FollowUpDelta()
+        self._apply_composite_dimension_delta(clean, delta)
 
         channel = self._find_channel(clean)
         if channel and any(term in q for term in ("只看", "单看", "仅看")):
@@ -169,8 +219,8 @@ class QuestionRewriter:
             delta.preserve.extend(["time_range", "metrics"])
 
         if any(term in q for term in ("不要门店", "不用门店", "不看门店", "去掉门店")) and "整体" in q:
-            delta.operations.append("dimension_removal")
-            delta.remove_dimensions.append("sy_hospital_name")
+            self._append_unique(delta.operations, "dimension_removal")
+            self._append_unique(delta.remove_dimensions, "sy_hospital_name")
             delta.output_grain = "overall"
             delta.preserve.extend(["time_range", "metrics", "filters"])
 
@@ -178,6 +228,12 @@ class QuestionRewriter:
             delta.operations.append("metric_switch_to_ratio")
             delta.set_metrics.append("execution_income_share")
             delta.preserve.extend(["time_range", "dimensions", "top_n", "filters"])
+
+        metric = self._find_metric_switch(clean)
+        if metric and compact_follow_up:
+            delta.operations.append("metric_switch")
+            delta.set_metrics.append(metric)
+            delta.preserve.extend(["time_range", "city", "item", "filters", "dimensions", "top_n"])
 
         time_phrase = self._find_time_phrase(clean)
         if time_phrase and (clean == time_phrase or compact_follow_up):
@@ -189,9 +245,7 @@ class QuestionRewriter:
             delta.set_metrics.append("payment_gmv")
             delta.preserve.extend(["time_range", "city", "item", "dimensions", "top_n"])
 
-        if any(alias in q for alias in EXECUTION_INCOME_ALIASES) and any(
-            term in q for term in ("换成", "改成", "改看")
-        ):
+        if any(alias in q for alias in EXECUTION_INCOME_ALIASES) and compact_follow_up:
             delta.operations.append("domain_switch_to_execution")
             delta.set_metrics.append("execution_income")
             delta.preserve.extend(["time_range", "city", "item", "dimensions", "top_n"])
@@ -208,11 +262,19 @@ class QuestionRewriter:
             if channel:
                 return self._channel_narrowing_question(base, channel)
 
+        if "dimension_addition" in operations or delta.remove_filters:
+            rewritten = self._dimension_delta_question(base, delta)
+            if rewritten:
+                return rewritten
+
         if "dimension_removal" in operations and delta.output_grain == "overall":
             return self._overall_question(base)
 
         if "metric_switch_to_ratio" in operations:
             return self._income_share_question(base)
+
+        if "metric_switch" in operations and delta.set_metrics:
+            return self._metric_switch_question(base, delta.set_metrics[0], delta.set_time_range)
 
         if "domain_switch_to_payment" in operations:
             return self._payment_gmv_question(base, delta.set_time_range)
@@ -264,6 +326,24 @@ class QuestionRewriter:
             result = f"{result}，核销收入"
         return result
 
+    def _metric_switch_question(self, base: str, metric: str, time_phrase: str = "") -> str:
+        label = METRIC_LABELS.get(metric, "")
+        if not label:
+            return ""
+        result = base
+        for current_label in REPLACEABLE_METRIC_LABELS:
+            if current_label in result and current_label != label:
+                result = result.replace(current_label, label, 1)
+                break
+        else:
+            if result.endswith("是多少？"):
+                result = result.replace("是多少？", f"，{label}是多少？", 1)
+            else:
+                result = f"{result}，{label}"
+        if time_phrase:
+            result = self._replace_time(result, time_phrase)
+        return result
+
     def _replace_channel_set(self, base: str, channel: str) -> str:
         result = base
         patterns = (
@@ -285,6 +365,124 @@ class QuestionRewriter:
         if match:
             return match.group(0)
         return ""
+
+    def _top_from_base(self, base: str) -> int | None:
+        return self._extract_top_n(base)
+
+    def _metric_phrase_from_base(self, base: str) -> str:
+        for metric, label in METRIC_LABELS.items():
+            if metric in base:
+                return label
+        for phrase in METRIC_PHRASE_CANDIDATES:
+            if phrase in base:
+                if phrase in PAYMENT_METRIC_ALIASES:
+                    return "支付GMV"
+                if phrase in EXECUTION_INCOME_ALIASES:
+                    return "核销收入"
+                return phrase
+        return ""
+
+    def _filter_phrases_from_base(self, base: str, removed_fields: set[str]) -> list[str]:
+        phrases: list[str] = []
+
+        def add(field: str, phrase: str) -> None:
+            if field not in removed_fields and phrase and phrase not in phrases:
+                phrases.append(phrase)
+
+        for city in CITY_NAMES:
+            if city in base:
+                add("city_name", city)
+                break
+        for area in AREA_NAMES:
+            if area in base:
+                add("area_name", f"{area}大区")
+                break
+        for item in ITEM_NAMES:
+            if item.upper() in base.upper():
+                add("standard_name", item)
+                break
+        for channel in CHANNEL_NAMES:
+            if channel in base and not any(pattern in base for pattern in ("私域、公域、老带新", "私域/公域/老带新")):
+                add("cx_first_channel", channel)
+                break
+        store = self._find_store(base)
+        if store:
+            add("sy_hospital_name", f"{store}店")
+        return phrases
+
+    def _dimension_delta_question(self, base: str, delta: FollowUpDelta) -> str:
+        time_phrase = delta.set_time_range or self._time_from_base(base)
+        metric_phrase = self._metric_phrase_from_base(base)
+        if not metric_phrase:
+            return ""
+
+        removed_fields = set(delta.remove_filters) | set(delta.remove_dimensions)
+        preserved_filters = "".join(self._filter_phrases_from_base(base, removed_fields))
+
+        if delta.output_grain == "overall":
+            return f"{time_phrase}{preserved_filters}整体{metric_phrase}是多少？"
+
+        dimension = delta.add_dimensions[0] if delta.add_dimensions else ""
+        dimension_phrase = DIMENSION_PHRASES.get(dimension, "")
+        if not dimension_phrase:
+            return ""
+
+        result = f"{time_phrase}{preserved_filters}{dimension_phrase}{metric_phrase}"
+        top_n = delta.set_top_n if delta.set_top_n is not None else self._top_from_base(base)
+        if top_n:
+            result = f"{result} TOP{top_n}"
+        return result
+
+    def _apply_composite_dimension_delta(self, question: str, delta: FollowUpDelta) -> None:
+        match = re.search(
+            r"(?:不看|不要|去掉|不按|不用)\s*(?P<remove>[^，,、\s]+)"
+            r"(?:[，,、\s]+|了)"
+            r".*?(?:看一下|看下|看|按|分一下|分)\s*(?P<add>[^，,。？！\s]+)",
+            question,
+        )
+        if not match:
+            return
+
+        remove_text = self._strip_followup_suffix(match.group("remove"))
+        add_text = self._strip_followup_suffix(match.group("add"))
+        remove_dim = self._dimension_from_text(remove_text)
+        add_dim = self._dimension_from_text(add_text)
+        output_overall = any(term in add_text for term in ("整体", "汇总", "总览", "全局"))
+
+        if not remove_dim and not add_dim and not output_overall:
+            return
+
+        if remove_dim:
+            self._append_unique(delta.operations, "filter_removal")
+            self._append_unique(delta.operations, "dimension_removal")
+            self._append_unique(delta.remove_filters, remove_dim)
+            self._append_unique(delta.remove_dimensions, remove_dim)
+
+        if output_overall:
+            self._append_unique(delta.operations, "grain_switch_to_overall")
+            delta.output_grain = "overall"
+        elif add_dim:
+            self._append_unique(delta.operations, "dimension_addition")
+            self._append_unique(delta.add_dimensions, add_dim)
+
+        for item in ("time_range", "metrics", "filters"):
+            self._append_unique(delta.preserve, item)
+        if not output_overall:
+            self._append_unique(delta.preserve, "top_n")
+
+    def _dimension_from_text(self, text: str) -> str:
+        clean = self._strip_followup_suffix(text)
+        for dimension, aliases in DIMENSION_ALIASES.items():
+            if any(alias in clean for alias in aliases):
+                return dimension
+        return ""
+
+    def _strip_followup_suffix(self, text: str) -> str:
+        return text.strip().strip("，,。？！? ").rstrip("了吧呢吗啊呀").strip()
+
+    def _append_unique(self, values: list[str], value: str) -> None:
+        if value and value not in values:
+            values.append(value)
 
     def _as_state_window(
         self,
@@ -440,7 +638,11 @@ class QuestionRewriter:
         return ""
 
     def _find_store(self, question: str) -> str:
-        if any(term in question for term in ("各门店", "各店", "门店TOP", "门店排行")):
+        if (
+            any(term in question for term in ("各门店", "各店", "门店TOP", "门店排行"))
+            or re.search(r"(?i)top\s*\d+\s*门店", question)
+            or re.search(r"前\s*\d+\s*门店", question)
+        ):
             return ""
         for store in STORE_NAME_HINTS:
             if store in question:
@@ -453,7 +655,21 @@ class QuestionRewriter:
         if not match:
             return ""
         store = match.group(1).strip()
+        if any(term in store for term in ("本周", "本月", "最近", "核销", "支付", "收入", "GMV", "TOP", "top")):
+            return ""
         return store if store and store not in {"门", "门店"} else ""
+
+    def _find_metric_switch(self, question: str) -> str:
+        if "待核销" in question or "未核销" in question or "剩余" in question:
+            for metric in ("unverified_service_point_count", "unverified_order_count"):
+                if any(alias in question for alias in METRIC_SWITCH_ALIASES[metric]):
+                    return metric
+        for metric, aliases in METRIC_SWITCH_ALIASES.items():
+            if metric.startswith("unverified_"):
+                continue
+            if any(alias in question for alias in aliases):
+                return metric
+        return ""
 
     def _find_time_phrase(self, question: str) -> str:
         for phrase in TIME_PHRASES:

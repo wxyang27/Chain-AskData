@@ -235,6 +235,46 @@ metrics:
   version: 1.0.0
   eval_cases:
   - METRIC_ASSET_013
+- canonical: execution_order_count
+  display_name: 核销订单数
+  aliases:
+  - 核销单量
+  - 消耗订单数
+  - 核销了多少单
+  priority: P0
+  metric_type: atomic
+  business_domain: execution
+  support_status: sql_supported
+  definition: 统计周期内已核销订单数量。
+  formula_sql: COUNT(DISTINCT main_order_id)
+  source_tables:
+  - soyoung_dw.dm_opt_qy_user_execution_record_all_d
+  date_field: executed_date
+  required_fields:
+  - main_order_id
+  - executed_date
+  - dp
+  - is_valid
+  required_filters:
+  - is_valid = 1
+  supported_dimensions:
+  - city_name
+  - sy_hospital_name
+  - standard_name
+  - cx_first_channel
+  - is_new
+  forbidden_fields:
+  - uid
+  - left_num
+  critical_rules:
+  - CR001_dp
+  - CR002_execution_valid
+  known_risks:
+  - 核销订单数不是核销人次，也不是支付订单数。
+  capability_notes: 用于核销单量和履约订单规模分析。
+  version: 1.0.0
+  eval_cases:
+  - METRIC_ASSET_016
 - canonical: execution_aov_by_visit
   display_name: 核销客单价
   aliases:
@@ -279,6 +319,88 @@ metrics:
   version: 1.0.0
   eval_cases:
   - P0V1_026
+- canonical: income_per_service_point
+  display_name: 单服务点收入
+  aliases:
+  - 点均收入
+  - 每个服务点收入
+  - 服务点收入
+  priority: P1
+  metric_type: derived
+  business_domain: execution
+  support_status: sql_supported
+  definition: 核销收入除以核销服务点数，用于货盘效率分析。
+  formula_sql: SUM(exe_income) / NULLIF(SUM(exe_cnt), 0)
+  source_tables:
+  - soyoung_dw.dm_opt_qy_user_execution_record_all_d
+  date_field: executed_date
+  required_fields:
+  - exe_income
+  - exe_cnt
+  - executed_date
+  - dp
+  - is_valid
+  required_filters:
+  - is_valid = 1
+  supported_dimensions:
+  - city_name
+  - sy_hospital_name
+  - standard_name
+  - cx_first_channel
+  - is_new
+  forbidden_fields:
+  - left_num
+  - pay_gmv
+  critical_rules:
+  - CR001_dp
+  - CR002_execution_valid
+  known_risks:
+  - 单服务点收入分母是 exe_cnt，不是核销人次。
+  capability_notes: 当前先支持整体口径，非0元和非0非大师口径后续扩展。
+  version: 1.0.0
+  eval_cases:
+  - METRIC_ASSET_019
+- canonical: service_points_per_user
+  display_name: 人均核销服务点
+  aliases:
+  - 人均服务点
+  - 人均消耗点数
+  - 人均点数
+  priority: P1
+  metric_type: derived
+  business_domain: execution
+  support_status: sql_supported
+  definition: 核销服务点数除以核销人数，用于用户消耗深度分析。
+  formula_sql: SUM(exe_cnt) / NULLIF(COUNT(DISTINCT customer_id), 0)
+  source_tables:
+  - soyoung_dw.dm_opt_qy_user_execution_record_all_d
+  date_field: executed_date
+  required_fields:
+  - exe_cnt
+  - customer_id
+  - executed_date
+  - dp
+  - is_valid
+  required_filters:
+  - is_valid = 1
+  supported_dimensions:
+  - city_name
+  - sy_hospital_name
+  - standard_name
+  - cx_first_channel
+  - is_new
+  forbidden_fields:
+  - verify_date_id
+  - left_num
+  critical_rules:
+  - CR001_dp
+  - CR002_execution_valid
+  known_risks:
+  - 人均核销服务点分母是 customer_id，不是 verify_date_id。
+  capability_notes: 用于用户消耗深度和货盘使用情况分析。
+  version: 1.0.0
+  eval_cases:
+  - METRIC_ASSET_020
 - canonical: payment_gmv
   display_name: 支付GMV
   aliases:
@@ -321,6 +443,46 @@ metrics:
   eval_cases:
   - P0V1_031
   - P0V1_032
+- canonical: payment_order_count
+  display_name: 支付订单数
+  aliases:
+  - 支付单量
+  - 成交订单数
+  - 下单数
+  priority: P0
+  metric_type: atomic
+  business_domain: payment
+  support_status: sql_supported
+  definition: 统计周期内支付订单数量。
+  formula_sql: COUNT(DISTINCT main_order_id)
+  source_tables:
+  - soyoung_dw.dm_opt_qy_order_info_all_d
+  date_field: pay_date
+  required_fields:
+  - main_order_id
+  - pay_date
+  - dp
+  - is_paydate_cash
+  required_filters:
+  - is_paydate_cash = 0
+  supported_dimensions:
+  - city_name
+  - sy_hospital_name
+  - standard_name
+  - cx_first_channel
+  - is_pay_new
+  forbidden_fields:
+  - verify_date_id
+  - customer_id
+  critical_rules:
+  - CR001_dp
+  - CR006_payment_refund_filter
+  known_risks:
+  - 支付订单数使用订单表 main_order_id，不使用核销表 verify_date_id。
+  capability_notes: 适合支付单量、成交订单数和转化漏斗分析。
+  version: 1.0.0
+  eval_cases:
+  - METRIC_ASSET_017
 - canonical: payment_user_count
   display_name: 支付人数
   aliases:
@@ -479,6 +641,44 @@ metrics:
   version: 1.0.0
   eval_cases:
   - P0V1_038
+- canonical: unverified_order_count
+  display_name: 待核销订单数
+  aliases:
+  - 未核销订单数
+  - 剩余订单数
+  priority: P0
+  metric_type: atomic
+  business_domain: inventory
+  support_status: sql_supported
+  definition: 当前快照下仍存在待核销服务点的订单数量。
+  formula_sql: COUNT(DISTINCT main_order_id)
+  source_tables:
+  - soyoung_dw.dm_opt_qy_order_info_all_d
+  date_field: dp
+  required_fields:
+  - main_order_id
+  - left_num
+  - dp
+  required_filters:
+  - left_num > 0
+  supported_dimensions:
+  - city_name
+  - sy_hospital_name
+  - standard_name
+  - cx_first_channel
+  - is_pay_new
+  forbidden_fields:
+  - executed_date
+  - exe_cnt
+  critical_rules:
+  - CR001_dp
+  - CR008_unverified_snapshot
+  known_risks:
+  - 待核销订单数是库存快照口径，不加 pay_date 或 executed_date 发生期。
+  capability_notes: 用于待核销订单规模和库存释放分析。
+  version: 1.0.0
+  eval_cases:
+  - METRIC_ASSET_018
 - canonical: zero_income_order_count
   display_name: 0元单量
   aliases:

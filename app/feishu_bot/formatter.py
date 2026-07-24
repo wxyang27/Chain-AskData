@@ -3,19 +3,21 @@ from app.models.query import QueryResponse
 
 
 BOT_SCOPE_TEXT = (
-    "我是 CatData，定位是新氧连锁经营数据问数助手，主要用于查询和解释连锁经营口径，"
-    "例如核销、支付、门店、品项、渠道、新老客、待核销、达成率等数据问题。"
+    "你好~ 我是 CatData，可以帮你查询和解释新氧连锁经营数据，"
+    "更适合处理带有时间、指标和维度的问题。"
 )
 
 BOT_BOUNDARY_TEXT = (
-    "这类问题不属于我的问数范围，我无法可靠回答。"
-    "你可以换成包含时间、指标和维度的经营数据问题。"
+    "我先不强行回答这个问题啦。你可以换成包含时间、指标和维度的经营数据问题，"
+    "我会按统一口径帮你生成查询。"
 )
 
 BOT_EXAMPLES = (
     "可以这样问：\n"
+    "- 本月华东大区支付GMV\n"
+    "- 那华北大区呢\n"
+    "- 不看大区，看一下各门店吧\n"
     "- 最近30天北京奇迹胶原核销收入TOP5门店\n"
-    "- 昨天整体核销收入、核销GMV、核销人次是多少\n"
     "- 截至昨天各门店待核销金额TOP10"
 )
 
@@ -99,11 +101,15 @@ def format_help() -> str:
 
 
 def format_unsupported(text: str) -> str:
-    return f"{BOT_SCOPE_TEXT}\n\n{BOT_BOUNDARY_TEXT}\n\n{BOT_EXAMPLES}"
+    return f"收到你的问题：{_clip(text, 80)} 啦。\n\n{BOT_BOUNDARY_TEXT}\n\n{BOT_EXAMPLES}"
 
 
-def format_processing(text: str) -> str:
-    return f"收到，我正在查询：{_clip(text, 80)}\n稍等一下，我会把结果直接回复在这里。"
+def format_processing(text: str, resolved_question: str = "") -> str:
+    lines = [f"收到你的问题啦：{_clip(text, 80)}"]
+    if resolved_question and resolved_question != text:
+        lines.append(f"补齐问题：{_clip(resolved_question, 160)}")
+    lines.append("我先按经营口径看一下，稍后把结果回复在这里~")
+    return "\n".join(lines)
 
 
 def _business_notes(notes: list[str]) -> list[str]:

@@ -97,6 +97,7 @@ class AskDataPipeline:
         *,
         session_id: str = "",
         use_memory: bool = True,
+        memory_states_override: list[ConversationState] | None = None,
     ) -> PipelineRunResult:
         trace = PipelineTrace(
             question=question,
@@ -107,6 +108,7 @@ class AskDataPipeline:
             question=question,
             session_id=session_id,
             use_memory=use_memory,
+            memory_states_override=memory_states_override,
             trace=trace,
         )
         working_question = memory_resolution.resolved_question
@@ -227,6 +229,7 @@ class AskDataPipeline:
         question: str,
         session_id: str,
         use_memory: bool,
+        memory_states_override: list[ConversationState] | None = None,
         trace: PipelineTrace,
     ) -> MemoryResolution:
         t0 = _now_ms()
@@ -238,7 +241,11 @@ class AskDataPipeline:
                 "question": question,
             },
         )
-        state_window = self.memory_store.get_window(session_id) if session_id else []
+        state_window = (
+            list(memory_states_override)
+            if memory_states_override is not None
+            else (self.memory_store.get_window(session_id) if session_id else [])
+        )
         resolution = self.question_rewriter.resolve(
             question,
             state_window,
@@ -253,6 +260,7 @@ class AskDataPipeline:
             "memory_window_size": resolution.memory_window_size,
             "selected_turn_id": resolution.selected_turn_id,
             "has_previous_state": bool(state_window),
+            "override_memory": memory_states_override is not None,
         }
         stage.summary = (
             f"used={resolution.used_memory} follow_up={resolution.is_follow_up}"

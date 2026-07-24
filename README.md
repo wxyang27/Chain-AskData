@@ -1,6 +1,6 @@
 # Chain-AskData
 
-Chain-AskData 是一个面向新氧连锁医美经营分析场景的 **Agentic Text2SQL / Schema RAG 问数系统**。
+Chain-AskData 是一个面向新氧连锁医美经营分析场景的 **Agentic Text2SQL / Schema RAG 问数系统**。项目服务数据智能部-数据架构组面向经管中心战略咨询、商业分析、经营分析等业务团队的自然语言取数需求，目标用户规模约 20-50 人。
 
 它将自然语言经营问题转化为可审计、可执行、可校验的 MaxCompute SQL，并通过 Hybrid Schema RAG、QueryPlanCoT、SQL Safety Gate、真实执行、结果校验与修复回退机制，降低 LLM-SQL 在字段幻觉、口径混淆、漏过滤、漏分组等场景下的风险。
 
@@ -8,13 +8,17 @@ Chain-AskData 是一个面向新氧连锁医美经营分析场景的 **Agentic T
 
 > 这不是一个“让大模型直接写 SQL”的工具，而是一条可观测、可执行、可回退的 Agentic Text2SQL Workflow。
 
-当前链路已经覆盖从短期记忆追问补全、业务问题理解、指标/字段召回、QueryPlanCoT、SQL 生成、安全门禁、MaxCompute 只读执行、结果校验到修复回退的闭环。LLM SQL 默认以受控方式参与：可以生成候选 SQL，但只有通过 Safety Gate、执行层和结果校验后才会被采纳；否则系统会继续使用规则修复或模板 SQL 兜底。飞书 CatData 机器人也已接入，支持私聊/群聊 @ 触发、Card 2.0 图表回复、SQL 折叠展示和运行日志写入飞书多维表格。
+当前链路已经覆盖从短期记忆追问补全、语义层归一、业务问题理解、指标/字段召回、QueryPlanCoT、SQL 生成、安全门禁、MaxCompute 只读执行、结果校验到修复回退的闭环。LLM SQL 默认以受控方式参与：可以生成候选 SQL，但只有通过 Safety Gate、执行层和结果校验后才会被采纳；否则系统会继续使用规则修复或模板 SQL 兜底。飞书 CatData 机器人也已接入，支持私聊/群聊 @ 触发、Card 2.0 图表回复、SQL 折叠展示和运行日志写入飞书多维表格。
 
 ---
 
 ## 1. 项目背景
 
-连锁医美经营分析中，业务问题通常包含大量隐含约束：
+在连锁医美经营分析中，数据架构组长期承接经管中心其他部门的基础取数和口径确认需求。战略咨询、商业分析、经营分析等业务同事往往知道自己要看“哪个经营问题”，但不一定知道应该使用哪张事实表、哪个维度表、哪个指标字段、哪个日期口径和过滤条件。
+
+本项目的业务目标不是替代数仓同学做复杂分析，而是把已经沉淀的指标口径、数仓表结构、历史 SQL 经验和执行校验能力产品化，帮助业务团队建立自己的数据运营能力，减少中心化基础取数压力，降低跨部门沟通歧义，并保证核心指标口径一致。
+
+连锁经营问题通常包含大量隐含约束：
 
 - 指标口径：核销收入、核销 GMV、支付 GMV、待核销金额、0 元单、支付后 30 日核销率
 - 业务域：核销域、支付域、库存快照、门店维度、品项维度、渠道维度、新老客维度
@@ -29,7 +33,13 @@ Chain-AskData 是一个面向新氧连锁医美经营分析场景的 **Agentic T
 - 语法不兼容：生成非 MaxCompute 函数，如 `DATE_TRUNC`、`INTERVAL`、`NOW()`
 - 校验误杀：SQL 业务正确，但因为 `total_income` 和“核销收入”列名不同被误判失败
 
-因此本项目的目标是构建一个 **可解释、可校验、可修复、可回退** 的 LLM-SQL 闭环，而不是追求一次生成即正确。
+因此本项目的目标是构建一个 **业务驱动、可解释、可校验、可修复、可回退** 的 LLM-SQL 闭环，而不是追求一次生成即正确。
+
+项目依赖的内部知识资产包括：
+
+- [【经营管理中心】数据字典](https://soyoung.feishu.cn/sheets/WQRbsbh0QhEfuPt6onHcGcHbnGh)：由每周跨部门指标评审会沉淀，作为核心指标口径知识库
+- [数据小课堂 · 连锁数仓表地图](https://soyoung.feishu.cn/docx/CoWrdfPYioN3ZxxSWKbcG4EGnKf)：梳理连锁数仓分层、核心表、易混淆字段和口径关系
+- [小鹿智能体 Q2 季度总结与 Q3 规划](https://soyoung.feishu.cn/docx/ZF6XdLo8lop3KDx02Bocwv26nDd)：作为释放基础取数人力、提升业务响应效率的组织目标参考
 
 ---
 
@@ -38,11 +48,13 @@ Chain-AskData 是一个面向新氧连锁医美经营分析场景的 **Agentic T
 项目面向连锁经营分析中的自然语言取数需求，目标是把业务指标口径、数仓表结构、历史 SQL 经验和执行校验能力沉淀成一条稳定可复用的问数链路：
 
 - 让业务同事用自然语言描述问题，系统自动识别指标、维度、时间范围和过滤条件
-- 支持同一会话内的短追问补全，让“那上海呢”“top3”“本月呢”可以继承最近问题的指标和分析对象
+- 支持同一会话内的短追问补全，让“那上海呢”“top3”“本月呢”“支付金额呢”可以继承最近问题的指标、维度、过滤和时间范围
+- 引入轻量语义层，将口语表达映射为 `domain / metrics / dimensions / filters / time_range / top_n / grain` 等结构化状态
 - 通过指标字典、schema 索引和样例 SQL 降低字段幻觉与口径混淆
-- 用 Keyword、BM25、Vector、RRF、Rerank 组合召回表、字段和指标证据
+- 用 Keyword、BM25、Vector、RRF、Rerank 和闭包补齐组合召回表、字段、指标和关系证据
 - 用 Thinking / Coder 模型分工，把业务规划和 SQL 生成拆开治理
-- 同时保留模板 SQL、规则修复 SQL、LLM SQL 三种来源，兼顾稳定性和泛化能力
+- 采用 Plan-and-Execute + Reflection 范式，把查询规划、工具调用、执行校验和修复回退串成 Agentic Workflow
+- 同时保留模板 SQL、规则修复 SQL、LLM SQL 三种来源，兼顾稳定性、泛化能力和可采纳率
 - 通过 SQL Safety Gate、真实执行、结果校验、修复回退闭环提升返回结果可信度
 - 保留 Pipeline Trace，让每一步可观测、可解释、可复盘
 
@@ -55,6 +67,8 @@ Chain-AskData 是一个面向新氧连锁医美经营分析场景的 **Agentic T
 - 支持连锁经营常见取数问题
 - 输出 QueryPlan、SQL、口径说明、校验结果、执行结果和 Pipeline Trace
 - 支持模板 SQL 与 LLM SQL 双路径
+- 支持语义层归一：将“支付金额 / 支付收入 / 收款 / 流水”归一到 `payment_gmv`，将“华北大区 / 华东地区 / 战区”归一到 `area_name`
+- 支持短期记忆 delta：把追问解释为 `set_metrics`、`set_time_range`、`remove_dimensions`、`preserve` 等结构化动作，而不是简单拼接字符串
 
 ### 3.2 Hybrid Schema RAG
 
@@ -64,6 +78,7 @@ Chain-AskData 是一个面向新氧连锁医美经营分析场景的 **Agentic T
 - RRF Fusion：多路召回结果融合
 - Rerank：候选 schema 重排
 - Closure：补齐 `dp`、`is_valid`、`pay_date`、`tenant_id` 等低语义但 SQL 必需字段
+- 三级索引：字段/指标关键词索引、向量索引、rerank 文本索引分层维护，支持 schema 检索和指标检索独立评估
 
 ### 3.3 QueryPlanCoT
 
@@ -76,6 +91,7 @@ Chain-AskData 是一个面向新氧连锁医美经营分析场景的 **Agentic T
 - 在生成前注入当前可用数据库和工具能力，约束模型只能在已暴露能力范围内规划
 - `processing_objects` 要覆盖指标字段、筛选字段、分组/输出字段、业务日期字段、分区字段、口径字段和必要 join key
 - `operation_instructions` 按筛选、关联、聚合/计算、排序/截断、输出的顺序描述执行计划
+- QueryPlanCoT 是 Plan-and-Execute 的显式计划层，后续 SQL 生成、Safety Gate 和执行层只消费这个可审计计划，不依赖模型隐藏思考链
 
 ### 3.4 Thinking / Coder 模型分工
 
@@ -109,6 +125,8 @@ maxcompute  通过 PyODPS 只读执行真实 MaxCompute SQL
 ```
 
 执行请求携带 `database` 作为路由元信息，当前默认暴露 `soyoung_dw`。SQL 生成模型只生成 SQL，执行层根据已校验的 `database` 和执行模式选择对应 executor；如果请求的数据库未注册，执行层会拒绝执行。
+
+当前实现是轻量数据库 MCP 路由思想，还不是标准 MCP Server：系统已具备能力清单注入、数据库路由字段和 executor 注册/拒绝机制，但尚未实现 `tools/list`、`tools/call`、resources、prompts 等标准协议能力。
 
 ### 3.7 Result Validation / Repair / Fallback
 
@@ -332,7 +350,7 @@ http://127.0.0.1:8000
 
 ### 7.6 终端调试短期记忆
 
-短期记忆使用进程内 dict 保存最近 3 轮结构化状态，形成轻量滑动窗口。传入同一个 `session_id` 后，可以支持换品项、换城市、换渠道、换排名和换时间等追问补全。
+短期记忆使用进程内 dict 保存最近 3 轮结构化状态，形成轻量滑动窗口。传入同一个 `session_id` 后，可以支持换品项、换城市、换大区、换渠道、换排名、换时间、换指标域和去掉维度看整体等追问补全。
 
 默认情况下，短追问继承最近一轮；只有用户明确说“回到/还是/刚才第一个/北京那个”等回指表达时，才从窗口中选择更早的匹配轮次。
 
@@ -348,9 +366,17 @@ AskData> 那上海呢
 AskData> top3
 AskData> 北京那个，换成奇迹童颜
 AskData> 本月
+AskData> 支付金额呢
+AskData> 不要门店了，看整体
 ```
 
-终端会输出原始问题、补全后的问题、是否使用记忆、窗口大小、继承轮次、template_id、sql_source 和最终 SQL。
+终端会输出原始问题、补全后的问题、是否使用记忆、窗口大小、继承轮次、`delta`、`template_id`、`sql_source` 和最终 SQL。`delta` 用于解释本轮追问的结构化动作，例如：
+
+```text
+operations: ["domain_switch_to_payment"]
+set_metrics: ["payment_gmv"]
+preserve: ["time_range", "city", "item", "dimensions", "top_n"]
+```
 
 开启 `LLM_ENABLED=true` 后，补全后的用户问题和结构化硬约束会同步进入 LLM SQL prompt；Safety Gate 会继续检查城市、品项、渠道、本月时间窗和 TopN/LIMIT 是否被保留。城市和品项名称要求使用 `REGEXP` 或 `LIKE` 模糊匹配，避免 `city_name = '杭州'` 无法命中 `杭州市` 这类标准名称；只有通过门禁的 LLM SQL 才会被采纳。
 
@@ -675,6 +701,35 @@ python eval/run_eval.py --api http://localhost:8000 --output eval/eval_result_la
 - Critical Rules 是否通过
 - 口径说明是否覆盖关键业务术语
 
+短期记忆专项评测：
+
+```powershell
+# 默认只跑 p0_current
+python eval/run_memory_eval.py --llm-enabled false
+
+# 跑下一阶段复杂追问
+python eval/run_memory_eval.py --priority p1_next --llm-enabled false
+
+# 跑全部短期记忆评测集
+python eval/run_memory_eval.py --priority all --llm-enabled false
+```
+
+评测关注：
+
+- `resolved_question`：追问补全后的完整问题是否正确
+- `used_memory`：是否应该使用短期记忆
+- `selected_turn_id`：是否继承了正确历史轮次
+- `template_id`：语义层和模板路由是否正确
+- `sql_constraints`：城市、品项、渠道、时间、大区、TopN 等约束是否进入 SQL
+
+当前短期记忆评测集：
+
+```text
+p0_current：12 cases / 34 turns
+p1_next：4 cases / 8 turns
+最近一次本地验证：P0 / P1 resolved、memory、selected、sql_constraints 均为 100%
+```
+
 ### 12.3 LLM SQL 采纳评估
 
 LLM SQL 的评估重点不是“是否生成了 SQL”，而是候选 SQL 能否通过 Safety Gate 并被最终采纳。Prompt 调整时建议使用同一批 golden case 做前后对比，关注：
@@ -736,6 +791,10 @@ table_recall >= 85%
 本月奇迹童颜核销收入时间进度达成率
 本月BBL HERO核销收入时间进度达成率
 本月新一代热玛吉核销收入时间进度达成率
+本月华北大区核销收入
+本月华北大区支付金额
+最近30天各大区核销收入
+最近30天各门店支付GMV TOP10
 ```
 
 ---
@@ -749,6 +808,10 @@ table_recall >= 85%
 - 当前 RRF 采用等权融合，后续可基于 Recall@K、Precision@K、MRR 调 Weighted RRF
 - Rerank 模型可能受 DashScope 权限影响，未开通时会 fallback 到本地 reranker
 - 当前结果校验偏结构校验，真实数值正确性仍需要业务侧或数据侧进一步验证
+- 当前语义层是轻量实现，已覆盖核销、支付、渠道、新老客、品项、城市、大区、TopN 和常见时间，但还不是完整指标词典
+- 当前短期记忆主要是最近 3 轮结构化滑动窗口，暂未做长期用户偏好、组织级口径记忆和摘要压缩
+- 当前 MCP 只实现能力边界和数据库路由思想，还没有抽象为标准 MCP Server
+- 当前缺乏后训练，真实问答、采纳 SQL、修复轨迹和用户反馈还需要继续沉淀为 SFT / preference 数据
 
 ---
 
@@ -756,11 +819,11 @@ table_recall >= 85%
 
 短期：
 
-- 增加更多复杂组合问题到 golden eval
-- 将最近 3 轮短期记忆从终端调试入口逐步接入 Web/API 和飞书入口
+- 补齐长短期记忆：在现有 3 轮滑动窗口基础上，补充摘要压缩、用户偏好和组织级指标口径记忆
+- 继续迭代语义层：优先补核销服务点、支付人数、待核销服务点、趋势、占比、对比等指标语义簇
+- 强化 Reflection：把 Safety Gate、执行错误、结果校验失败和用户反馈统一沉淀为可归因、可修复、可评测的闭环
+- 增加更多复杂组合问题到 golden eval 和 memory eval，尤其覆盖“删除过滤 + 新增维度”等复合追问
 - 强化 LLM SQL 的 constraint-aware prompt、Safety Gate 和静态修复，持续提升可采纳率
-- 扩展 Result Validation 对诊断类问题、占比类问题、对比类问题的校验
-- 丰富城市、品项、渠道、时间窗、TopN 等追问改写规则和回指识别样例
 
 中期：
 
@@ -768,13 +831,16 @@ table_recall >= 85%
 - 引入更多统计评估指标，如 Recall、Precision、MRR、Correctness
 - 将 MaxCompute 执行结果进一步接入解释层，支持结果摘要和异常诊断
 - 对 Weighted RRF、DashScope Embedding、DashScope Rerank 做 A/B 评估
-- 在 Capability Context 基础上扩展多数据源注册结构，为 `soyoung_analysis` 等受控数据源预留路由能力
+- 在 Capability Context 基础上扩展多数据源注册结构，为 `soyoung_analysis` 等受控数据源预留路由能力，并逐步演进为标准 MCP 工具层
 - 将真实问答日志、最终采用 SQL、修复轨迹和用户反馈沉淀为可复用评测集
+- 飞书卡片支持可选输出明细表，例如生成飞书表格文档链接，便于业务同事二次分析
 
 长期：
 
-- 在最近 3 轮滑动窗口基础上补充摘要压缩、用户偏好和组织级指标记忆
 - 将 schema 检索、指标查询、SQL 校验、SQL 执行封装为标准化工具能力
+- 落地权限管理和身份识别，根据发送人的部门、角色和权限范围返回差异化答案
+- 建立指标字典定期 review 机制，未知口径不强答，必要时返回澄清或升级到人工确认
+- 持续收集业务语义习惯和许愿需求，例如占比、趋势、对比、异常归因，更好抽象语义层
 - 基于高质量问答与修复样例探索 SFT、偏好优化或小模型蒸馏
 - 从当前 Agentic Workflow 演进为可权限治理、可复盘、可持续学习的数据分析 Agent
 
